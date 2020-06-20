@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-uk
-// @version      1.0.0
+// @version      1.0.1
 // @author       DrTraxx
 // @include      *://www.missionchief.co.uk/
 // @include      *://missionchief.co.uk/
@@ -183,10 +183,10 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => getBuildingName[a.buildingId].toUpperCase() > getBuildingName[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "type-up":
-                    tableDatabase.sort((a, b) => vehicleDatabase[a.typeId].name.toUpperCase() > vehicleDatabase[b.typeId].name.toUpperCase() ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "type-down":
-                    tableDatabase.sort((a, b) => vehicleDatabase[a.typeId].name.toUpperCase() > vehicleDatabase[b.typeId].name.toUpperCase() ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
