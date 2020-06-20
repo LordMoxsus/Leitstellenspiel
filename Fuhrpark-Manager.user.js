@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.0.1
+// @version      1.0.2
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -215,10 +215,10 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => getBuildingName[a.buildingId].toUpperCase() > getBuildingName[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "Typ-aufsteigend":
-                    tableDatabase.sort((a, b) => vehicleDatabase[a.typeId].name.toUpperCase() > vehicleDatabase[b.typeId].name.toUpperCase() ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "Typ-absteigend":
-                    tableDatabase.sort((a, b) => vehicleDatabase[a.typeId].name.toUpperCase() > vehicleDatabase[b.typeId].name.toUpperCase() ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
