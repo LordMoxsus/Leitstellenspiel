@@ -261,7 +261,7 @@ overflow-y: auto;
         loadApi()
     });
 
-    $("body").on("click", "#sortBy", function(){
+    $("body").on("click", "#sortByUk", function(){
         if(statusCount != 0) createTable(statusCount);
         else {
             statusCount = "1 to 9";
