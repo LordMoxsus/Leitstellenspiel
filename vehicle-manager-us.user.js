@@ -111,12 +111,12 @@ overflow-y: auto;
         $('#sortByUs').append(`<option value="${sortOptions[i]}">${sortOptions[i]}</option>`);
     }
 
-    var filterFwVehicles = true; //buildingTypeIds: 0, 13
-    var filterRdVehicles = true; //buildingTypeIds: 3, 14, 16
-    var filterPolVehicles = true; //buildingTypeIds: 5, 15
-    var filterHeliVehicles = true; //buildingTypeIds: 6
-    var filterAirplanes = true; //buildingTypeIds: 11, 17
-    var filterBoats = true; //buildingTypeIds: 12
+    var filterFwVehicles = true;
+    var filterRdVehicles = true;
+    var filterPolVehicles = true;
+    var filterHeliVehicles = true;
+    var filterAirplanes = true;
+    var filterBoats = true;
     var filterVehicleType = parseInt($('#filterTypeUs').val());
     var filterOwnClassType = parseInt($('#filterOwnClassUs').val());
     var buildingsCount = 0;
