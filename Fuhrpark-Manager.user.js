@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.0.2
+// @version      1.1.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -12,6 +12,7 @@
     'use strict';
 
     $('#radio_panel_heading').after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><button type="button" class="btn btn-default btn-xs">Fuhrpark-Manager</button></a>`);
+    //$('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
 .modal {
@@ -68,6 +69,9 @@ overflow-y: auto;
                              <div class="pull-left">
                               <select id="sortBy" class="custom-select">
                                <option selected>Sortierung wählen</option>
+                              </select><br>
+                              <select id="filterType" class="custom-select">
+                               <option selected>alle Typen</option>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -112,6 +116,7 @@ overflow-y: auto;
     var filterHeliVehicles = true; //buildingTypeIds: 5, 13
     var filterBpVehicles = true; //buildingTypeIds: 11, 17
     var filterSegVehicles = true; //buildingTypeIds: 12, 21
+    var filterVehicleType = parseInt($('#filterType').val());
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
@@ -121,12 +126,18 @@ overflow-y: auto;
     var vehicleDatabaseFms = {};
 
     $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(function(data){
-        var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü"};
+        var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
         $.each(data, (k,v) => {
             v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
         });
         vehicleDatabase = data;
     });
+
+    setTimeout(function(){
+        for(let i = 0; i < vehicleDatabase.length; i++){
+            $('#filterType').append(`<option value="${i}">${vehicleDatabase[i].name}</option>`);
+        }
+    }, 2000);
 
     function loadApi(){
 
@@ -150,8 +161,14 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-            else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            if(isNaN(filterVehicleType)){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            }
+            else if(filterVehicleType == item.vehicle_type){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+            }
         });
 
         if(!filterFwVehicles){
@@ -222,8 +239,7 @@ overflow-y: auto;
                     break;
             }
             let intoLabel =
-                `<div class="pull-left">Fahrzeuge im Status ${statusIndex}</div>
-                 <div class="pull-right">${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
+                `<div class="pull-right">Status ${statusIndex}: ${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
             let intoTable =
                 `<table class="table">
                  <thead>
@@ -231,7 +247,7 @@ overflow-y: auto;
                  <th class="col-1">FMS</th>
                  <th class="col">Kennung</th>
                  <th class="col">Fahrzeugtyp</th>
-                 <th class="col">Personalzuweisung</th>
+                 <th class="col"> </th>
                  <th class="col">Wache</th>
                  </tr>
                  </thead>
@@ -243,7 +259,8 @@ overflow-y: auto;
                      <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
                      <td class="col">${!tableDatabase[i].ownClass ? vehicleDatabase[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
-                     <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a></td>
+                     <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a>
+                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button type="button" class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a></td>
                      <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${getBuildingName[tableDatabase[i].buildingId]}</a></td>
                      </tr>`;
             }
@@ -285,6 +302,14 @@ overflow-y: auto;
             $.get('/vehicles/' + $(this)[0].id.replace('tableFms_','') + '/set_fms/6');
             $(this).toggleClass("building_list_fms_6 building_list_fms_2");
             $(this).text("6");
+        }
+    });
+
+    $("body").on("click", "#filterType", function(){
+        if(statusCount == 0) filterVehicleType = parseInt($('#filterType').val());
+        else {
+            filterVehicleType = parseInt($('#filterType').val());
+            createTable(statusCount);
         }
     });
 
