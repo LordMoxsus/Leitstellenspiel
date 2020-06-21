@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-uk
-// @version      1.0.1
+// @version      1.1.0
 // @author       DrTraxx
 // @include      *://www.missionchief.co.uk/
 // @include      *://missionchief.co.uk/
@@ -12,6 +12,7 @@
     'use strict';
 
     $('#radio_panel_heading').after(`<a id="vehicleManagementUk" data-toggle="modal" data-target="#tableStatusUk" ><button type="button" class="btn btn-default btn-xs">Vehicle-Manager</button></a>`);
+    //$('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagementUk" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
 .modal {
@@ -67,7 +68,10 @@ overflow-y: auto;
                              </div><br><br>
                              <div class="pull-left">
                               <select id="sortByUk" class="custom-select">
-                               <option selected>select sort</option>
+                               <option selected>select sort</option><br>
+                              <select id="filterTypeUk" class="custom-select">
+                               <option selected>all types</option>
+                              </select>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -104,6 +108,7 @@ overflow-y: auto;
     var filterRdVehicles = true; //buildingTypeIds: 2, 20, 21
     var filterPolVehicles = true; //buildingTypeIds: 6, 19
     var filterHeliVehicles = true; //buildingTypeIds: 5, 13
+    var filterVehicleType = parseInt($('#filterTypeUk').val());
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
@@ -115,6 +120,12 @@ overflow-y: auto;
     $.getJSON('https://lss-manager.de/api/cars.php?lang=en_GB').done(function(data){
         vehicleDatabase = data;
     });
+
+    setTimeout(function(){
+        for(let i = 0; i < vehicleDatabase.length; i++){
+            $('#filterType').append(`<option value="${i}">${vehicleDatabase[i].name}</option>`);
+        }
+    }, 2000);
 
     function loadApi(){
 
@@ -138,8 +149,14 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-            else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            if(isNaN(filterVehicleType)){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            }
+            else if(filterVehicleType == item.vehicle_type){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+            }
         });
 
         if(!filterFwVehicles){
@@ -253,6 +270,14 @@ overflow-y: auto;
             $.get('/vehicles/' + $(this)[0].id.replace('tableFms_','') + '/set_fms/6');
             $(this).toggleClass("building_list_fms_6 building_list_fms_2");
             $(this).text("6");
+        }
+    });
+
+    $("body").on("click", "#filterTypeUk", function(){
+        if(statusCount == 0) filterVehicleType = parseInt($('#filterTypeUk').val());
+        else {
+            filterVehicleType = parseInt($('#filterTypeUk').val());
+            createTable(statusCount);
         }
     });
 
