@@ -182,7 +182,7 @@ overflow-y: auto;
                 }
                 else if(filterVehicleType == item.vehicle_type){
                     if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
                 }
             }
             else if(filterOwnClassType == 1 && !item.vehicle_type_caption){
@@ -192,7 +192,7 @@ overflow-y: auto;
                 }
                 else if(filterVehicleType == item.vehicle_type){
                     if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
                 }
             }
             else if(filterOwnClassType == 2 && item.vehicle_type_caption){
@@ -202,7 +202,7 @@ overflow-y: auto;
                 }
                 else if(filterVehicleType == item.vehicle_type){
                     if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
                 }
             }
         });
