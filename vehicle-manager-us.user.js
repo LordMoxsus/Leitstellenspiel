@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-us
-// @version      1.0.0
+// @version      1.1.0
 // @author       DrTraxx
 // @include      *://www.missionchief.com/
 // @include      *://missionchief.com/
@@ -79,8 +79,8 @@ overflow-y: auto;
                               <a id="filterRdUs" class="label label-success">ambulance station</a>
                               <a id="filterPolUs" class="label label-success">police station</a>
                               <a id="filterHeliUs" class="label label-success">helicopter</a>
-                              <a id="filterAirUs" class="label label-success">fire plane/boat</a>
-                              <a id="filterBoatUs" class="label label-success">rescue boats</a>
+                              <a id="filterAirUs" class="label label-success">planes</a>
+                              <a id="filterBoatUs" class="label label-success">boats</a>
                              </div><br><br>
                                 <h5 class="modal-title" id="tableStatusLabelUs">
                                 </h5>
@@ -106,12 +106,12 @@ overflow-y: auto;
         $('#sortByUs').append(`<option value="${sortOptions[i]}">${sortOptions[i]}</option>`);
     }
 
-    var filterFwVehicles = true; //buildingTypeIds: 0, 13
-    var filterRdVehicles = true; //buildingTypeIds: 3, 14, 16
-    var filterPolVehicles = true; //buildingTypeIds: 5, 15
-    var filterHeliVehicles = true; //buildingTypeIds: 6
-    var filterAirplanes = true; //buildingTypeIds: 11, 17
-    var filterBoats = true; //buildingTypeIds: 12
+    var filterFwVehicles = true;
+    var filterRdVehicles = true;
+    var filterPolVehicles = true;
+    var filterHeliVehicles = true;
+    var filterAirplanes = true;
+    var filterBoats = true;
     var filterVehicleType = parseInt($('#filterTypeUs').val());
     var buildingsCount = 0;
     var vehiclesCount = 0;
@@ -121,58 +121,21 @@ overflow-y: auto;
     var getBuildingName = {};
     var vehicleDatabaseFms = {};
 
-    //aktuell keine API vom LSSM vorhanden
-    //$.getJSON('https://lss-manager.de/api/cars.php?lang=en_GB').done(function(data){
-    //    vehicleDatabase = data;
-    //});
-
-    vehicleDatabase = {
-        "0": "Type 1 fire engine",
-        "1": "Type 2 fire engine",
-        "2": "Platform truck",
-        "3": "Battalion Chief Unit",
-        "4": "Heavy Rescue Vehicle",
-        "5": "ALS Ambulance",
-        "6": "Mobile air",
-        "7": "Water Tanker",
-        "8": "Utility unit",
-        "9": "HazMat",
-        "10": "Patrol Car",
-        "11": "HEMS",
-        "12": "Mobile command vehicle",
-        "13": "Quint",
-        "14": "Police helicopter",
-        "15": "Fly-Car",
-        "16": "SWAT Armoured Vehicle",
-        "17": "ARFF Crash Tender",
-        "18": "Rescue Engine",
-        "19": "K-9 Unit",
-        "20": "Mass Casualty Unit",
-        "21": "Heavy Rescue + Boat",
-        "22": "Boat Trailer",
-        "23": "Police Motorcycle",
-        "24": "Large Fireboat",
-        "25": "Large Rescue Boat",
-        "26": "SWAT SUV",
-        "27": "BLS Ambulance",
-        "28": "EMS Rescue",
-        "29": "EMS Chief",
-        "30": "Type 3 engine",
-        "31": "Type 5 engine",
-        "32": "Type 7 engine",
-        "33": "Pumper Tanker",
-        "34": "Crew Carrier",
-        "35": "Water drop helicopter",
-        "36": "Air tanker",
-        "37": "Heavy air tanker",
-        "38": "Type 4 engine",
-        "39": "Type 6 engine"
-    };
+    $.getJSON('https://lss-manager.de/api/cars.php?lang=en_US').done(function(data){
+        vehicleDatabase = data;
+    });
 
     setTimeout(function(){
-        for(let i = 0; i < vehicleDatabase.length; i++){
-            $('#filterTypeUs').append(`<option value="${i}">${vehicleDatabase[i]}</option>`);
-        }
+        var dropdownDatabase = [];
+        $.each(vehicleDatabase, function(key, item){
+            dropdownDatabase.push({"typeId": key, "name": item.name});
+        });
+        //setTimeout(function(){
+            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownDatabase.length; i++){
+                $('#filterTypeUs').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
+            }
+        //}, 2000);
     }, 2000);
 
     function loadApi(){
@@ -224,17 +187,17 @@ overflow-y: auto;
         }
         if(!filterHeliVehicles){
             for(var heli = tableDatabase.length - 1; heli >= 0; heli--){
-                if(getBuildingTypeId[tableDatabase[heli].buildingId] == "6") tableDatabase.splice(heli,1);
+                if(getBuildingTypeId[tableDatabase[heli].buildingId] == "6" || getBuildingTypeId[tableDatabase[heli].buildingId] == "8") tableDatabase.splice(heli,1);
             }
         }
         if(!filterAirplanes){
             for(var air = tableDatabase.length - 1; air >= 0; air--){
-                if(getBuildingTypeId[tableDatabase[air].buildingId] == "11" || getBuildingTypeId[tableDatabase[air].buildingId] == "17") tableDatabase.splice(air,1);
+                if(getBuildingTypeId[tableDatabase[air].buildingId] == "17") tableDatabase.splice(air,1);
             }
         }
         if(!filterBoats){
             for(var boat = tableDatabase.length - 1; boat >= 0; boat--){
-                if(getBuildingTypeId[tableDatabase[boat].buildingId] == "12") tableDatabase.splice(boat,1);
+                if(getBuildingTypeId[tableDatabase[boat].buildingId] == "11" || getBuildingTypeId[tableDatabase[boat].buildingId] == "12") tableDatabase.splice(boat,1);
             }
         }
 
@@ -258,12 +221,10 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => getBuildingName[a.buildingId].toUpperCase() > getBuildingName[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "type-up":
-                    //tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? 1 : -1);
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].toUpperCase()) ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "type-down":
-                    //tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? -1 : 1);
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].toUpperCase()) ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
