@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.1.0
+// @version      1.2.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -72,6 +72,11 @@ overflow-y: auto;
                               </select><br>
                               <select id="filterType" class="custom-select">
                                <option selected>alle Typen</option>
+                              </select><br>
+                              <select id="filterOwnClass" class="custom-select">
+                               <option selected value="0">eigene Klassen anzeigen</option>
+                               <option value="1">eine Klassen ausblenden</option>
+                               <option value="2">nur eigene Klassen anzeigen</option>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -117,6 +122,7 @@ overflow-y: auto;
     var filterBpVehicles = true; //buildingTypeIds: 11, 17
     var filterSegVehicles = true; //buildingTypeIds: 12, 21
     var filterVehicleType = parseInt($('#filterType').val());
+    var filterOwnClassType = parseInt($('#filterOwnClass').val());
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
@@ -134,9 +140,16 @@ overflow-y: auto;
     });
 
     setTimeout(function(){
-        for(let i = 0; i < vehicleDatabase.length; i++){
-            $('#filterType').append(`<option value="${i}">${vehicleDatabase[i].name}</option>`);
-        }
+        var dropdownDatabase = [];
+        $.each(vehicleDatabase, function(key, item){
+            dropdownDatabase.push({"typeId": key, "name": item.name});
+        });
+        //setTimeout(function(){
+            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownDatabase.length; i++){
+                $('#filterType').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
+            }
+        //}, 2000);
     }, 2000);
 
     function loadApi(){
@@ -153,6 +166,7 @@ overflow-y: auto;
             vehiclesCount = data.length;
             vehicleDatabaseFms = data;
         });
+
     }
 
     function createTable(statusIndex) {
@@ -161,13 +175,35 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(filterVehicleType)){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            if(filterOwnClassType == 0){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
             }
-            else if(filterVehicleType == item.vehicle_type){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+            else if(filterOwnClassType == 1 && !item.vehicle_type_caption){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
+            }
+            else if(filterOwnClassType == 2 && item.vehicle_type_caption){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
             }
         });
 
@@ -309,6 +345,14 @@ overflow-y: auto;
         if(statusCount == 0) filterVehicleType = parseInt($('#filterType').val());
         else {
             filterVehicleType = parseInt($('#filterType').val());
+            createTable(statusCount);
+        }
+    });
+
+    $("body").on("click", "#filterOwnClass", function(){
+        if(statusCount == 0) filterOwnClassType = parseInt($('#filterOwnClass').val());
+        else {
+            filterOwnClassType = parseInt($('#filterOwnClass').val());
             createTable(statusCount);
         }
     });
