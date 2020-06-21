@@ -75,7 +75,7 @@ overflow-y: auto;
                               </select><br>
                               <select id="filterOwnClass" class="custom-select">
                                <option selected value="0">eigene Klassen anzeigen</option>
-                               <option value="1">eine Klassen ausblenden</option>
+                               <option value="1">eigene Klassen ausblenden</option>
                                <option value="2">nur eigene Klassen anzeigen</option>
                               </select>
                              </div>
