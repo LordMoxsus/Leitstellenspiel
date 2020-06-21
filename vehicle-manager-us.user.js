@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-us
-// @version      1.1.0
+// @version      1.2.0
 // @author       DrTraxx
 // @include      *://www.missionchief.com/
 // @include      *://missionchief.com/
@@ -68,10 +68,15 @@ overflow-y: auto;
                              </div><br><br>
                              <div class="pull-left">
                               <select id="sortByUs" class="custom-select">
-                               <option selected>select sort</option><br>
+                               <option selected>select sort</option>
+                              </select><br>
                               <select id="filterTypeUs" class="custom-select">
                                <option selected>all types</option>
-                              </select>
+                              </select><br>
+                              <select id="filterOwnClassUs" class="custom-select">
+                               <option selected value="0">show own class</option>
+                               <option value="1">hide own class</option>
+                               <option value="2">only show own class</option>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -106,13 +111,14 @@ overflow-y: auto;
         $('#sortByUs').append(`<option value="${sortOptions[i]}">${sortOptions[i]}</option>`);
     }
 
-    var filterFwVehicles = true;
-    var filterRdVehicles = true;
-    var filterPolVehicles = true;
-    var filterHeliVehicles = true;
-    var filterAirplanes = true;
-    var filterBoats = true;
+    var filterFwVehicles = true; //buildingTypeIds: 0, 13
+    var filterRdVehicles = true; //buildingTypeIds: 3, 14, 16
+    var filterPolVehicles = true; //buildingTypeIds: 5, 15
+    var filterHeliVehicles = true; //buildingTypeIds: 6
+    var filterAirplanes = true; //buildingTypeIds: 11, 17
+    var filterBoats = true; //buildingTypeIds: 12
     var filterVehicleType = parseInt($('#filterTypeUs').val());
+    var filterOwnClassType = parseInt($('#filterOwnClassUs').val());
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
@@ -160,13 +166,35 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(filterVehicleType)){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            if(filterOwnClassType == 0){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
             }
-            else if(filterVehicleType == item.vehicle_type){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+            else if(filterOwnClassType == 1 && !item.vehicle_type_caption){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
+            }
+            else if(filterOwnClassType == 2 && item.vehicle_type_caption){
+                if(isNaN(filterVehicleType)){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+                }
+                else if(filterVehicleType == item.vehicle_type){
+                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                    else if((statusIndex == item.fms_real) ) tableDatabase.push(pushContent);
+                }
             }
         });
 
@@ -228,8 +256,7 @@ overflow-y: auto;
                     break;
             }
             let intoLabel =
-                `<div class="pull-left">vehicles on radio ${statusIndex}</div>
-                 <div class="pull-right">${tableDatabase.length.toLocaleString()} vehicles</div>`;
+                `<div class="pull-right">radio ${statusIndex}: ${tableDatabase.length.toLocaleString()} vehicles</div>`;
             let intoTable =
                 `<table class="table">
                  <thead>
@@ -299,6 +326,14 @@ overflow-y: auto;
         if(statusCount == 0) filterVehicleType = parseInt($('#filterTypeUs').val());
         else {
             filterVehicleType = parseInt($('#filterTypeUs').val());
+            createTable(statusCount);
+        }
+    });
+
+    $("body").on("click", "#filterOwnClassUs", function(){
+        if(statusCount == 0) filterOwnClassType = parseInt($('#filterOwnClassUs').val());
+        else {
+            filterOwnClassType = parseInt($('#filterOwnClassUs').val());
             createTable(statusCount);
         }
     });
@@ -380,38 +415,38 @@ overflow-y: auto;
     });
 
     $("body").on("click", "#filterAirUs", function(){
-        if(filterHeliVehicles) {
+        if(filterAirplanes) {
             if(statusCount != 0){
-                filterHeliVehicles = false;
+                filterAirplanes = false;
                 createTable(statusCount);
             }
-            else filterHeliVehicles = false;
+            else filterAirplanes = false;
         }
         else {
             if(statusCount != 0) {
-                filterHeliVehicles = true;
+                filterAirplanes = true;
                 createTable(statusCount);
             }
-            else filterHeliVehicles = true;
+            else filterAirplanes = true;
         }
 
         $('#filterAirUs').toggleClass("label-success label-danger");
     });
 
     $("body").on("click", "#filterBoatUs", function(){
-        if(filterHeliVehicles) {
+        if(filterBoats) {
             if(statusCount != 0){
-                filterHeliVehicles = false;
+                filterBoats = false;
                 createTable(statusCount);
             }
-            else filterHeliVehicles = false;
+            else filterBoats = false;
         }
         else {
             if(statusCount != 0) {
-                filterHeliVehicles = true;
+                filterBoats = true;
                 createTable(statusCount);
             }
-            else filterHeliVehicles = true;
+            else filterBoats = true;
         }
 
         $('#filterBoatUs').toggleClass("label-success label-danger");
