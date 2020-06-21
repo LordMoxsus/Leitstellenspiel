@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-uk
-// @version      1.1.0
+// @version      1.1.1
 // @author       DrTraxx
 // @include      *://www.missionchief.co.uk/
 // @include      *://missionchief.co.uk/
@@ -122,9 +122,16 @@ overflow-y: auto;
     });
 
     setTimeout(function(){
-        for(let i = 0; i < vehicleDatabase.length; i++){
-            $('#filterType').append(`<option value="${i}">${vehicleDatabase[i].name}</option>`);
-        }
+        var dropdownDatabase = [];
+        $.each(vehicleDatabase, function(key, item){
+            dropdownDatabase.push({"typeId": key, "name": item.name});
+        });
+        //setTimeout(function(){
+            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownDatabase.length; i++){
+                $('#filterTypeUk').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
+            }
+        //}, 2000);
     }, 2000);
 
     function loadApi(){
