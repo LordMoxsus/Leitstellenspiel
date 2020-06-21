@@ -12,7 +12,7 @@
     'use strict';
 
     $('#radio_panel_heading').after(`<a id="vehicleManagementUk" data-toggle="modal" data-target="#tableStatusUk" ><button type="button" class="btn btn-default btn-xs">Vehicle-Manager</button></a>`);
-    //$('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagementUk" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
+    //$('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagementUk" data-toggle="modal" data-target="#tableStatusUk" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
 .modal {
