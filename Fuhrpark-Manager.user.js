@@ -192,7 +192,7 @@ overflow-y: auto;
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(filterVehicleType == item.vehicle_type){
+            else if(filterVehicleType == item.vehicle_type && !item.vehicle_type_caption){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
