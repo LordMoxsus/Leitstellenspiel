@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Vehicle-Manager-us
-// @version      1.2.0
+// @version      1.3.0
 // @author       DrTraxx
 // @include      *://www.missionchief.com/
 // @include      *://missionchief.com/
@@ -72,11 +72,6 @@ overflow-y: auto;
                               </select><br>
                               <select id="filterTypeUs" class="custom-select">
                                <option selected>all types</option>
-                              </select><br>
-                              <select id="filterOwnClassUs" class="custom-select">
-                               <option selected value="0">show own class</option>
-                               <option value="1">hide own class</option>
-                               <option value="2">only show own class</option>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -118,7 +113,7 @@ overflow-y: auto;
     var filterAirplanes = true;
     var filterBoats = true;
     var filterVehicleType = parseInt($('#filterTypeUs').val());
-    var filterOwnClassType = parseInt($('#filterOwnClassUs').val());
+    var filterOwnClassType = $('#filterType').find(':selected').data('vehicle');
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
@@ -126,9 +121,16 @@ overflow-y: auto;
     var getBuildingTypeId = {};
     var getBuildingName = {};
     var vehicleDatabaseFms = {};
+    var dropdownOwnClass = [];
 
     $.getJSON('https://lss-manager.de/api/cars.php?lang=en_US').done(function(data){
         vehicleDatabase = data;
+    });
+
+    $.getJSON('/api/vehicles').done(function(data){
+        $.each(data, function(key, item){
+            if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
+        });
     });
 
     setTimeout(function(){
@@ -136,12 +138,19 @@ overflow-y: auto;
         $.each(vehicleDatabase, function(key, item){
             dropdownDatabase.push({"typeId": key, "name": item.name});
         });
-        //setTimeout(function(){
-            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdownDatabase.length; i++){
-                $('#filterTypeUs').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
+        dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+        for(let i = 0; i < dropdownDatabase.length; i++){
+            $('#filterTypeUs').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
+        }
+        if(dropdownOwnClass.length > 0){
+            if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownOwnClass.length; i++){
+                if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
+                    $('#filterTypeUs').append(`<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`);
+                }
+                else if(i == 0) $('#filterTypeUs').append(`<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`);
             }
-        //}, 2000);
+        }
     }, 2000);
 
     function loadApi(){
@@ -166,35 +175,17 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(filterOwnClassType == 0){
-                if(isNaN(filterVehicleType)){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
-                else if(filterVehicleType == item.vehicle_type){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
+            if(isNaN(filterVehicleType)){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(filterOwnClassType == 1 && !item.vehicle_type_caption){
-                if(isNaN(filterVehicleType)){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
-                else if(filterVehicleType == item.vehicle_type){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
+            else if(filterVehicleType == -1 && filterOwnClassType == item.vehicle_type_caption){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(filterOwnClassType == 2 && item.vehicle_type_caption){
-                if(isNaN(filterVehicleType)){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
-                else if(filterVehicleType == item.vehicle_type){
-                    if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                    else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-                }
+            else if(filterVehicleType == item.vehicle_type && !item.vehicle_type_caption){
+                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
+                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
         });
 
@@ -323,17 +314,13 @@ overflow-y: auto;
     });
 
     $("body").on("click", "#filterTypeUs", function(){
-        if(statusCount == 0) filterVehicleType = parseInt($('#filterTypeUs').val());
+        if(statusCount == 0){
+            filterVehicleType = parseInt($('#filterTypeUs').val());
+            filterOwnClassType = $('#filterTypeUs').find(':selected').data('vehicle');
+        }
         else {
             filterVehicleType = parseInt($('#filterTypeUs').val());
-            createTable(statusCount);
-        }
-    });
-
-    $("body").on("click", "#filterOwnClassUs", function(){
-        if(statusCount == 0) filterOwnClassType = parseInt($('#filterOwnClassUs').val());
-        else {
-            filterOwnClassType = parseInt($('#filterOwnClassUs').val());
+            filterOwnClassType = $('#filterTypeUs').find(':selected').data('vehicle');
             createTable(statusCount);
         }
     });
