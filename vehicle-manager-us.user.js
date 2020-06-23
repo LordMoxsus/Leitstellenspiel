@@ -113,7 +113,7 @@ overflow-y: auto;
     var filterAirplanes = true;
     var filterBoats = true;
     var filterVehicleType = parseInt($('#filterTypeUs').val());
-    var filterOwnClassType = $('#filterType').find(':selected').data('vehicle');
+    var filterOwnClassType = $('#filterTypeUs').find(':selected').data('vehicle');
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
