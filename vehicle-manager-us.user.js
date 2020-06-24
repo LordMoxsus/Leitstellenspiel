@@ -278,7 +278,7 @@ overflow-y: auto;
 
             $('#tableStatusLabelUs').html(intoLabel);
             $('#tableStatusBodyUs').html(intoTable);
-            $('#counterUs').html(`<p>buildings: ${buildingsCount.toLocaleString()}</p><br><p>vehicles: ${vehiclesCount.toLocaleString()}</p>`);
+            $('#counterUs').html(`<p>buildings: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>vehicles: ${vehiclesCount.toLocaleString()}</p>`);
             tableDatabase.length = 0;
         //}, 2000);
     }
