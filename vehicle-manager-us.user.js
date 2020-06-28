@@ -11,8 +11,10 @@
 (function() {
     'use strict';
 
-    $('#radio_panel_heading').after(`<a id="vehicleManagementUs" data-toggle="modal" data-target="#tableStatusUs" ><button type="button" class="btn btn-default btn-xs">Vehicle-Manager</button></a>`);
-    //$('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagementUs" data-toggle="modal" data-target="#tableStatusUs" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
+    var buttonOnRadio = true; //true: shows button on radio-panel; false: shows button on header
+
+    if(buttonOnRadio) $('#radio_panel_heading').after(`<a id="vehicleManagementUs" data-toggle="modal" data-target="#tableStatusUs" ><button type="button" class="btn btn-default btn-xs">Vehicle-Manager</button></a>`);
+    else $('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagementUs" data-toggle="modal" data-target="#tableStatusUs" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
 .modal {
