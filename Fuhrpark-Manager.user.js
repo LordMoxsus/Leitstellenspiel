@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.3.0
+// @version      1.4.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -297,7 +297,9 @@ overflow-y: auto;
 
             $('#tableStatusLabel').html(intoLabel);
             $('#tableStatusBody').html(intoTable);
-            $('#counter').html(`<p>Gebäude: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>Fahrzeuge: ${vehiclesCount.toLocaleString()}</p>`);
+            $('#counter').html(`<p>Gebäude: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>Fahrzeuge: ${vehiclesCount.toLocaleString()}<span style="margin-left:4em"></span>
+                                mögl. Hubschrauber: ${Math.floor(buildingsCount / 25) > 5 ? Math.floor(buildingsCount / 25).toLocaleString() : 5}<span style="margin-left:4em"></span>
+                                mögl. Leitstelllen: ${Math.floor(buildingsCount / 25) > 1 ? Math.floor(buildingsCount / 25).toLocaleString() : 1}</p>`);
             tableDatabase.length = 0;
         //}, 2000);
     }
