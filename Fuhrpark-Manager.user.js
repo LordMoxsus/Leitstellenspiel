@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.4.0
+// @version      1.5.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -90,6 +90,7 @@ overflow-y: auto;
                             <div class="modal-body" id="tableStatusBody"></div>
                             <div class="modal-footer">
                              <div id="counter" class="pull-left"></div>
+                             <div id="counterPossibles" class="pull-left"></div>
                                 v ${GM_info.script.version}
                                 <button type="button"
                                         id="tableStatusCloseButton"
@@ -121,6 +122,8 @@ overflow-y: auto;
     var buildingsCount = 0;
     var vehiclesCount = 0;
     var statusCount = 0;
+    var rescueCount = 0;
+    var fireBuildings = 0;
     var vehicleDatabase = {};
     var getBuildingTypeId = {};
     var getBuildingName = {};
@@ -164,11 +167,22 @@ overflow-y: auto;
     function loadApi(){
 
         $.getJSON('/api/buildings').done(function(data){
+            var countRescueBuildings = [];
+            var countFireBuildings = [];
             buildingsCount = data.length;
             $.each(data, function(key, item){
                 getBuildingTypeId[item.id] = item.building_type;
                 getBuildingName[item.id] = item.caption;
+                if(item.building_type == 0 || item.building_type == 18) countFireBuildings.push(item);
+                if(item.building_type == 2 || item.building_type == 20) countRescueBuildings.push(item);
+                if(item.extensions.length > 0){
+                    for(let i = 0; i < item.extensions.length; i++){
+                        if(item.extensions[i].caption == "Rettungsdienst-Erweiterung" && item.extensions[i].enabled) countRescueBuildings.push(item);
+                    }
+                }
             });
+            rescueCount = countRescueBuildings.length;
+            fireBuildings = countFireBuildings.length;
         });
 
         $.getJSON('/api/vehicles').done(function(data){
@@ -199,43 +213,43 @@ overflow-y: auto;
         });
 
         if(!filterFwVehicles){
-            for(var fw = tableDatabase.length - 1; fw >= 0; fw--){
-                if(getBuildingTypeId[tableDatabase[fw].buildingId] == "0" || getBuildingTypeId[tableDatabase[fw].buildingId] == "18") tableDatabase.splice(fw,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "0" || getBuildingTypeId[tableDatabase[i].buildingId] == "18") tableDatabase.splice(i,1);
             }
         }
         if(!filterRdVehicles){
-            for(var rd = tableDatabase.length - 1; rd >= 0; rd--){
-                if(getBuildingTypeId[tableDatabase[rd].buildingId] == "2" || getBuildingTypeId[tableDatabase[rd].buildingId] == "20") tableDatabase.splice(rd,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "2" || getBuildingTypeId[tableDatabase[i].buildingId] == "20") tableDatabase.splice(i,1);
             }
         }
         if(!filterThwVehicles){
-            for(var thw = tableDatabase.length - 1; thw >= 0; thw--){
-                if(getBuildingTypeId[tableDatabase[thw].buildingId] == "9") tableDatabase.splice(thw,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "9") tableDatabase.splice(i,1);
             }
         }
         if(!filterPolVehicles){
-            for(var pol = tableDatabase.length - 1; pol >= 0; pol--){
-                if(getBuildingTypeId[tableDatabase[pol].buildingId] == "6" || getBuildingTypeId[tableDatabase[pol].buildingId] == "19") tableDatabase.splice(pol,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "6" || getBuildingTypeId[tableDatabase[i].buildingId] == "19") tableDatabase.splice(i,1);
             }
         }
         if(!filterWrVehicles){
-            for(var wr = tableDatabase.length - 1; wr >= 0; wr--){
-                if(getBuildingTypeId[tableDatabase[wr].buildingId] == "15") tableDatabase.splice(wr,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "15") tableDatabase.splice(i,1);
             }
         }
         if(!filterHeliVehicles){
-            for(var heli = tableDatabase.length - 1; heli >= 0; heli--){
-                if(getBuildingTypeId[tableDatabase[heli].buildingId] == "5" || getBuildingTypeId[tableDatabase[heli].buildingId] == "13") tableDatabase.splice(heli,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "5" || getBuildingTypeId[tableDatabase[i].buildingId] == "13") tableDatabase.splice(i,1);
             }
         }
         if(!filterBpVehicles){
-            for(var bp = tableDatabase.length - 1; bp >= 0; bp--){
-                if(getBuildingTypeId[tableDatabase[bp].buildingId] == "11" || getBuildingTypeId[tableDatabase[bp].buildingId] == "17") tableDatabase.splice(bp,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "11" || getBuildingTypeId[tableDatabase[i].buildingId] == "17") tableDatabase.splice(i,1);
             }
         }
         if(!filterSegVehicles){
-            for(var seg = tableDatabase.length - 1; seg >= 0; seg--){
-                if(getBuildingTypeId[tableDatabase[seg].buildingId] == "12" || getBuildingTypeId[tableDatabase[seg].buildingId] == "21") tableDatabase.splice(seg,1);
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
+                if(getBuildingTypeId[tableDatabase[i].buildingId] == "12" || getBuildingTypeId[tableDatabase[i].buildingId] == "21") tableDatabase.splice(i,1);
             }
         }
 
@@ -297,9 +311,6 @@ overflow-y: auto;
 
             $('#tableStatusLabel').html(intoLabel);
             $('#tableStatusBody').html(intoTable);
-            $('#counter').html(`<p>Gebäude: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>Fahrzeuge: ${vehiclesCount.toLocaleString()}<span style="margin-left:4em"></span>
-                                mögl. Hubschrauber: ${Math.floor(buildingsCount / 25) > 5 ? Math.floor(buildingsCount / 25).toLocaleString() : 5}<span style="margin-left:4em"></span>
-                                mögl. Leitstelllen: ${Math.floor(buildingsCount / 25) > 1 ? Math.floor(buildingsCount / 25).toLocaleString() : 1}</p>`);
             tableDatabase.length = 0;
         //}, 2000);
     }
@@ -311,7 +322,16 @@ overflow-y: auto;
         getBuildingTypeId.length = 0;
         getBuildingName.length = 0;
         vehicleDatabaseFms.length = 0;
-        loadApi()
+        loadApi();
+        setTimeout(function(){
+            $('#counter').html(`<p>Fahrzeuge: ${vehiclesCount.toLocaleString()}<span style="margin-left:4em"></span>
+                                   Gebäude: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>
+                                   mögl. Großwachen: ${Math.floor(fireBuildings / 10).toLocaleString()}<span style="margin-left:4em"></span>
+                                   mögl. Leitstelllen: ${Math.floor(buildingsCount / 25) > 1 ? Math.floor(buildingsCount / 25).toLocaleString() : 1}</p>`);
+            $('#counterPossibles').html(`<p>mögl. Hubschrauber: ${Math.floor(buildingsCount / 25) > 4 ? Math.floor(buildingsCount / 25).toLocaleString() : 4}<span style="margin-left:4em"></span>
+                                         mögl. NAW: ${rescueCount.toLocaleString()}<span style="margin-left:4em"></span>
+                                         mögl. GRTW: ${user_premium ? Math.floor(rescueCount / 15).toLocaleString() : Math.floor(rescueCount / 20).toLocaleString()}</p>`);
+        }, 2000);
     });
 
     $("body").on("click", "#sortBy", function(){
