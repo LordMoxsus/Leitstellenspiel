@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.5.0
+// @version      1.5.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -329,7 +329,7 @@ overflow-y: auto;
             $('#counter').html(`<p>Fahrzeuge: ${vehiclesCount.toLocaleString()}<span style="margin-left:4em"></span>
                                    Gebäude: ${buildingsCount.toLocaleString()}<span style="margin-left:4em"></span>
                                    mögl. Großwachen: ${Math.floor(fireBuildings / 10).toLocaleString()}<span style="margin-left:4em"></span>
-                                   mögl. Leitstelllen: ${Math.floor(buildingsCount / 25) > 1 ? Math.floor(buildingsCount / 25).toLocaleString() : 1}</p>`);
+                                   mögl. Leitstelllen: ${Math.ceil(buildingsCount / 25) > 0 ? Math.ceil(buildingsCount / 25).toLocaleString() : 1}</p>`);
             $('#counterPossibles').html(`<p>mögl. Hubschrauber: ${Math.floor(buildingsCount / 25) > 4 ? Math.floor(buildingsCount / 25).toLocaleString() : 4}<span style="margin-left:4em"></span>
                                          mögl. NAW: ${rescueCount.toLocaleString()}<span style="margin-left:4em"></span>
                                          mögl. GRTW: ${user_premium ? Math.floor(rescueCount / 15).toLocaleString() : Math.floor(rescueCount / 20).toLocaleString()}</p>`);
