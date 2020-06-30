@@ -351,6 +351,8 @@ overflow-y: auto;
         var buildNch = 0;
         var buildKar = 0;
         var buildKch = 0;
+        var buildPrisonBig = 0;
+        var buildPrisonSmall = 0;
         var activeIndustry = 0;
         var activeAirport = 0;
         var activeRescue = 0;
@@ -524,6 +526,10 @@ overflow-y: auto;
                                 break;
                             case "Kardiochirurgie": buildKch ++;
                                 break;
+                            case "Zelle":
+                                if(item.building_type == 6) buildPrisonBig ++;
+                                else if(item.building_type == 19) buildPrisonSmall ++;
+                                break;
                         }
                     }
                     if(item.extensions[i].enabled && item.extensions[i].available){
@@ -654,9 +660,15 @@ overflow-y: auto;
 
         if(rescueHelicopterBuildings > 0) infoContentOneValue("Rettungshubschrauber-Stationen", rescueHelicopterBuildings);
 
-        if(policeBuildings > 0) infoContentOneValue("Polizeiwachen", policeBuildings);
+        if(policeBuildings > 0){
+            infoContentOneValue("Polizeiwachen", policeBuildings);
+            infoContentOneValue("Zellen in Polizeiwachen", buildPrisonBig);
+        }
 
-        if(policeBuildingsSmall > 0) infoContentOneValue("Polizeiwachen (klein)", policeBuildingsSmall);
+        if(policeBuildingsSmall > 0){
+            infoContentOneValue("Polizeiwachen (klein)", policeBuildingsSmall);
+            infoContentOneValue("Zellen in Polizeiwachen (klein)", buildPrisonSmall);
+        }
 
         if(bePoBuildings > 0) infoContentOneValue("Bereitschaftspolizei", bePoBuildings);
         if(buildSecondDivision > 0) infoContentMax('Bereitschaftspolizei mit Ausbau "2. Zug der 1. Hundertschaft"', activeSecondDivision, buildSecondDivision);
