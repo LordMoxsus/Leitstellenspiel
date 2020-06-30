@@ -351,6 +351,7 @@ overflow-y: auto;
         var buildNch = 0;
         var buildKar = 0;
         var buildKch = 0;
+        var buildHospitalBeds = 0;
         var buildPrisonBig = 0;
         var buildPrisonSmall = 0;
         var activeIndustry = 0;
@@ -442,6 +443,7 @@ overflow-y: auto;
                 case 21: rescueDogBuildings ++;
                     break;
             }
+            if(item.building_type == 4) buildHospitalBeds += item.level;
             if(item.extensions.length > 0){
                 for(let i = 0; i < item.extensions.length; i ++){
                     if(item.extensions[i].available){
@@ -708,6 +710,7 @@ overflow-y: auto;
 
         if(hospitalBuildings > 0){
             infoContentOneValue("Krankenhäuser", hospitalBuildings);
+            infoContentOneValue("Betten in Krankenhäusern", buildHospitalBeds + (hospitalBuildings * 10));
             infoContentMax('Krankenhäuser mit Fachrichtung "Allgemeine Innere"', buildIna, hospitalBuildings);
             infoContentMax('Krankenhäuser mit Fachrichtung "Allgemeine Chirurgie"', buildAch, hospitalBuildings);
             infoContentMax('Krankenhäuser mit Fachrichtung "Gynäkologie"', buildGyn, hospitalBuildings);
