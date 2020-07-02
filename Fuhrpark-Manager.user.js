@@ -352,6 +352,10 @@ overflow-y: auto;
         var buildNch = 0;
         var buildKar = 0;
         var buildKch = 0;
+        var buildRoomFire = 0;
+        var buildRoomRescue = 0;
+        var buildRoomThw = 0;
+        var buildRoomPol = 0;
         var buildHospitalBeds = 0;
         var buildPrisonBig = 0;
         var buildPrisonSmall = 0;
@@ -426,6 +430,10 @@ overflow-y: auto;
         var onBuildHospitalBeds = 0;
         var onBuildPrisonBig = 0;
         var onBuildPrisonSmall = 0;
+        var onBuildRoomFire = 0;
+        var onBuildRoomRescue = 0;
+        var onBuildRoomThw = 0;
+        var onBuildRoomPol = 0;
 
         $.each(vehicleDatabaseFms, function(key, item){
             switch(item.vehicle_type){
@@ -563,6 +571,12 @@ overflow-y: auto;
                             case "Kardiochirurgie": buildKch ++;
                                 break;
                             case "Zelle": item.small_building ? buildPrisonSmall ++ : buildPrisonBig ++;
+                                break;
+                            case "Weiterer Klassenraum":
+                                if(item.building_type == 1) buildRoomFire ++;
+                                else if(item.building_type == 3) buildRoomRescue ++;
+                                else if(item.building_type == 8) buildRoomPol ++;
+                                else if(item.building_type == 10) buildRoomThw ++;
                                 break;
                         }
                     }
@@ -707,6 +721,12 @@ overflow-y: auto;
                             case "Kardiochirurgie": onBuildKch ++;
                                 break;
                             case "Zelle": item.small_building ? onBuildPrisonSmall ++ : onBuildPrisonBig ++;
+                                break;
+                            case "Weiterer Klassenraum":
+                                if(item.building_type == 1) onBuildRoomFire ++;
+                                else if(item.building_type == 3) onBuildRoomRescue ++;
+                                else if(item.building_tye == 8) onBuildRoomPol ++;
+                                else if(item.building_type == 10) onBuildRoomThw ++;
                                 break;
                         }
                     }
@@ -988,10 +1008,30 @@ overflow-y: auto;
             }
         }
 
-        if(fireSchoolBuildings > 0) infoContentOneValue("Feuerwehrschulen", fireSchoolBuildings);
-        if(rescueSchoolBuildings > 0) infoContentOneValue("Rettungsdienstschulen", rescueSchoolBuildings);
-        if(polSchoolBuildings > 0) infoContentOneValue("Polizeischulen", polSchoolBuildings);
-        if(thwSchoolBuildings > 0) infoContentOneValue("THW Bundesschulen", thwSchoolBuildings);
+        if(fireSchoolBuildings > 0){
+            infoContentOneValue("Feuerwehrschulen", fireSchoolBuildings);
+            displayName = "Klassenräume in Feuerwehrschulen";
+            if(onBuildRoomFire > 0) infoContentOnBuild(displayName, buildRoomFire + fireSchoolBuildings, fireSchoolBuildings * 4, onBuildRoomFire);
+            else infoContentMax(displayName, buildRoomFire + fireSchoolBuildings, fireSchoolBuildings * 4);
+        }
+        if(rescueSchoolBuildings > 0){
+            infoContentOneValue("Rettungsdienstschulen", rescueSchoolBuildings);
+            displayName = "Klassenräume in Rettungsdienstschulen";
+            if(onBuildRoomRescue > 0) infoContentOnBuild(displayName, buildRoomRescue + rescueSchoolBuildings, rescueSchoolBuildings * 4, onBuildRoomRescue);
+            else infoContentMax(displayName, buildRoomRescue + rescueSchoolBuildings, rescueSchoolBuildings * 4);
+        }
+        if(polSchoolBuildings > 0){
+            infoContentOneValue("Polizeischulen", polSchoolBuildings);
+            displayName = "Klassenräume in Polizeischulen";
+            if(onBuildRoomPol > 0) infoContentOnBuild(displayName, buildRoomPol + polSchoolBuildings, polSchoolBuildings * 4, onBuildRoomPol);
+            else infoContentMax(displayName, buildRoomPol + polSchoolBuildings, polSchoolBuildings * 4);
+        }
+        if(thwSchoolBuildings > 0){
+            infoContentOneValue("THW Bundesschulen", thwSchoolBuildings);
+            displayName = "Klassenräume in THW Bundesschulen";
+            if(onBuildRoomThw > 0) infoContentOnBuild(displayName, buildRoomThw + thwSchoolBuildings, thwSchoolBuildings * 4, onBuildRoomThw);
+            else infoContentMax(displayName, buildRoomThw + thwSchoolBuildings, thwSchoolBuildings * 4);
+        }
 
         userInfos += `</tbody></table>`;
 
