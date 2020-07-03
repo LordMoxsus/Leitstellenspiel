@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.10.0
+// @version      1.10.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -471,7 +471,7 @@ overflow-y: auto;
                     }
                     else item.level > 0 ? rescueHelicopterBuildings += (item.level + 1) : rescueHelicopterBuildings ++;
                     break;
-                case 6: item.small_buildings ? policeBuildingsSmall ++ : policeBuildings ++;
+                case 6: item.small_building ? policeBuildingsSmall ++ : policeBuildings ++;
                     break;
                 case 7: dispatchCenterBuildings ++;
                     break;
