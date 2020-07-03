@@ -739,7 +739,7 @@ overflow-y: auto;
                             case "Weiterer Klassenraum":
                                 if(item.building_type == 1) onBuildRoomFire ++;
                                 else if(item.building_type == 3) onBuildRoomRescue ++;
-                                else if(item.building_tye == 8) onBuildRoomPol ++;
+                                else if(item.building_type == 8) onBuildRoomPol ++;
                                 else if(item.building_type == 10) onBuildRoomThw ++;
                                 break;
                         }
