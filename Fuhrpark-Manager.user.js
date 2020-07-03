@@ -1045,7 +1045,7 @@ overflow-y: auto;
 
         if(hospitalBuildings > 0){
             infoContentOneValue(`<div style="margin-left:1em">Krankenhäuser</div>`, hospitalBuildings);
-            infoContentOneValue(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:slategrey"></div> Betten`, buildHospitalBeds + (hospitalBuildings * 10));
+            infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:slategrey"></div> Betten`, buildHospitalBeds + (hospitalBuildings * 10), hospitalBuildings * 30);
             if(onBuildIna > 0 || onBuildAch > 0 || onBuildGyn > 0 || onBuildUro > 0 || onBuildUch > 0 || onBuildNrl > 0 || onBuildNch > 0 || onBuildKar > 0 ||onBuildKch > 0){
                 infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:slategrey"></div> Allgemeine Innere`, buildIna, hospitalBuildings, onBuildIna);
                 infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:slategrey"></div> Allgemeine Chirurgie`, buildAch, hospitalBuildings, onBuildAch);
