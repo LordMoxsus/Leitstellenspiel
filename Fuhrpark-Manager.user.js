@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.10.1
+// @version      1.11.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -771,14 +771,14 @@ overflow-y: auto;
         function infoContentMax(name, valueNow, valueMax){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow.toLocaleString()} / ${valueMax.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:lime">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
                           </tr>`;
         }
 
         function infoContentOnBuild(name, valueNow, valueMax, valueOnBuild){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow.toLocaleString()} / ${valueMax.toLocaleString()} / ${valueOnBuild.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:lime">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} / <span style="color:aqua">${valueOnBuild.toLocaleString()}</span></center></td>
                           </tr>`;
         }
 
