@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.8.0
+// @version      1.9.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -299,7 +299,9 @@ overflow-y: auto;
         var bePoBuildings = 0;
         var polSonderBuildings = 0;
         var rescueHelicopterBuildings = 0;
+        var activeHeliportsRescue = 0;
         var policeHelicopterBuildings = 0;
+        var activeHeliportsPolice = 0;
         var hospitalBuildings = 0;
         var segBuildings = 0;
         var dispatchCenterBuildings = 0;
@@ -460,7 +462,12 @@ overflow-y: auto;
                     break;
                 case 4: hospitalBuildings ++;
                     break;
-                case 5: rescueHelicopterBuildings ++;
+                case 5:
+                    if(item.enabled){
+                        item.level > 0 ? rescueHelicopterBuildings += (item.level + 1) : rescueHelicopterBuildings ++;
+                        item.level > 0 ? activeHeliportsRescue += (item.level + 1) : activeHeliportsRescue ++;
+                    }
+                    else item.level > 0 ? rescueHelicopterBuildings += (item.level + 1) : rescueHelicopterBuildings ++;
                     break;
                 case 6: item.small_buildings ? policeBuildingsSmall ++ : policeBuildings ++;
                     break;
@@ -476,7 +483,12 @@ overflow-y: auto;
                     break;
                 case 12: segBuildings ++;
                     break;
-                case 13: policeHelicopterBuildings ++;
+                case 13:
+                    if(item.enabled){
+                        item.level > 0 ? policeHelicopterBuildings += (item.level + 1) : policeHelicopterBuildings ++;
+                        item.level > 0 ? activeHeliportsPolice += (item.level + 1) : activeHeliportsPolice ++;
+                    }
+                    else item.level > 0 ? policeHelicopterBuildings += (item.level + 1) : policeHelicopterBuildings ++;
                     break;
                 case 14: stagingArea ++;
                     break;
@@ -782,43 +794,48 @@ overflow-y: auto;
 
         infoContentMax("Polizeihubschrauber", polHeli, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
 
-        userInfos += `</tbody><tbody>`;
+        userInfos += `<tr>
+                      <td class="col"></td>
+                      <td class="col-1"></td>
+                      </tr>`;
 
         infoContentOneValue("Gebäude", buildingsDatabase.length);
 
         if(fireBuildingsSmall > 0) infoContentOneValue("Feuerwachen (klein)", fireBuildingsSmall);
         if(buildAbSmall > 0 || onBuildAbSmall > 0){
-            displayName = "AB-Stellplätze an Feuerwachen (klein)";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> AB-Stellplätze`;
             if(onBuildAbSmall > 0) infoContentOnBuild(displayName, buildAbSmall, fireBuildingsSmall * 2, onBuildAbSmall);
             else infoContentMax(displayName, buildAbSmall, fireBuildingsSmall * 2);
         }
 
-        if(fireBuildings > 0) infoContentOneValue("Feuerwachen", fireBuildings);
-        displayName = 'Feuerwachen mit Ausbau "Großwache"';
-        if(onBuildBig > 0) infoContentOnBuild(displayName, buildBig, Math.floor((fireBuildings + fireBuildingsSmall) / 10), onBuildBig);
-        else infoContentMax(displayName, buildBig, Math.floor((fireBuildings + fireBuildingsSmall) / 10));
+        if(fireBuildings > 0){
+            infoContentOneValue("Feuerwachen", fireBuildings);
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Großwache`;
+            if(onBuildBig > 0) infoContentOnBuild(displayName, buildBig, Math.floor((fireBuildings + fireBuildingsSmall) / 10), onBuildBig);
+            else infoContentMax(displayName, buildBig, Math.floor((fireBuildings + fireBuildingsSmall) / 10));
+        }
         if(buildRescue > 0 || onBuildRescue > 0){
-            displayName = 'Feuerwachen mit Ausbau "Rettungsdienst-Erweiterung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Rettungsdienst-Erweiterung`;
             if(onBuildRescue > 0) infoContentOnBuild(displayName, activeRescue, buildRescue, onBuildRescue);
             else infoContentMax(displayName, activeRescue, buildRescue);
         }
         if(buildFwWr > 0 || onBuildFwWr > 0){
-            displayName = 'Feuerwachen mit Ausbau "Wasserrettungs-Erweiterung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Wasserrettungs-Erweiterung`;
             if(onBuildFwWr > 0) infoContentOnBuild(displayName, activeFwWr, buildFwWr, onBuildFwWr);
             else infoContentMax(displayName, activeFwWr, buildFwWr);
         }
         if(buildAirport > 0 || onBuildAirport > 0){
-            displayName = 'Feuerwachen mit Ausbau "Flughafen-Erweiterung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Flughafen-Erweiterung`;
             if(onBuildAirport > 0) infoContentOnBuild(displayName, activeAirport, buildAirport, onBuildAirport);
             else infoContentMax(displayName, activeAirport, buildAirport);
         }
         if(buildIndustry > 0 || onBuildIndustry > 0){
-            displayName = 'Feuerwachen mit Ausbau "Werkfeuerwehr"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Werkfeuerwehr`;
             if(onBuildIndustry > 0) infoContentOnBuild(displayName, activeIndustry, buildIndustry, onBuildIndustry);
             else infoContentMax(displayName, activeIndustry, buildIndustry);
         }
         if(buildAbBig > 0 || onBuildAbBig > 0){
-            displayName = "AB-Stellplätze an Feuerwachen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> AB-Stellplätze`;
             if(onBuildAbBig > 0) infoContentOnBuild(displayName, buildAbBig, fireBuildings * 9, onBuildAbBig);
             else infoContentMax(displayName, buildAbBig, fireBuildings * 9);
         }
@@ -829,22 +846,22 @@ overflow-y: auto;
 
         if(segBuildings > 0) infoContentOneValue("Schnelleinsatzgruppen (SEG)", segBuildings);
         if(buildLeader > 0 || onBuildLeader > 0){
-            displayName = 'Schnelleinsatzgruppen (SEG) mit Ausbau "Führung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Führung`;
             if(onBuildLeader > 0) infoContentOnBuild(displayName, activeLeader, buildLeader, onBuildLeader);
             else infoContentMax(displayName, activeLeader, buildLeader);
         }
         if(buildSanD > 0 || onBuildSanD > 0){
-            displayName = 'Schnelleinsatzgruppen (SEG) mit Ausbau "Sanitätsdienst"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Sanitätsdienst`;
             if(onBuildSanD > 0) infoContentOnBuild(displayName, activeSanD, buildSanD, onBuildSanD);
             else infoContentMax(displayName, activeSanD, buildSanD);
         }
         if(buildSegWr > 0 || onBuildSegWr > 0){
-            displayName = 'Schnelleinsatzgruppen (SEG) mit Ausbau "Wasserrettungs-Erweiterung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Wasserrettungs-Erweiterung`;
             if(onBuildSegWr > 0) infoContentOnBuild(displayName, activeSegWr, buildSegWr, onBuildSegWr);
             else infoContentMax(displayName, activeSegWr, buildSegWr);
         }
         if(buildSegDogs > 0 || onBuildSegDogs > 0){
-            displayName = 'Schnelleinsatzgruppen (SEG) mit Ausbau "Rettungshundestaffel"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Rettungshundestaffel`;
             if(onBuildSegDogs > 0) infoContentOnBuild(displayName, activeSegDogs, buildSegDogs, onBuildSegDogs);
             else infoContentMax(displayName, activeSegDogs, buildSegDogs);
         }
@@ -853,126 +870,126 @@ overflow-y: auto;
 
         if(rescueDogBuildings > 0) infoContentOneValue("Rettungshundestaffeln", rescueDogBuildings);
 
-        if(rescueHelicopterBuildings > 0) infoContentOneValue("Rettungshubschrauber-Stationen", rescueHelicopterBuildings);
+        if(rescueHelicopterBuildings > 0) infoContentMax("Rettungshubschrauber-Stationen", activeHeliportsRescue, rescueHelicopterBuildings);
 
         if(policeBuildingsSmall > 0){
             infoContentOneValue("Polizeiwachen (klein)", policeBuildingsSmall);
-            displayName = "Zellen in Polizeiwachen (klein)";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Zellen`;
             if(onBuildPrisonSmall > 0) infoContentOnBuild(displayName, buildPrisonSmall, policeBuildingsSmall * 2, onBuildPrisonSmall);
             else infoContentMax(displayName, buildPrisonSmall, policeBuildingsSmall * 2);
         }
 
         if(policeBuildings > 0){
             infoContentOneValue("Polizeiwachen", policeBuildings);
-            displayName = "Zellen in Polizeiwachen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Zellen`;
             if(onBuildPrisonBig > 0) infoContentOnBuild(displayName, buildPrisonBig, policeBuildings * 10, onBuildPrisonBig);
             else infoContentMax(displayName, buildPrisonBig, policeBuildings * 10);
         }
 
         if(bePoBuildings > 0) infoContentOneValue("Bereitschaftspolizei", bePoBuildings);
         if(buildSecondDivision > 0 || onBuildSecondDivision > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "2. Zug der 1. Hundertschaft"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 2. Zug der 1. Hundertschaft`;
             if(onBuildSecondDivision > 0) infoContentOnBuild(displayName, activeSecondDivision, buildSecondDivision, onBuildSecondDivision);
             else infoContentMax(displayName, activeSecondDivision, buildSecondDivision);
         }
         if(buildThirdDivision > 0 || onBuildThirdDivision > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "3. Zug der 1. Hundertschaft"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 3. Zug der 1. Hundertschaft`;
             if(onBuildThirdDivision > 0) infoContentOnBuild(displayName, activeThirdDivision, buildThirdDivision, onBuildThirdDivision);
             else infoContentMax(displayName, activeThirdDivision, buildThirdDivision);
         }
         if(buildMobilePrison > 0 || onBuildMobilePrison > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "Sonderfahrzeug: Gefangenenkraftwagen"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Sonderfahrzeug: Gefangenenkraftwagen`;
             if(onBuildMobilePrison > 0) infoContentOnBuild(displayName, activeMobilePrison, buildMobilePrison ,onBuildMobilePrison);
             else infoContentMax(displayName, activeMobilePrison, buildMobilePrison);
         }
         if(buildWaterthrower > 0 || onBuildWaterthrower > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "Technischer Zug: Wasserwerfer"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Technischer Zug: Wasserwerfer`;
             if(onBuildWaterthrower > 0) infoContentOnBuild(displayName, activeWaterthrower, buildWaterthrower ,onBuildWaterthrower);
             else infoContentMax(displayName, activeWaterthrower, buildWaterthrower);
         }
         if(buildBpFirstSek > 0 || onBuildBpFirstSek > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "SEK: 1. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> SEK: 1. Zug`;
             if(onBuildBpFirstSek > 0) infoContentOnBuild(displayName, activeBpFirstSek, buildBpFirstSek ,onBuildBpFirstSek);
             else infoContentMax(displayName, activeBpFirstSek, buildBpFirstSek);
         }
         if(buildBpSecondSek > 0 || onBuildBpSecondSek > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "SEK: 2. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> SEK: 2. Zug`;
             if(onBuildBpSecondSek > 0) infoContentOnBuild(displayName, activeBpSecondSek, buildBpSecondSek ,onBuildBpSecondSek);
             else infoContentMax(displayName, activeBpSecondSek, buildBpSecondSek);
         }
         if(buildBpFirstMek > 0 || onBuildBpFirstMek > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "MEK: 1. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> MEK: 1. Zug`;
             if(onBuildBpFirstMek > 0) infoContentOnBuild(displayName, activeBpFirstMek, buildBpFirstMek ,onBuildBpFirstMek);
             else infoContentMax(displayName, activeBpFirstMek, buildBpFirstMek);
         }
         if(buildBpSecondMek > 0 || onBuildBpSecondMek > 0){
-            displayName = 'Bereitschaftspolizei mit Ausbau "MEK: 2. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> MEK: 2. Zug`;
             if(onBuildBpSecondMek > 0) infoContentOnBuild(displayName, activeBpSecondMek, buildBpSecondMek ,onBuildBpSecondMek);
             else infoContentMax(displayName, activeBpSecondMek, buildBpSecondMek);
         }
 
         if(polSonderBuildings > 0) infoContentOneValue("Polizei-Sondereinheiten", polSonderBuildings);
         if(buildPolSonderFirstSek > 0 || onBuildPolSonderFirstSek > 0){
-            displayName = 'Polizei-Sondereinheiten mit Ausbau "SEK: 1. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> SEK: 1. Zug`;
             if(onBuildPolSonderFirstSek > 0) infoContentOnBuild(displayName, activePolSonderFirstSek, buildPolSonderFirstSek ,onBuildPolSonderFirstSek);
             else infoContentMax(displayName, activePolSonderFirstSek, buildPolSonderFirstSek);
         }
         if(buildPolSonderSecondSek > 0 || onBuildPolSonderSecondSek > 0){
-            displayName = 'Polizei-Sondereinheiten mit Ausbau "SEK: 2. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> SEK: 2. Zug`;
             if(onBuildPolSonderSecondSek > 0) infoContentOnBuild(displayName, activePolSonderSecondSek, buildPolSonderSecondSek ,onBuildPolSonderSecondSek);
             else infoContentMax(displayName, activePolSonderSecondSek, buildPolSonderSecondSek);
         }
         if(buildPolSonderFirstMek > 0 || onBuildPolSonderFirstMek > 0){
-            displayName = 'Polizei-Sondereinheiten mit Ausbau "MEK: 1. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> MEK: 1. Zug`;
             if(onBuildPolSonderFirstMek > 0) infoContentOnBuild(displayName, activePolSonderFirstMek, buildPolSonderFirstMek ,onBuildPolSonderFirstMek);
             else infoContentMax(displayName, activePolSonderFirstMek, buildPolSonderFirstMek);
         }
         if(buildPolSonderSecondMek > 0 || onBuildPolSonderSecondMek > 0){
-            displayName = 'Polizei-Sondereinheiten mit Ausbau "MEK: 2. Zug"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> MEK: 2. Zug`;
             if(onBuildPolSonderSecondMek > 0) infoContentOnBuild(displayName, activePolSonderSecondMek, buildPolSonderSecondMek ,onBuildPolSonderSecondMek);
             else infoContentMax(displayName, activePolSonderSecondMek, buildPolSonderSecondMek);
         }
 
-        if(policeHelicopterBuildings > 0) infoContentOneValue("Polizeihubschrauber-Stationen", policeHelicopterBuildings);
+        if(policeHelicopterBuildings > 0) infoContentMax("Polizeihubschrauber-Stationen", activeHeliportsPolice, policeHelicopterBuildings);
 
         if(thwBuildings > 0) infoContentOneValue("THW Ortsverbände", thwBuildings);
         if(buildFirstTzBg > 0 || onBuildFirstTzBg > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "1. Technischer Zug: Bergungsgruppe 2"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 1. Technischer Zug: Bergungsgruppe 2`;
             if(onBuildFirstTzBg > 0) infoContentOnBuild(displayName, activeFirstTzBg, buildFirstTzBg, onBuildFirstTzBg);
             else infoContentMax(displayName, activeFirstTzBg, buildFirstTzBg);
         }
         if(buildFirstTzZug > 0 || onBuildFirstTzZug > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "1. Technischer Zug: Zugtrupp"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 1. Technischer Zug: Zugtrupp`;
             if(onBuildFirstTzZug > 0) infoContentOnBuild(displayName, activeFirstTzZug, buildFirstTzZug, onBuildFirstTzZug);
             else infoContentMax(displayName, activeFirstTzZug, buildFirstTzZug);
         }
         if(buildFgrR > 0 || onBuildFgrR > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "Fachgruppe Räumen"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Fachgruppe Räumen`;
             if(onBuildFgrR > 0) infoContentOnBuild(displayName, activeFgrR, buildFgrR, onBuildFgrR);
             else infoContentMax(displayName, activeFgrR, buildFgrR);
         }
         if(buildFgrW > 0 || onBuildFgrW > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "Fachgruppe Wassergefahren"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Fachgruppe Wassergefahren`;
             if(onBuildFgrW > 0) infoContentOnBuild(displayName, activeFgrW, buildFgrW, onBuildFgrW);
             else infoContentMax(displayName, activeFgrW, buildFgrW);
         }
         if(buildSecondTzGrund > 0 || onBuildSecondTzGrund > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "2. Technischer Zug: Grundvoraussetzungen"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 2. Technischer Zug: Grundvoraussetzungen`;
             if(onBuildSecondTzGrund > 0) infoContentOnBuild(displayName, activeSecondTzGrund, buildSecondTzGrund, onBuildSecondTzGrund);
             else infoContentMax(displayName, activeSecondTzGrund, buildSecondTzGrund);
         }
         if(buildSecondTzBg > 0 || onBuildSecondTzBg > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "2. Technischer Zug: Bergungsgruppe 2"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 2. Technischer Zug: Bergungsgruppe 2`;
             if(onBuildSecondTzBg > 0) infoContentOnBuild(displayName, activeSecondTzBg, buildSecondTzBg, onBuildSecondTzBg);
             else infoContentMax(displayName, activeSecondTzBg, buildSecondTzBg);
         }
         if(buildSecondTzZug > 0 || onBuildSecondTzZug > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "2. Technischer Zug: Zugtrupp"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> 2. Technischer Zug: Zugtrupp`;
             if(onBuildSecondTzZug > 0) infoContentOnBuild(displayName, activeSecondTzZug, buildSecondTzZug, onBuildSecondTzZug);
             else infoContentMax(displayName, activeSecondTzZug, buildSecondTzZug);
         }
         if(buildFgrO > 0 || onBuildFgrO > 0){
-            displayName = 'THW Ortsverbände mit Ausbau "Fachgruppe Ortung"';
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Fachgruppe Ortung`;
             if(onBuildFgrO > 0) infoContentOnBuild(displayName, activeFgrO, buildFgrO, onBuildFgrO);
             else infoContentMax(displayName, activeFgrO, buildFgrO);
         }
@@ -983,52 +1000,52 @@ overflow-y: auto;
 
         if(hospitalBuildings > 0){
             infoContentOneValue("Krankenhäuser", hospitalBuildings);
-            infoContentOneValue("Betten in Krankenhäusern", buildHospitalBeds + (hospitalBuildings * 10));
+            infoContentOneValue(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Betten`, buildHospitalBeds + (hospitalBuildings * 10));
             if(onBuildIna > 0 || onBuildAch > 0 || onBuildGyn > 0 || onBuildUro > 0 || onBuildUch > 0 || onBuildNrl > 0 || onBuildNch > 0 || onBuildKar > 0 ||onBuildKch > 0){
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Allgemeine Innere"', buildIna, hospitalBuildings, onBuildIna);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Allgemeine Chirurgie"', buildAch, hospitalBuildings, onBuildAch);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Gynäkologie"', buildGyn, hospitalBuildings, onBuildGyn);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Urologie"', buildUro, hospitalBuildings, onBuildUro);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Unfallchirurgie"', buildUch, hospitalBuildings, onBuildUch);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Neurologie"', buildNrl, hospitalBuildings, onBuildNrl);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Neurochirurgie"', buildNch, hospitalBuildings, onBuildNch);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Kardiologie"', buildKar, hospitalBuildings, onBuildKar);
-                infoContentOnBuild('Krankenhäuser mit Fachrichtung "Kardiochirurgie"', buildKch, hospitalBuildings, onBuildKch);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Allgemeine Innere`, buildIna, hospitalBuildings, onBuildIna);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Allgemeine Chirurgie`, buildAch, hospitalBuildings, onBuildAch);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Gynäkologie`, buildGyn, hospitalBuildings, onBuildGyn);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Urologie`, buildUro, hospitalBuildings, onBuildUro);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Unfallchirurgie`, buildUch, hospitalBuildings, onBuildUch);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Neurologie`, buildNrl, hospitalBuildings, onBuildNrl);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Neurochirurgie`, buildNch, hospitalBuildings, onBuildNch);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Kardiologie`, buildKar, hospitalBuildings, onBuildKar);
+                infoContentOnBuild(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Kardiochirurgie`, buildKch, hospitalBuildings, onBuildKch);
             }
             else{
-                infoContentMax('Krankenhäuser mit Fachrichtung "Allgemeine Innere"', buildIna, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Allgemeine Chirurgie"', buildAch, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Gynäkologie"', buildGyn, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Urologie"', buildUro, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Unfallchirurgie"', buildUch, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Neurologie"', buildNrl, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Neurochirurgie"', buildNch, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Kardiologie"', buildKar, hospitalBuildings);
-                infoContentMax('Krankenhäuser mit Fachrichtung "Kardiochirurgie"', buildKch, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Allgemeine Innere`, buildIna, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Allgemeine Chirurgie`, buildAch, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Gynäkologie`, buildGyn, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Urologie`, buildUro, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Unfallchirurgie`, buildUch, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Neurologie`, buildNrl, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Neurochirurgie`, buildNch, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Kardiologie`, buildKar, hospitalBuildings);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Kardiochirurgie`, buildKch, hospitalBuildings);
             }
         }
 
         if(fireSchoolBuildings > 0){
             infoContentOneValue("Feuerwehrschulen", fireSchoolBuildings);
-            displayName = "Klassenräume in Feuerwehrschulen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Klassenräume`;
             if(onBuildRoomFire > 0) infoContentOnBuild(displayName, buildRoomFire + fireSchoolBuildings, fireSchoolBuildings * 4, onBuildRoomFire);
             else infoContentMax(displayName, buildRoomFire + fireSchoolBuildings, fireSchoolBuildings * 4);
         }
         if(rescueSchoolBuildings > 0){
             infoContentOneValue("Rettungsdienstschulen", rescueSchoolBuildings);
-            displayName = "Klassenräume in Rettungsdienstschulen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Klassenräume`;
             if(onBuildRoomRescue > 0) infoContentOnBuild(displayName, buildRoomRescue + rescueSchoolBuildings, rescueSchoolBuildings * 4, onBuildRoomRescue);
             else infoContentMax(displayName, buildRoomRescue + rescueSchoolBuildings, rescueSchoolBuildings * 4);
         }
         if(polSchoolBuildings > 0){
             infoContentOneValue("Polizeischulen", polSchoolBuildings);
-            displayName = "Klassenräume in Polizeischulen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Klassenräume`;
             if(onBuildRoomPol > 0) infoContentOnBuild(displayName, buildRoomPol + polSchoolBuildings, polSchoolBuildings * 4, onBuildRoomPol);
             else infoContentMax(displayName, buildRoomPol + polSchoolBuildings, polSchoolBuildings * 4);
         }
         if(thwSchoolBuildings > 0){
             infoContentOneValue("THW Bundesschulen", thwSchoolBuildings);
-            displayName = "Klassenräume in THW Bundesschulen";
+            displayName = `<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div> Klassenräume`;
             if(onBuildRoomThw > 0) infoContentOnBuild(displayName, buildRoomThw + thwSchoolBuildings, thwSchoolBuildings * 4, onBuildRoomThw);
             else infoContentMax(displayName, buildRoomThw + thwSchoolBuildings, thwSchoolBuildings * 4);
         }
