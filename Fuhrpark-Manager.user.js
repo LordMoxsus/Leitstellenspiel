@@ -381,11 +381,11 @@ overflow-y: auto;
                         "dispatchCenter":0,
                         "buildings.stagingArea":0
                        };
-        var configTable = {"arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:red"></div>`,
+        var configTable = {"arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
                            "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
                            "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
-                           "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:navy"></div>`,
-                           "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:slategrey"></div>`
+                           "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
+                           "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`
                           };
 
         $.each(vehicleDatabaseFms, function(key, item){
@@ -704,14 +704,14 @@ overflow-y: auto;
         function infoContentMax(name, valueNow, valueMax){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:lime">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
                           </tr>`;
         }
 
         function infoContentOnBuild(name, valueNow, valueMax, valueOnBuild){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:lime">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} / <span style="color:aqua">${valueOnBuild.toLocaleString()}</span></center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} / <span style="color:mediumslateblue">${valueOnBuild.toLocaleString()}</span></center></td>
                           </tr>`;
         }
 
@@ -744,9 +744,9 @@ overflow-y: auto;
             else infoContentMax(displayName, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build);
             if(buildings.rescue.normal == 0 && buildings.rescue.small == 0){
                 if(user_premium ? buildings.fire.normal.rescue.active > 15 : buildings.fire.normal.rescue.active > 20){
-                    infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:red"></div> Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(buildings.fire.normal.rescue.active / 15) : Math.floor(buildings.fire.normal.rescue.active / 20));
+                    infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(buildings.fire.normal.rescue.active / 15) : Math.floor(buildings.fire.normal.rescue.active / 20));
                 }
-                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:red"></div> Notarztwagen (NAW)`, vehicles.naw, buildings.fire.normal.rescue.active);
+                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Notarztwagen (NAW)`, vehicles.naw, buildings.fire.normal.rescue.active);
             }
         }
         if(buildings.fire.normal.wr.build > 0 || buildings.fire.normal.wr.onBuild > 0){
@@ -979,9 +979,9 @@ overflow-y: auto;
         if(buildings.hospital.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Krankenhäuser</div>`, buildings.hospital.count);
             infoContentMax(`${configTable.arrowHospital} Betten`, buildings.hospital.beds.build + (buildings.hospital.count * 10), buildings.hospital.count * 30);
-            if(buildings.hospital.extension.ina.onBuild > 0 || buildings.hospital.extension.ach.onBuild > 0 || buildings.hospital.extension.gyn.onBuild > 0 || buildings.hospital.extension.uro.onBuild > 0 ||
-               buildings.hospital.extension.uch.onBuild > 0 || buildings.hospital.extension.nrl.onBuild > 0 || buildings.hospital.extension.nch.onBuild > 0 || buildings.hospital.extension.kar.onBuild > 0 ||
-               buildings.hospital.extension.kch.onBuild > 0){
+            if(buildings.hospital.extension.ina.onBuild > 0 || buildings.hospital.extension.ach.onBuild > 0 || buildings.hospital.extension.gyn.onBuild > 0 ||
+               buildings.hospital.extension.uro.onBuild > 0 || buildings.hospital.extension.uch.onBuild > 0 || buildings.hospital.extension.nrl.onBuild > 0 ||
+               buildings.hospital.extension.nch.onBuild > 0 || buildings.hospital.extension.kar.onBuild > 0 || buildings.hospital.extension.kch.onBuild > 0){
                 infoContentOnBuild(`${configTable.arrowHospital} Allgemeine Innere`, buildings.hospital.extension.ina.build, buildings.hospital.count, buildings.hospital.extension.ina.onBuild);
                 infoContentOnBuild(`${configTable.arrowHospital} Allgemeine Chirurgie`, buildings.hospital.extension.ach.build, buildings.hospital.count, buildings.hospital.extension.ach.onBuild);
                 infoContentOnBuild(`${configTable.arrowHospital} Gynäkologie`, buildings.hospital.extension.gyn.build, buildings.hospital.count, buildings.hospital.extension.gyn.onBuild);
