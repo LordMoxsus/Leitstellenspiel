@@ -511,27 +511,27 @@ overflow-y: auto;
                             break;
                         case "Rettungsdienst-Erweiterung":
                             if(item.extensions[i].available) buildRescue ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeRescue ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeRescue ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildRescue ++;
                             break;
                         case "Werkfeuerwehr":
                             if(item.extensions[i].available) buildIndustry ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeIndustry ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeIndustry ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildIndustry ++;
                             break;
                         case "Flughafen-Erweiterung":
                             if(item.extensions[i].available) buildAirport ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeAirport ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeAirport ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildAirport ++;
                             break;
                         case "Führung":
                             if(item.extensions[i].available) buildLeader ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeLeader ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeLeader ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildLeader ++;
                             break;
                         case "Sanitätsdienst":
                             if(item.extensions[i].available) buildSanD ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSanD ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSanD ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSanD ++;
                             break;
                         case "Wasserrettungs-Erweiterung":
@@ -539,7 +539,7 @@ overflow-y: auto;
                                 if(item.building_type == 0) buildFwWr ++;
                                 else if(item.building_type == 12) buildSegWr ++;
                             }
-                            if(item.extensions[i].enabled && !item.extensions[i].available){
+                            if(item.extensions[i].enabled && item.extensions[i].available){
                                 if(item.building_type == 0) activeFwWr ++;
                                 else if(item.building_type == 12) activeSegWr ++;
                             }
@@ -550,7 +550,7 @@ overflow-y: auto;
                             break;
                         case "Rettungshundestaffel":
                             if(item.extensions[i].available) buildSegDogs ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSegDogs ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSegDogs ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSegDogs ++;
                             break;
                         case "Abrollbehälter-Stellplatz":
@@ -559,22 +559,22 @@ overflow-y: auto;
                             break;
                         case "2. Zug der 1. Hundertschaft":
                             if(item.extensions[i].available) buildSecondDivision ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSecondDivision ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSecondDivision ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSecondDivision ++;
                             break;
                         case "3. Zug der 1. Hundertschaft":
                             if(item.extensions[i].available) buildThirdDivision ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeThirdDivision ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeThirdDivision ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildThirdDivision ++;
                             break;
                         case "Sonderfahrzeug: Gefangenenkraftwagen":
                             if(item.extensions[i].available) buildMobilePrison ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeMobilePrison ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeMobilePrison ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildMobilePrison ++;
                             break;
                         case "Technischer Zug: Wasserwerfer":
                             if(item.extensions[i].available) buildWaterthrower ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeWaterthrower ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeWaterthrower ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildWaterthrower ++;
                             break;
                         case "SEK: 1. Zug":
@@ -582,7 +582,7 @@ overflow-y: auto;
                                 if(item.building_type == 11) buildBpFirstSek ++;
                                 else if(item.building_type == 17) buildPolSonderFirstSek ++;
                             }
-                            if(item.extensions[i].enabled && !item.extensions[i].available){
+                            if(item.extensions[i].enabled && item.extensions[i].available){
                                 if(item.building_type == 11) activeBpFirstSek ++;
                                 else if(item.building_type == 17) activePolSonderFirstSek ++;
                             }
@@ -596,7 +596,7 @@ overflow-y: auto;
                                 if(item.building_type == 11) buildBpSecondSek ++;
                                 else if(item.building_type == 17) buildPolSonderSecondSek ++;
                             }
-                            if(item.extensions[i].enabled && !item.extensions[i].available){
+                            if(item.extensions[i].enabled && item.extensions[i].available){
                                 if(item.building_type == 11) activeBpSecondSek ++;
                                 else if(item.building_type == 17) activePolSonderSecondSek ++;
                             }
@@ -610,7 +610,7 @@ overflow-y: auto;
                                 if(item.building_type == 11) buildBpFirstMek ++;
                                 else if(item.building_type == 17) buildPolSonderFirstMek ++;
                             }
-                            if(item.extensions[i].enabled && !item.extensions[i].available){
+                            if(item.extensions[i].enabled && item.extensions[i].available){
                                 if(item.building_type == 11) activeBpFirstMek ++;
                                 else if(item.building_type == 17) activePolSonderFirstMek ++;
                             }
@@ -624,7 +624,7 @@ overflow-y: auto;
                                 if(item.building_type == 11) buildBpSecondMek ++;
                                 else if(item.building_type == 17) buildPolSonderSecondMek ++;
                             }
-                            if(item.extensions[i].enabled && !item.extensions[i].available){
+                            if(item.extensions[i].enabled && item.extensions[i].available){
                                 if(item.building_type == 11) activeBpSecondMek ++;
                                 else if(item.building_type == 17) activePolSonderSecondMek ++;
                             }
@@ -635,42 +635,42 @@ overflow-y: auto;
                             break;
                         case "1. Technischer Zug: Bergungsgruppe 2":
                             if(item.extensions[i].available) buildFirstTzBg ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeFirstTzBg ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeFirstTzBg ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildFirstTzBg ++;
                             break;
                         case "1. Technischer Zug: Zugtrupp":
                             if(item.extensions[i].available) buildFirstTzZug ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeFirstTzZug ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeFirstTzZug ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildFirstTzZug ++;
                             break;
                         case "Fachgruppe Räumen":
                             if(item.extensions[i].available) buildFgrR ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeFgrR ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeFgrR ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildFgrR ++;
                             break;
                         case "Fachgruppe Wassergefahren":
                             if(item.extensions[i].available) buildFgrW ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeFgrW ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeFgrW ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildFgrW ++;
                             break;
                         case "2. Technischer Zug - Grundvorraussetzungen":
                             if(item.extensions[i].available) buildSecondTzGrund ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSecondTzGrund ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSecondTzGrund ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSecondTzGrund ++;
                             break;
                         case "2. Technischer Zug: Bergungsgruppe 2":
                             if(item.extensions[i].available) buildSecondTzBg ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSecondTzBg ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSecondTzBg ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSecondTzBg ++;
                             break;
                         case "2. Technischer Zug: Zugtrupp":
                             if(item.extensions[i].available) buildSecondTzZug ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeSecondTzZug ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeSecondTzZug ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildSecondTzZug ++;
                             break;
                         case "Fachgruppe Ortung":
                             if(item.extensions[i].available) buildFgrO ++;
-                            if(item.extensions[i].enabled && !item.extensions[i].available) activeFgrO ++;
+                            if(item.extensions[i].enabled && item.extensions[i].available) activeFgrO ++;
                             if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) onBuildFgrO ++;
                             break;
                         case "Allgemeine Innere":
