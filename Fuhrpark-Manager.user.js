@@ -379,7 +379,7 @@ overflow-y: auto;
                                                 },
                                    },
                         "dispatchCenter":0,
-                        "buildings.stagingArea":0
+                        "stagingArea":0
                        };
         var configTable = {"arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
                            "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
