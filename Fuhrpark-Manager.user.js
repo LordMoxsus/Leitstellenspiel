@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.11.0
+// @version      1.12.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -73,11 +73,14 @@ overflow-y: auto;
                                </div>
                              </div><br><br>
                              <div class="pull-left">
-                              <select id="sortBy" class="custom-select">
-                               <option selected>Sortierung wählen</option>
+                              <select id="filterDispatchCenter" class="custom-select">
+                               <option selected>wird geladen ...</option>
                               </select><br>
                               <select id="filterType" class="custom-select">
-                               <option selected>alle Typen</option>
+                               <option selected>wird geladen ...</option>
+                              </select><br>
+                              <select id="sortBy" class="custom-select">
+                               <option selected>unsortiert</option>
                               </select>
                              </div>
                              <div class="pull-right">
@@ -115,24 +118,21 @@ overflow-y: auto;
         $('#sortBy').append(`<option value="${sortOptions[i]}">${sortOptions[i]}</option>`);
     }
 
-    var filterFwVehicles = true; //buildingTypeIds: 0, 18
-    var filterRdVehicles = true; //buildingTypeIds: 2, 20
-    var filterThwVehicles = true; //buildingTypeIds: 9
-    var filterPolVehicles = true; //buildingTypeIds: 6, 19
-    var filterWrVehicles = true; //buildingTypeIds: 15
-    var filterHeliVehicles = true; //buildingTypeIds: 5, 13
-    var filterBpVehicles = true; //buildingTypeIds: 11, 17
-    var filterSegVehicles = true; //buildingTypeIds: 12, 21
-    var filterVehicleType = parseInt($('#filterType').val());
-    var filterOwnClassType = $('#filterType').find(':selected').data('vehicle');
-    var statusCount = 0;
+    var preferences = {"filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
+                       "dropdown":{"vehicles":{"ownClass":$('#filterType').find(':selected').data('vehicle'),
+                                               "type":parseInt($('#filterType').val())
+                                              },
+                                   "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())}
+                                  },
+                       "status":{"count":0}
+                      };
     var vehicleDatabase = {};
     var buildingsDatabase = {};
     var getBuildingTypeId = {};
     var getBuildingName = {};
+    var getBuildingsOnDispatchCenter = {};
     var vehicleDatabaseFms = {};
     var creditsDatabase = {};
-    var dropdownOwnClass = [];
 
     $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(function(data){
         var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
@@ -142,32 +142,6 @@ overflow-y: auto;
         vehicleDatabase = data;
     });
 
-    $.getJSON('/api/vehicles').done(function(data){
-        $.each(data, function(key, item){
-            if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
-        });
-    });
-
-    setTimeout(function(){
-        var dropdownDatabase = [];
-        $.each(vehicleDatabase, function(key, item){
-            dropdownDatabase.push({"typeId": key, "name": item.name});
-        });
-        dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-        for(let i = 0; i < dropdownDatabase.length; i++){
-            $('#filterType').append(`<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`);
-        }
-        if(dropdownOwnClass.length > 0){
-            if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdownOwnClass.length; i++){
-                if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
-                    $('#filterType').append(`<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`);
-                }
-                else if(i == 0) $('#filterType').append(`<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`);
-            }
-        }
-    }, 2000);
-
     function loadApi(){
 
         $.getJSON('/api/buildings').done(function(data){
@@ -175,6 +149,7 @@ overflow-y: auto;
             $.each(data, function(key, item){
                 getBuildingTypeId[item.id] = item.building_type;
                 getBuildingName[item.id] = item.caption;
+                getBuildingsOnDispatchCenter[item.id] = item.leitstelle_building_id;
             });
         });
 
@@ -185,7 +160,6 @@ overflow-y: auto;
         $.getJSON('/api/credits').done(function(data){
             creditsDatabase = data;
         });
-
     }
 
     function createTable(statusIndex) {
@@ -194,19 +168,25 @@ overflow-y: auto;
 
         $.each(vehicleDatabaseFms, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(filterVehicleType)){
+            if(isNaN(preferences.dropdown.vehicles.type)){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(filterVehicleType == -1 && filterOwnClassType == item.vehicle_type_caption){
+            else if(preferences.dropdown.vehicles.type == -1 && preferences.dropdown.vehicles.ownClass == item.vehicle_type_caption){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(filterVehicleType == item.vehicle_type && !item.vehicle_type_caption){
+            else if(preferences.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
         });
+
+        if(!isNaN(preferences.dropdown.dispatchCenter.id)){
+            for(let i = tableDatabase.length - 1; i >= 0; i --){
+                if(preferences.dropdown.dispatchCenter.id !== getBuildingsOnDispatchCenter[tableDatabase[i].buildingId]) tableDatabase.splice(i,1);
+            }
+        }
 
         function filterDatabase(typeId1, typeId2){
             for(let i = tableDatabase.length - 1; i >= 0; i--){
@@ -214,14 +194,14 @@ overflow-y: auto;
             }
         }
 
-        if(!filterFwVehicles) filterDatabase("0", "18");
-        if(!filterRdVehicles) filterDatabase("2", "20");
-        if(!filterThwVehicles) filterDatabase("9", "9");
-        if(!filterPolVehicles) filterDatabase("6", "19");
-        if(!filterWrVehicles) filterDatabase("15", "15");
-        if(!filterHeliVehicles) filterDatabase("5", "13");
-        if(!filterBpVehicles) filterDatabase("11", "17");
-        if(!filterSegVehicles) filterDatabase("12", "21");
+        if(!preferences.filter.fire) filterDatabase("0", "18");
+        if(!preferences.filter.rescue) filterDatabase("2", "20");
+        if(!preferences.filter.thw) filterDatabase("9", "9");
+        if(!preferences.filter.police) filterDatabase("6", "19");
+        if(!preferences.filter.wr) filterDatabase("15", "15");
+        if(!preferences.filter.helicopter) filterDatabase("5", "13");
+        if(!preferences.filter.bepo) filterDatabase("11", "17");
+        if(!preferences.filter.seg) filterDatabase("12", "21");
 
         //setTimeout(function(){
             switch($('#sortBy').val()){
@@ -287,6 +267,7 @@ overflow-y: auto;
 
     function playerInfos(){
 
+        var infoBuildingsDatabase = buildingsDatabase.slice(0);
         var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0};
         var buildings ={"fire":{"normal":{"count":0,
                                           "big":{"build":0,"onBuild":0},
@@ -401,7 +382,15 @@ overflow-y: auto;
             }
         });
 
-        $.each(buildingsDatabase, function(key, item){
+        if(!isNaN(preferences.dropdown.dispatchCenter.id)){
+            for(let i = infoBuildingsDatabase.length - 1; i >= 0; i --){
+                if(infoBuildingsDatabase[i].leitstelle_building_id && infoBuildingsDatabase[i].leitstelle_building_id !== preferences.dropdown.dispatchCenter.id){
+                    infoBuildingsDatabase.splice(i,1);
+                }
+            }
+        }
+
+        $.each(infoBuildingsDatabase, function(key, item){
             switch(item.building_type){
                 case 0: item.small_building ? buildings.fire.small.count ++ : buildings.fire.normal.count ++;
                     break;
@@ -704,14 +693,18 @@ overflow-y: auto;
         function infoContentMax(name, valueNow, valueMax){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
+                                                                      `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
+                                                                      `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
                           </tr>`;
         }
 
         function infoContentOnBuild(name, valueNow, valueMax, valueOnBuild){
             userInfos += `<tr>
                           <td class="col">${name}</td>
-                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ? `<span style="color:orange">${valueNow.toLocaleString()}</span>` : `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} / <span style="color:mediumslateblue">${valueOnBuild.toLocaleString()}</span></center></td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
+                                                                      `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
+                                                                      `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} / <span style="color:mediumslateblue">${valueOnBuild.toLocaleString()}</span></center></td>
                           </tr>`;
         }
 
@@ -723,7 +716,11 @@ overflow-y: auto;
 
         if(buildings.helicopter.police.count == 0) infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
 
-        infoContentOneValue("Gebäude", buildingsDatabase.length);
+        isNaN(preferences.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", buildingsDatabase.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, buildingsDatabase.length);
+
+        infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(buildingsDatabase.length / 25) > 0 ? Math.ceil(buildingsDatabase.length / 25) : 1);
+
+        if(buildings.stagingArea > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
         if(buildings.fire.small.count > 0) infoContentOneValue(`<div style="margin-left:1em">Feuerwachen (klein)</div>`, buildings.fire.small.count);
         if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
@@ -972,10 +969,6 @@ overflow-y: auto;
             else infoContentMax(displayName, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4);
         }
 
-        infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(buildingsDatabase.length / 25) > 0 ? Math.ceil(buildingsDatabase.length / 25) : 1);
-
-        if(buildings.stagingArea > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
-
         if(buildings.hospital.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Krankenhäuser</div>`, buildings.hospital.count);
             infoContentMax(`${configTable.arrowHospital} Betten`, buildings.hospital.beds.build + (buildings.hospital.count * 10), buildings.hospital.count * 30);
@@ -1011,20 +1004,51 @@ overflow-y: auto;
     }
 
     $("body").on("click", "#vehicleManagement", function(){
+        $('#filterDispatchCenter').html(`<option selected>wird geladen ...</option>`);
+        $('#filterType').html(`<option selected>wird geladen ...</option>`);
         $('#tableStatusLabel').html('');
         $('#tableStatusBody').html('');
-        statusCount = 0;
+        preferences.status.count = 0;
         getBuildingTypeId.length = 0;
         getBuildingName.length = 0;
+        getBuildingsOnDispatchCenter.length = 0;
         loadApi();
-    });
-
-    $("body").on("click", "#sortBy", function(){
-        if(statusCount != 0) createTable(statusCount);
-        else {
-            statusCount = "1 bis 9";
-            createTable(statusCount);
-        }
+        setTimeout(function(){
+            var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
+                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`
+                           };
+            var dropdownDatabase = [];
+            var dropdownOwnClass = [];
+            $.each(buildingsDatabase, function(key, item){
+                if(item.building_type == 7){
+                    dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
+                }
+            });
+            $.each(vehicleDatabase, function(key, item){
+                dropdownDatabase.push({"typeId": key, "name": item.name});
+            });
+            $.each(vehicleDatabaseFms, function(key, item){
+                if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
+            });
+            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownDatabase.length; i++){
+                dropdown.vehicleTypes += `<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`;
+            }
+            if(dropdownOwnClass.length > 0){
+                if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
+                for(let i = 0; i < dropdownOwnClass.length; i++){
+                    if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
+                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+                    }
+                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+                }
+            }
+            $('#filterDispatchCenter').html(dropdown.dispatchCenter);
+            $('#filterType').html(dropdown.vehicleTypes);
+            preferences.dropdown.vehicles.type = parseInt($('#filterType').val());
+            preferences.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+            preferences.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
+        }, 2000);
     });
 
     $("body").on("click", "#tableStatusBody span", function(){
@@ -1039,217 +1063,117 @@ overflow-y: auto;
         }
     });
 
+    $("body").on("click", "#filterDispatchCenter", function(){
+        preferences.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
+        preferences.status.count == 0 ? playerInfos() : createTable(preferences.status.count);
+    });
+
     $("body").on("click", "#filterType", function(){
-        if(statusCount == 0){
-            filterVehicleType = parseInt($('#filterType').val());
-            filterOwnClassType = $('#filterType').find(':selected').data('vehicle');
-        }
-        else {
-            filterVehicleType = parseInt($('#filterType').val());
-            filterOwnClassType = $('#filterType').find(':selected').data('vehicle');
-            createTable(statusCount);
-        }
+            preferences.dropdown.vehicles.type = parseInt($('#filterType').val());
+            preferences.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+            if(preferences.status.count !== 0) createTable(preferences.status.count);
+    });
+
+    $("body").on("click", "#sortBy", function(){
+        if(preferences.status.count != 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterFw", function(){
-        if(filterFwVehicles) {
-            if(statusCount != 0){
-                filterFwVehicles = false;
-                createTable(statusCount);
-            }
-            else filterFwVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterFwVehicles = true;
-                createTable(statusCount);
-            }
-            else filterFwVehicles = true;
-        }
-
+        preferences.filter.fire = !preferences.filter.fire;
         $('#filterFw').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterRd", function(){
-        if(filterRdVehicles) {
-            if(statusCount != 0){
-                filterRdVehicles = false;
-                createTable(statusCount);
-            }
-            else filterRdVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterRdVehicles = true;
-                createTable(statusCount);
-            }
-            else filterRdVehicles = true;
-        }
-
+        preferences.filter.rescue = !preferences.filter.rescue;
         $('#filterRd').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterThw", function(){
-        if(filterThwVehicles) {
-            if(statusCount != 0){
-                filterThwVehicles = false;
-                createTable(statusCount);
-            }
-            else filterThwVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterThwVehicles = true;
-                createTable(statusCount);
-            }
-            else filterThwVehicles = true;
-        }
-
+        preferences.filter.thw = !preferences.filter.thw;
         $('#filterThw').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterPol", function(){
-        if(filterPolVehicles) {
-            if(statusCount != 0){
-                filterPolVehicles = false;
-                createTable(statusCount);
-            }
-            else filterPolVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterPolVehicles = true;
-                createTable(statusCount);
-            }
-            else filterPolVehicles = true;
-        }
-
+        preferences.filter.police = !preferences.filter.police;
         $('#filterPol').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterWr", function(){
-        if(filterWrVehicles) {
-            if(statusCount != 0){
-                filterWrVehicles = false;
-                createTable(statusCount);
-            }
-            else filterWrVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterWrVehicles = true;
-                createTable(statusCount);
-            }
-            else filterWrVehicles = true;
-        }
-
+        preferences.filter.wr = !preferences.filter.wr;
         $('#filterWr').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterHeli", function(){
-        if(filterHeliVehicles) {
-            if(statusCount != 0){
-                filterHeliVehicles = false;
-                createTable(statusCount);
-            }
-            else filterHeliVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterHeliVehicles = true;
-                createTable(statusCount);
-            }
-            else filterHeliVehicles = true;
-        }
-
+        preferences.filter.helicopter = !preferences.filter.helicopter;
         $('#filterHeli').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterBp", function(){
-        if(filterBpVehicles) {
-            if(statusCount != 0){
-                filterBpVehicles = false;
-                createTable(statusCount);
-            }
-            else filterBpVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterBpVehicles = true;
-                createTable(statusCount);
-            }
-            else filterBpVehicles = true;
-        }
-
+        preferences.filter.bepo = !preferences.filter.bepo;
         $('#filterBp').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#filterSeg", function(){
-        if(filterSegVehicles) {
-            if(statusCount != 0){
-                filterSegVehicles = false;
-                createTable(statusCount);
-            }
-            else filterSegVehicles = false;
-        }
-        else {
-            if(statusCount != 0) {
-                filterSegVehicles = true;
-                createTable(statusCount);
-            }
-            else filterSegVehicles = true;
-        }
-
+        preferences.filter.seg = !preferences.filter.seg;
         $('#filterSeg').toggleClass("label-success label-danger");
+        if(preferences.status.count !== 0) createTable(preferences.status.count);
     });
 
     $("body").on("click", "#player", function(){
+        preferences.status.count = 0;
         playerInfos();
     });
 
     $("body").on("click", "#complete", function(){
-        statusCount = "1 bis 9";
-        createTable(statusCount);
+        preferences.status.count = "1 bis 9";
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms1", function(){
-        statusCount = 1;
-        createTable(statusCount);
+        preferences.status.count = 1;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms2", function(){
-        statusCount = 2;
-        createTable(statusCount);
+        preferences.status.count = 2;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms3", function(){
-        statusCount = 3;
-        createTable(statusCount);
+        preferences.status.count = 3;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms4", function(){
-        statusCount = 4;
-        createTable(statusCount);
+        preferences.status.count = 4;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms5", function(){
-        statusCount = 5;
-        createTable(statusCount);
+        preferences.status.count = 5;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms6", function(){
-        statusCount = 6;
-        createTable(statusCount);
+        preferences.status.count = 6;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms7", function(){
-        statusCount = 7;
-        createTable(statusCount);
+        preferences.status.count = 7;
+        createTable(preferences.status.count);
     });
 
     $("body").on("click", "#fms9", function(){
-        statusCount = 9;
-        createTable(statusCount);
+        preferences.status.count = 9;
+        createTable(preferences.status.count);
     });
 
 })();
