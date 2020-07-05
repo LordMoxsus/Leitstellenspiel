@@ -670,8 +670,11 @@ overflow-y: auto;
             }
         });
 
-        $('#tableStatusLabel').html(`<div class="pull-right">Statistik ${creditsDatabase.user_name} (${creditsDatabase.user_id})<span style="margin-left:4em"></span>
-                                     Toplist-Platz: ${creditsDatabase.user_toplist_position.toLocaleString()}</div>`);
+        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${creditsDatabase.user_id}">${creditsDatabase.user_name} (${creditsDatabase.user_id})</span>
+                                     <span style="margin-left:4em"></span>
+                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(creditsDatabase.user_toplist_position / 20) > 1 ?
+                                                                                                       `/toplist?page=${Math.ceil(creditsDatabase.user_toplist_position / 20)}` :
+                                                                                                       `/toplist`}">${creditsDatabase.user_toplist_position.toLocaleString()}</span></div>`);
 
         let userInfos =
                 `<table class="table">
