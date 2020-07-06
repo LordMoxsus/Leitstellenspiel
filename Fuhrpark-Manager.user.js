@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.12.0
+// @version      1.12.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -11,10 +11,10 @@
 (function() {
     'use strict';
 
-    var buttonOnRadio = true; //true: shows button on radio-panel; false: shows button on header
+    var buttonOnRadio = true; //true: zeigt Button im Funk-Fenster; false: zeigt Button im Header
     var showOnBuild = true; //true: zeigt Ausbauten im Ausbau; false: Ausbauten im Ausbau werden nicht gezeigt
 
-    if(buttonOnRadio) $('#radio_panel_heading').after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><button type="button" class="btn btn-default btn-xs">Fuhrpark-Manager</button></a>`);
+    if(buttonOnRadio) $('#radio_panel_heading').after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" class="btn btn-default btn-xs">Fuhrpark-Manager</a>`);
     else $('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
@@ -143,30 +143,23 @@ overflow-y: auto;
 
     function loadApi(){
 
-        $.getJSON('/api/buildings').done(function(data){
-            database.buildings.all = data;
-            $.each(data, function(key, item){
-                database.buildings.get.typeId[item.id] = item.building_type;
-                database.buildings.get.name[item.id] = item.caption;
-                database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
-            });
-        });
-
-        $.getJSON('/api/vehicles').done(function(data){
-            database.vehicles.all = data;
-        });
-
-        $.getJSON('/api/credits').done(function(data){
-            database.credits = data;
-        });
-
-        $.when($.getJSON('/api/buildings'), $.getJSON('/api/vehicles'), $.getJSON('/api/credits')).done(function(){
+        $.when(
+            $.getJSON('/api/buildings'),
+            $.getJSON('/api/vehicles'),
+            $.getJSON('/api/credits')
+        ).done(function(dataBuildings, dataVehicles, dataCredits){
+            database.buildings.all = dataBuildings[0];
+            database.vehicles.all = dataVehicles[0];
+            database.credits = dataCredits[0];
             var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
                             "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`
                            };
             var dropdownDatabase = [];
             var dropdownOwnClass = [];
-            $.each(database.buildings.all, function(key, item){
+            $.each(dataBuildings[0], function(key, item){
+                database.buildings.get.typeId[item.id] = item.building_type;
+                database.buildings.get.name[item.id] = item.caption;
+                database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
                 if(item.building_type == 7){
                     dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
                 }
@@ -174,7 +167,7 @@ overflow-y: auto;
             $.each(database.vehicles.types, function(key, item){
                 dropdownDatabase.push({"typeId": key, "name": item.name});
             });
-            $.each(database.vehicles.all, function(key, item){
+            $.each(dataVehicles[0], function(key, item){
                 if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
             });
             dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
@@ -274,7 +267,7 @@ overflow-y: auto;
                  <th class="col-1">FMS</th>
                  <th class="col">Kennung</th>
                  <th class="col">Fahrzeugtyp</th>
-                 <th class="col"> </th>
+                 <th class="col-xs-3"></th>
                  <th class="col">Wache</th>
                  </tr>
                  </thead>
@@ -286,8 +279,10 @@ overflow-y: auto;
                      <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
                      <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
-                     <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a>
-                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button type="button" class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a></td>
+                     <td class="col-xs-3">
+                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button class="btn btn-default btn-xs">Personalzuweisung</button></a>
+                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a>
+                     </td>
                      <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
                      </tr>`;
             }
