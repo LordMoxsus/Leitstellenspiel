@@ -127,7 +127,7 @@ overflow-y: auto;
                                  "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
                                 },
                     "vehicles":{"all":{},
-                                "get":{"name":{}}
+                                "get":{"types":{}}
                                }
                    };
 
@@ -140,7 +140,7 @@ overflow-y: auto;
         $.each(data, (k,v) => {
             v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
         });
-        database.vehicles.get.name = data;
+        database.vehicles.get.types = data;
     });
 
     function loadApi(){
@@ -224,10 +224,10 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "Typ-aufsteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.name[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.name[b.typeId].name.toUpperCase()) ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.types[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "Typ-absteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.name[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.name[b.typeId].name.toUpperCase()) ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.types[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
@@ -250,7 +250,7 @@ overflow-y: auto;
                     `<tr>
                      <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.get.name[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.get.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a>
                       <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button type="button" class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a></td>
                      <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
@@ -1028,7 +1028,7 @@ overflow-y: auto;
                     dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
                 }
             });
-            $.each(database.vehicles.get.name, function(key, item){
+            $.each(database.vehicles.get.types, function(key, item){
                 dropdownDatabase.push({"typeId": key, "name": item.name});
             });
             $.each(database.vehicles.all, function(key, item){
