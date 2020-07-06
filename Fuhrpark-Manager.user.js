@@ -113,52 +113,53 @@ overflow-y: auto;
                     </div>
                 </div>`);
 
-    var sortOptions = ['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend'];
-    for(var i = 0; i < sortOptions.length; i++){
-        $('#sortBy').append(`<option value="${sortOptions[i]}">${sortOptions[i]}</option>`);
-    }
+    var options = {"filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
+                   "dropdown":{"vehicles":{"ownClass":$('#filterType').find(':selected').data('vehicle'),
+                                           "type":parseInt($('#filterType').val())
+                                          },
+                               "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())},
+                               "sort":['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend']
+                              },
+                   "status":{"count":0}
+                  };
+    var database = {"credits":{},
+                    "buildings":{"all":{},
+                                 "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
+                                },
+                    "vehicles":{"all":{},
+                                "get":{"name":{}}
+                               }
+                   };
 
-    var preferences = {"filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
-                       "dropdown":{"vehicles":{"ownClass":$('#filterType').find(':selected').data('vehicle'),
-                                               "type":parseInt($('#filterType').val())
-                                              },
-                                   "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())}
-                                  },
-                       "status":{"count":0}
-                      };
-    var vehicleDatabase = {};
-    var buildingsDatabase = {};
-    var getBuildingTypeId = {};
-    var getBuildingName = {};
-    var getBuildingsOnDispatchCenter = {};
-    var vehicleDatabaseFms = {};
-    var creditsDatabase = {};
+    for(var i = 0; i < options.dropdown.sort.length; i++){
+        $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
+    }
 
     $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(function(data){
         var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
         $.each(data, (k,v) => {
             v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
         });
-        vehicleDatabase = data;
+        database.vehicles.get.name = data;
     });
 
     function loadApi(){
 
         $.getJSON('/api/buildings').done(function(data){
-            buildingsDatabase = data;
+            database.buildings.all = data;
             $.each(data, function(key, item){
-                getBuildingTypeId[item.id] = item.building_type;
-                getBuildingName[item.id] = item.caption;
-                getBuildingsOnDispatchCenter[item.id] = item.leitstelle_building_id;
+                database.buildings.get.typeId[item.id] = item.building_type;
+                database.buildings.get.name[item.id] = item.caption;
+                database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
             });
         });
 
         $.getJSON('/api/vehicles').done(function(data){
-            vehicleDatabaseFms = data;
+            database.vehicles.all = data;
         });
 
         $.getJSON('/api/credits').done(function(data){
-            creditsDatabase = data;
+            database.credits = data;
         });
     }
 
@@ -166,42 +167,42 @@ overflow-y: auto;
 
         var tableDatabase = [];
 
-        $.each(vehicleDatabaseFms, function(key, item){
+        $.each(database.vehicles.all, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(preferences.dropdown.vehicles.type)){
+            if(isNaN(options.dropdown.vehicles.type)){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(preferences.dropdown.vehicles.type == -1 && preferences.dropdown.vehicles.ownClass == item.vehicle_type_caption){
+            else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
-            else if(preferences.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption){
+            else if(options.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption){
                 if(isNaN(statusIndex)) tableDatabase.push(pushContent);
                 else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
             }
         });
 
-        if(!isNaN(preferences.dropdown.dispatchCenter.id)){
+        if(!isNaN(options.dropdown.dispatchCenter.id)){
             for(let i = tableDatabase.length - 1; i >= 0; i --){
-                if(preferences.dropdown.dispatchCenter.id !== getBuildingsOnDispatchCenter[tableDatabase[i].buildingId]) tableDatabase.splice(i,1);
+                if(options.dropdown.dispatchCenter.id !== database.buildings.get.onDispatchCenter[tableDatabase[i].buildingId]) tableDatabase.splice(i,1);
             }
         }
 
         function filterDatabase(typeId1, typeId2){
             for(let i = tableDatabase.length - 1; i >= 0; i--){
-                if(getBuildingTypeId[tableDatabase[i].buildingId] == typeId1 || getBuildingTypeId[tableDatabase[i].buildingId] == typeId2) tableDatabase.splice(i,1);
+                if(database.buildings.get.typeId[tableDatabase[i].buildingId] == typeId1 || database.buildings.get.typeId[tableDatabase[i].buildingId] == typeId2) tableDatabase.splice(i,1);
             }
         }
 
-        if(!preferences.filter.fire) filterDatabase("0", "18");
-        if(!preferences.filter.rescue) filterDatabase("2", "20");
-        if(!preferences.filter.thw) filterDatabase("9", "9");
-        if(!preferences.filter.police) filterDatabase("6", "19");
-        if(!preferences.filter.wr) filterDatabase("15", "15");
-        if(!preferences.filter.helicopter) filterDatabase("5", "13");
-        if(!preferences.filter.bepo) filterDatabase("11", "17");
-        if(!preferences.filter.seg) filterDatabase("12", "21");
+        if(!options.filter.fire) filterDatabase("0", "18");
+        if(!options.filter.rescue) filterDatabase("2", "20");
+        if(!options.filter.thw) filterDatabase("9", "9");
+        if(!options.filter.police) filterDatabase("6", "19");
+        if(!options.filter.wr) filterDatabase("15", "15");
+        if(!options.filter.helicopter) filterDatabase("5", "13");
+        if(!options.filter.bepo) filterDatabase("11", "17");
+        if(!options.filter.seg) filterDatabase("12", "21");
 
         //setTimeout(function(){
             switch($('#sortBy').val()){
@@ -217,16 +218,16 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? -1 : 1);
                     break;
                 case "Wache-aufsteigend":
-                    tableDatabase.sort((a, b) => getBuildingName[a.buildingId].toUpperCase() > getBuildingName[b.buildingId].toUpperCase() ? 1 : -1);
+                    tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? 1 : -1);
                     break;
                 case "Wache-absteigend":
-                    tableDatabase.sort((a, b) => getBuildingName[a.buildingId].toUpperCase() > getBuildingName[b.buildingId].toUpperCase() ? -1 : 1);
+                    tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "Typ-aufsteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.name[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.name[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "Typ-absteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : vehicleDatabase[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : vehicleDatabase[b.typeId].name.toUpperCase()) ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.name[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.name[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
@@ -249,10 +250,10 @@ overflow-y: auto;
                     `<tr>
                      <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                     <td class="col">${!tableDatabase[i].ownClass ? vehicleDatabase[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.get.name[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a>
                       <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button type="button" class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a></td>
-                     <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${getBuildingName[tableDatabase[i].buildingId]}</a></td>
+                     <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
                      </tr>`;
             }
 
@@ -267,7 +268,7 @@ overflow-y: auto;
 
     function playerInfos(){
 
-        var infoBuildingsDatabase = buildingsDatabase.slice(0);
+        var infoBuildingsDatabase = database.buildings.all.slice(0);
         var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0};
         var buildings ={"fire":{"normal":{"count":0,
                                           "big":{"build":0,"onBuild":0},
@@ -369,7 +370,7 @@ overflow-y: auto;
                            "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`
                           };
 
-        $.each(vehicleDatabaseFms, function(key, item){
+        $.each(database.vehicles.all, function(key, item){
             switch(item.vehicle_type){
                 case 31: vehicles.rth ++;
                     break;
@@ -382,9 +383,9 @@ overflow-y: auto;
             }
         });
 
-        if(!isNaN(preferences.dropdown.dispatchCenter.id)){
+        if(!isNaN(options.dropdown.dispatchCenter.id)){
             for(let i = infoBuildingsDatabase.length - 1; i >= 0; i --){
-                if(infoBuildingsDatabase[i].leitstelle_building_id && infoBuildingsDatabase[i].leitstelle_building_id !== preferences.dropdown.dispatchCenter.id){
+                if(infoBuildingsDatabase[i].leitstelle_building_id && infoBuildingsDatabase[i].leitstelle_building_id !== options.dropdown.dispatchCenter.id){
                     infoBuildingsDatabase.splice(i,1);
                 }
             }
@@ -670,11 +671,11 @@ overflow-y: auto;
             }
         });
 
-        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${creditsDatabase.user_id}">${creditsDatabase.user_name} (${creditsDatabase.user_id})</span>
+        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${database.credits.user_id}">${database.credits.user_name} (${database.credits.user_id})</span>
                                      <span style="margin-left:4em"></span>
-                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(creditsDatabase.user_toplist_position / 20) > 1 ?
-                                                                                                       `/toplist?page=${Math.ceil(creditsDatabase.user_toplist_position / 20)}` :
-                                                                                                       `/toplist`}">${creditsDatabase.user_toplist_position.toLocaleString()}</span></div>`);
+                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(database.credits.user_toplist_position / 20) > 1 ?
+                                                                                                       `/toplist?page=${Math.ceil(database.credits.user_toplist_position / 20)}` :
+                                                                                                       `/toplist`}">${database.credits.user_toplist_position.toLocaleString()}</span></div>`);
 
         let userInfos =
                 `<table class="table">
@@ -713,15 +714,15 @@ overflow-y: auto;
 
         var displayName = "";
 
-        infoContentOneValue("Fahrzeuge", vehicleDatabaseFms.length);
+        infoContentOneValue("Fahrzeuge", database.vehicles.all.length);
 
-        if(buildings.helicopter.rescue.count == 0) infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
+        if(buildings.helicopter.rescue.count == 0) infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
 
-        if(buildings.helicopter.police.count == 0) infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
+        if(buildings.helicopter.police.count == 0) infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
 
-        isNaN(preferences.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", buildingsDatabase.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, buildingsDatabase.length);
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", database.buildings.all.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, database.buildings.all.length);
 
-        infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(buildingsDatabase.length / 25) > 0 ? Math.ceil(buildingsDatabase.length / 25) : 1);
+        infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(database.buildings.all.length / 25) > 0 ? Math.ceil(database.buildings.all.length / 25) : 1);
 
         if(buildings.stagingArea > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
@@ -823,7 +824,7 @@ overflow-y: auto;
 
         if(buildings.helicopter.rescue.count > 0){
             infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
-            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
+            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
         }
 
         if(buildings.school.rescue.count > 0){
@@ -913,7 +914,7 @@ overflow-y: auto;
 
         if(buildings.helicopter.police.count > 0){
             infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
-            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(buildingsDatabase.length / 25) > 4 ? Math.floor(buildingsDatabase.length / 25) : 4);
+            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
         }
 
         if(buildings.school.police.count > 0){
@@ -1011,10 +1012,10 @@ overflow-y: auto;
         $('#filterType').html(`<option selected>wird geladen ...</option>`);
         $('#tableStatusLabel').html('');
         $('#tableStatusBody').html('');
-        preferences.status.count = 0;
-        getBuildingTypeId.length = 0;
-        getBuildingName.length = 0;
-        getBuildingsOnDispatchCenter.length = 0;
+        options.status.count = 0;
+        database.buildings.get.typeId.length = 0;
+        database.buildings.get.name.length = 0;
+        database.buildings.get.onDispatchCenter.length = 0;
         loadApi();
         setTimeout(function(){
             var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
@@ -1022,15 +1023,15 @@ overflow-y: auto;
                            };
             var dropdownDatabase = [];
             var dropdownOwnClass = [];
-            $.each(buildingsDatabase, function(key, item){
+            $.each(database.buildings.all, function(key, item){
                 if(item.building_type == 7){
                     dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
                 }
             });
-            $.each(vehicleDatabase, function(key, item){
+            $.each(database.vehicles.get.name, function(key, item){
                 dropdownDatabase.push({"typeId": key, "name": item.name});
             });
-            $.each(vehicleDatabaseFms, function(key, item){
+            $.each(database.vehicles.all, function(key, item){
                 if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
             });
             dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
@@ -1048,9 +1049,9 @@ overflow-y: auto;
             }
             $('#filterDispatchCenter').html(dropdown.dispatchCenter);
             $('#filterType').html(dropdown.vehicleTypes);
-            preferences.dropdown.vehicles.type = parseInt($('#filterType').val());
-            preferences.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
-            preferences.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
+            options.dropdown.vehicles.type = parseInt($('#filterType').val());
+            options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+            options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
         }, 2000);
     });
 
@@ -1067,116 +1068,116 @@ overflow-y: auto;
     });
 
     $("body").on("click", "#filterDispatchCenter", function(){
-        preferences.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
-        preferences.status.count == 0 ? playerInfos() : createTable(preferences.status.count);
+        options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
+        options.status.count == 0 ? playerInfos() : createTable(options.status.count);
     });
 
     $("body").on("click", "#filterType", function(){
-            preferences.dropdown.vehicles.type = parseInt($('#filterType').val());
-            preferences.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
-            if(preferences.status.count !== 0) createTable(preferences.status.count);
+            options.dropdown.vehicles.type = parseInt($('#filterType').val());
+            options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+            if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#sortBy", function(){
-        if(preferences.status.count != 0) createTable(preferences.status.count);
+        if(options.status.count != 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterFw", function(){
-        preferences.filter.fire = !preferences.filter.fire;
+        options.filter.fire = !options.filter.fire;
         $('#filterFw').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterRd", function(){
-        preferences.filter.rescue = !preferences.filter.rescue;
+        options.filter.rescue = !options.filter.rescue;
         $('#filterRd').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterThw", function(){
-        preferences.filter.thw = !preferences.filter.thw;
+        options.filter.thw = !options.filter.thw;
         $('#filterThw').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterPol", function(){
-        preferences.filter.police = !preferences.filter.police;
+        options.filter.police = !options.filter.police;
         $('#filterPol').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterWr", function(){
-        preferences.filter.wr = !preferences.filter.wr;
+        options.filter.wr = !options.filter.wr;
         $('#filterWr').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterHeli", function(){
-        preferences.filter.helicopter = !preferences.filter.helicopter;
+        options.filter.helicopter = !options.filter.helicopter;
         $('#filterHeli').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterBp", function(){
-        preferences.filter.bepo = !preferences.filter.bepo;
+        options.filter.bepo = !options.filter.bepo;
         $('#filterBp').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterSeg", function(){
-        preferences.filter.seg = !preferences.filter.seg;
+        options.filter.seg = !options.filter.seg;
         $('#filterSeg').toggleClass("label-success label-danger");
-        if(preferences.status.count !== 0) createTable(preferences.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#player", function(){
-        preferences.status.count = 0;
+        options.status.count = 0;
         playerInfos();
     });
 
     $("body").on("click", "#complete", function(){
-        preferences.status.count = "1 bis 9";
-        createTable(preferences.status.count);
+        options.status.count = "1 bis 9";
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms1", function(){
-        preferences.status.count = 1;
-        createTable(preferences.status.count);
+        options.status.count = 1;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms2", function(){
-        preferences.status.count = 2;
-        createTable(preferences.status.count);
+        options.status.count = 2;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms3", function(){
-        preferences.status.count = 3;
-        createTable(preferences.status.count);
+        options.status.count = 3;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms4", function(){
-        preferences.status.count = 4;
-        createTable(preferences.status.count);
+        options.status.count = 4;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms5", function(){
-        preferences.status.count = 5;
-        createTable(preferences.status.count);
+        options.status.count = 5;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms6", function(){
-        preferences.status.count = 6;
-        createTable(preferences.status.count);
+        options.status.count = 6;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms7", function(){
-        preferences.status.count = 7;
-        createTable(preferences.status.count);
+        options.status.count = 7;
+        createTable(options.status.count);
     });
 
     $("body").on("click", "#fms9", function(){
-        preferences.status.count = 9;
-        createTable(preferences.status.count);
+        options.status.count = 9;
+        createTable(options.status.count);
     });
 
 })();
