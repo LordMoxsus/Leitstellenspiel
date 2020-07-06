@@ -126,9 +126,7 @@ overflow-y: auto;
                     "buildings":{"all":{},
                                  "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
                                 },
-                    "vehicles":{"all":{},
-                                "get":{"types":{}}
-                               }
+                    "vehicles":{"all":{},"types":{}}
                    };
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
@@ -140,7 +138,7 @@ overflow-y: auto;
         $.each(data, (k,v) => {
             v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
         });
-        database.vehicles.get.types = data;
+        database.vehicles.types = data;
     });
 
     function loadApi(){
@@ -160,6 +158,43 @@ overflow-y: auto;
 
         $.getJSON('/api/credits').done(function(data){
             database.credits = data;
+        });
+
+        $.when($.getJSON('/api/buildings'), $.getJSON('/api/vehicles'), $.getJSON('/api/credits')).done(function(){
+            var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
+                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`
+                           };
+            var dropdownDatabase = [];
+            var dropdownOwnClass = [];
+            $.each(database.buildings.all, function(key, item){
+                if(item.building_type == 7){
+                    dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
+                }
+            });
+            $.each(database.vehicles.types, function(key, item){
+                dropdownDatabase.push({"typeId": key, "name": item.name});
+            });
+            $.each(database.vehicles.all, function(key, item){
+                if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
+            });
+            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdownDatabase.length; i++){
+                dropdown.vehicleTypes += `<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`;
+            }
+            if(dropdownOwnClass.length > 0){
+                if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
+                for(let i = 0; i < dropdownOwnClass.length; i++){
+                    if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
+                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+                    }
+                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+                }
+            }
+            $('#filterDispatchCenter').html(dropdown.dispatchCenter);
+            $('#filterType').html(dropdown.vehicleTypes);
+            options.dropdown.vehicles.type = parseInt($('#filterType').val());
+            options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+            options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
         });
     }
 
@@ -224,10 +259,10 @@ overflow-y: auto;
                     tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
                     break;
                 case "Typ-aufsteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.types[b.typeId].name.toUpperCase()) ? 1 : -1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? 1 : -1);
                     break;
                 case "Typ-absteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.get.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.get.types[b.typeId].name.toUpperCase()) ? -1 : 1);
+                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? -1 : 1);
                     break;
             }
             let intoLabel =
@@ -250,7 +285,7 @@ overflow-y: auto;
                     `<tr>
                      <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.get.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
                      <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button type="button" class="btn btn-default btn-xs">Personalzuweisung</button></a>
                       <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button type="button" class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a></td>
                      <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
@@ -1017,42 +1052,6 @@ overflow-y: auto;
         database.buildings.get.name.length = 0;
         database.buildings.get.onDispatchCenter.length = 0;
         loadApi();
-        setTimeout(function(){
-            var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
-                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`
-                           };
-            var dropdownDatabase = [];
-            var dropdownOwnClass = [];
-            $.each(database.buildings.all, function(key, item){
-                if(item.building_type == 7){
-                    dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
-                }
-            });
-            $.each(database.vehicles.get.types, function(key, item){
-                dropdownDatabase.push({"typeId": key, "name": item.name});
-            });
-            $.each(database.vehicles.all, function(key, item){
-                if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
-            });
-            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdownDatabase.length; i++){
-                dropdown.vehicleTypes += `<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`;
-            }
-            if(dropdownOwnClass.length > 0){
-                if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
-                for(let i = 0; i < dropdownOwnClass.length; i++){
-                    if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
-                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
-                    }
-                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
-                }
-            }
-            $('#filterDispatchCenter').html(dropdown.dispatchCenter);
-            $('#filterType').html(dropdown.vehicleTypes);
-            options.dropdown.vehicles.type = parseInt($('#filterType').val());
-            options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
-            options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
-        }, 2000);
     });
 
     $("body").on("click", "#tableStatusBody span", function(){
