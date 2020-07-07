@@ -424,7 +424,8 @@ overflow-y: auto;
             "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
             "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
             "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
-            "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`
+            "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`,
+            "marginLeft":`<div style="margin-left:1em">`
         };
 
         $.each(database.vehicles.all, function(key, item){
@@ -791,25 +792,25 @@ overflow-y: auto;
 
         infoContentOneValue("Fahrzeuge", database.vehicles.all.length);
 
-        if(buildings.helicopter.rescue.count == 0) infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+        if(buildings.helicopter.rescue.count == 0) infoContentMax(`${configTable.marginLeft}Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
 
-        if(buildings.helicopter.police.count == 0) infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+        if(buildings.helicopter.police.count == 0) infoContentMax(`${configTable.marginLeft}Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
 
         isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", database.buildings.all.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, database.buildings.all.length);
 
         infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(database.buildings.all.length / 25) > 0 ? Math.ceil(database.buildings.all.length / 25) : 1);
 
-        if(buildings.stagingArea > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
+        if(buildings.stagingArea > 0) infoContentOneValue(`${configTable.marginLeft}Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
         if(buildings.fire.small.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Feuerwachen (klein)</div>`, buildings.fire.small.count);
+            infoContentOneValue(`${configTable.marginLeft}Feuerwachen (klein)</div>`, buildings.fire.small.count);
             if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
                 tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.small.ab.build, buildings.fire.small.build * 2, buildings.fire.small.ab.onBuild);
             }
         }
 
         if(buildings.fire.normal.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Feuerwachen</div>`, buildings.fire.normal.count);
+            infoContentOneValue(`${configTable.marginLeft}Feuerwachen</div>`, buildings.fire.normal.count);
             if(Math.round((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
                 tableExtension(`Großwache`, configTable.arrowFire, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
             }
@@ -828,24 +829,24 @@ overflow-y: auto;
         }
 
         if(buildings.school.fire.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Feuerwehrschulen</div>`, buildings.school.fire.count);
+            infoContentOneValue(`${configTable.marginLeft}Feuerwehrschulen</div>`, buildings.school.fire.count);
             tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
         }
 
         if(buildings.rescue.small > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Rettungswachen (klein)</div>`, buildings.rescue.small);
+            infoContentOneValue(`${configTable.marginLeft}Rettungswachen (klein)</div>`, buildings.rescue.small);
             if(buildings.rescue.normal == 0){
                 rescueVehicles(configTable.arrowRescue, buildings.rescue.small + buildings.fire.rescue.active);
             }
         }
 
         if(buildings.rescue.normal > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Rettungswachen</div>`, buildings.rescue.normal);
+            infoContentOneValue(`${configTable.marginLeft}Rettungswachen</div>`, buildings.rescue.normal);
             rescueVehicles(configTable.arrowRescue, buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active);
         }
 
         if(buildings.seg.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
+            infoContentOneValue(`${configTable.marginLeft}Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
             tableExtension(`Führung`, configTable.arrowRescue, buildings.seg.leader.active, buildings.seg.leader.build, buildings.seg.leader.onBuild);
             tableExtension(`Sanitätsdienst`, configTable.arrowRescue, buildings.seg.sanD.active, buildings.seg.sanD.build, buildings.seg.sanD.onBuild);
             tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, buildings.seg.wr.active, buildings.seg.wr.build, buildings.seg.wr.onBuild);
@@ -853,35 +854,35 @@ overflow-y: auto;
         }
 
         if(buildings.wr.count > 0 || buildings.wr.active > 0){
-            infoContentMax(`<div style="margin-left:1em">Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
+            infoContentMax(`${configTable.marginLeft}Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
         }
 
         if(buildings.rescueDogs.count > 0 || buildings.rescueDogs.active > 0){
-            infoContentMax(`<div style="margin-left:1em">Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
+            infoContentMax(`${configTable.marginLeft}Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
         }
 
         if(buildings.helicopter.rescue.count > 0){
-            infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
+            infoContentMax(`${configTable.marginLeft}Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
             infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
         }
 
         if(buildings.school.rescue.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Rettungsdienstschulen</div>`, buildings.school.rescue.count);
+            infoContentOneValue(`${configTable.marginLeft}Rettungsdienstschulen</div>`, buildings.school.rescue.count);
             tableExtension(`Klassenräume`, configTable.arrowRescue, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4, buildings.school.rescue.rooms.onBuild);
         }
 
         if(buildings.police.small.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Polizeiwachen (klein)</div>`, buildings.police.small.count);
+            infoContentOneValue(`${configTable.marginLeft}Polizeiwachen (klein)</div>`, buildings.police.small.count);
             tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.small.cell.build, buildings.police.small.count * 2, buildings.police.small.cell.onBuild);
         }
 
         if(buildings.police.normal.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Polizeiwachen</div>`, buildings.police.normal.count);
+            infoContentOneValue(`${configTable.marginLeft}Polizeiwachen</div>`, buildings.police.normal.count);
             tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.normal.cell.build, buildings.police.normal.count * 10, buildings.police.normal.cell.onBuild);
         }
 
         if(buildings.bepo.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Bereitschaftspolizei</div>`, buildings.bepo.count);
+            infoContentOneValue(`${configTable.marginLeft}Bereitschaftspolizei</div>`, buildings.bepo.count);
             tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.second.active, buildings.bepo.division.second.build, buildings.bepo.division.second.onBuild);
             tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.third.active, buildings.bepo.division.third.build, buildings.bepo.division.third.onBuild);
             tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build ,buildings.bepo.mobilePrison.onBuild);
@@ -893,7 +894,7 @@ overflow-y: auto;
         }
 
         if(buildings.polSonder.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
+            infoContentOneValue(`${configTable.marginLeft}Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
             tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build, buildings.polSonder.sek.first.onBuild);
             tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build, buildings.polSonder.sek.second.onBuild);
             tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build, buildings.polSonder.mek.first.onBuild);
@@ -901,17 +902,17 @@ overflow-y: auto;
         }
 
         if(buildings.helicopter.police.count > 0){
-            infoContentMax(`<div style="margin-left:1em">Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
+            infoContentMax(`${configTable.marginLeft}Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
             infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
         }
 
         if(buildings.school.police.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Polizeischulen</div>`, buildings.school.police.count);
+            infoContentOneValue(`${configTable.marginLeft}Polizeischulen</div>`, buildings.school.police.count);
             tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4, buildings.school.police.rooms.onBuild);
         }
 
         if(buildings.thw.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">THW Ortsverbände</div>`, buildings.thw.count);
+            infoContentOneValue(`${configTable.marginLeft}THW Ortsverbände</div>`, buildings.thw.count);
             tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build, buildings.thw.firstTz.bg.onBuild);
             tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build, buildings.thw.firstTz.zug.onBuild);
             tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, buildings.thw.fgrR.active, buildings.thw.fgrR.build, buildings.thw.fgrR.onBuild);
@@ -923,12 +924,12 @@ overflow-y: auto;
         }
 
         if(buildings.school.thw.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">THW Bundesschulen</div>`, buildings.school.thw.count);
+            infoContentOneValue(`${configTable.marginLeft}THW Bundesschulen</div>`, buildings.school.thw.count);
             tableExtension(`Klassenräume`, configTable.arrowThw, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
         }
 
         if(buildings.hospital.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Krankenhäuser</div>`, buildings.hospital.count);
+            infoContentOneValue(`${configTable.marginLeft}Krankenhäuser</div>`, buildings.hospital.count);
             infoContentMax(`${configTable.arrowHospital} Betten`, buildings.hospital.beds.build + (buildings.hospital.count * 10), buildings.hospital.count * 30);
             if(buildings.hospital.extension.ina.onBuild > 0 || buildings.hospital.extension.ach.onBuild > 0 || buildings.hospital.extension.gyn.onBuild > 0 ||
                buildings.hospital.extension.uro.onBuild > 0 || buildings.hospital.extension.uch.onBuild > 0 || buildings.hospital.extension.nrl.onBuild > 0 ||
