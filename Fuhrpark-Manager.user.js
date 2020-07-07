@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.12.1
+// @version      1.13.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -152,10 +152,9 @@ overflow-y: auto;
             database.vehicles.all = dataVehicles[0];
             database.credits = dataCredits[0];
             var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
-                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`
+                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
+                            "database":{"class":[],"types":[]}
                            };
-            var dropdownDatabase = [];
-            var dropdownOwnClass = [];
             $.each(dataBuildings[0], function(key, item){
                 database.buildings.get.typeId[item.id] = item.building_type;
                 database.buildings.get.name[item.id] = item.caption;
@@ -165,22 +164,22 @@ overflow-y: auto;
                 }
             });
             $.each(database.vehicles.types, function(key, item){
-                dropdownDatabase.push({"typeId": key, "name": item.name});
+                dropdown.database.types.push({"typeId": key, "name": item.name});
             });
             $.each(dataVehicles[0], function(key, item){
-                if(item.vehicle_type_caption) dropdownOwnClass.push({"ownClass": item.vehicle_type_caption});
+                if(item.vehicle_type_caption) dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
             });
-            dropdownDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdownDatabase.length; i++){
-                dropdown.vehicleTypes += `<option value="${dropdownDatabase[i].typeId}">${dropdownDatabase[i].name}</option>`;
+            dropdown.database.types.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdown.database.types.length; i++){
+                dropdown.vehicleTypes += `<option value="${dropdown.database.types[i].typeId}">${dropdown.database.types[i].name}</option>`;
             }
-            if(dropdownOwnClass.length > 0){
-                if(dropdownOwnClass.length >= 2) dropdownOwnClass.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
-                for(let i = 0; i < dropdownOwnClass.length; i++){
-                    if(i > 0 && dropdownOwnClass[i].ownClass !== dropdownOwnClass[i - 1].ownClass){
-                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+            if(dropdown.database.class.length > 0){
+                if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
+                for(let i = 0; i < dropdown.database.class.length; i++){
+                    if(i > 0 && dropdown.database.class[i].ownClass !== dropdown.database.class[i - 1].ownClass){
+                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database[i].ownClass}</option>`;
                     }
-                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdownOwnClass[i].ownClass}">${dropdownOwnClass[i].ownClass}</option>`;
+                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
                 }
             }
             $('#filterDispatchCenter').html(dropdown.dispatchCenter);
@@ -197,17 +196,15 @@ overflow-y: auto;
 
         $.each(database.vehicles.all, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
-            if(isNaN(options.dropdown.vehicles.type)){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            if(isNaN(statusIndex)){
+                if(isNaN(options.dropdown.vehicles.type)) tableDatabase.push(pushContent);
+                else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption) tableDatabase.push(pushContent);
+                else if(options.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption) tableDatabase.push(pushContent);
             }
-            else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
-            }
-            else if(options.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption){
-                if(isNaN(statusIndex)) tableDatabase.push(pushContent);
-                else if(statusIndex == item.fms_real) tableDatabase.push(pushContent);
+            else if(statusIndex == item.fms_real){
+                if(isNaN(options.dropdown.vehicles.type)) tableDatabase.push(pushContent);
+                else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption) tableDatabase.push(pushContent);
+                else if(options.dropdown.vehicles.type == item.vehicle_type && !item.vehicle_type_caption) tableDatabase.push(pushContent);
             }
         });
 
@@ -232,68 +229,65 @@ overflow-y: auto;
         if(!options.filter.bepo) filterDatabase("11", "17");
         if(!options.filter.seg) filterDatabase("12", "21");
 
-        //setTimeout(function(){
-            switch($('#sortBy').val()){
-                case "":
-                    break;
-                case "Status":
-                    tableDatabase.sort((a, b) => a.status > b.status ? 1 : -1);
-                    break;
-                case "Name-aufsteigend":
-                    tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-                    break;
-                case "Name-absteigend":
-                    tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? -1 : 1);
-                    break;
-                case "Wache-aufsteigend":
-                    tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? 1 : -1);
-                    break;
-                case "Wache-absteigend":
-                    tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
-                    break;
-                case "Typ-aufsteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? 1 : -1);
-                    break;
-                case "Typ-absteigend":
-                    tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? -1 : 1);
-                    break;
-            }
-            let intoLabel =
-                `<div class="pull-right">Status ${statusIndex}: ${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
-            let intoTable =
-                `<table class="table">
-                 <thead>
-                 <tr>
-                 <th class="col-1">FMS</th>
-                 <th class="col">Kennung</th>
-                 <th class="col">Fahrzeugtyp</th>
-                 <th class="col-xs-3"></th>
-                 <th class="col">Wache</th>
-                 </tr>
-                 </thead>
-                 <tbody>`;
+        switch($('#sortBy').val()){
+            case "Status":
+                tableDatabase.sort((a, b) => a.status > b.status ? 1 : -1);
+                break;
+            case "Name-aufsteigend":
+                tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+                break;
+            case "Name-absteigend":
+                tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? -1 : 1);
+                break;
+            case "Wache-aufsteigend":
+                tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? 1 : -1);
+                break;
+            case "Wache-absteigend":
+                tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
+                break;
+            case "Typ-aufsteigend":
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? 1 : -1);
+                break;
+            case "Typ-absteigend":
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? -1 : 1);
+                break;
+        }
 
-            for(let i = 0; i < tableDatabase.length; i++){
-                intoTable +=
-                    `<tr>
-                     <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
-                     <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                     <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
-                     <td class="col-xs-3">
-                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/zuweisung"><button class="btn btn-default btn-xs">Personalzuweisung</button></a>
-                      <a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}/edit"><button class="btn btn-default btn-xs"><div class="glyphicon glyphicon-pencil"></div></button></a>
-                     </td>
-                     <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
-                     </tr>`;
-            }
+        let intoLabel =
+            `<div class="pull-right">Status ${statusIndex}: ${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
+        let intoTable =
+            `<table class="table">
+             <thead>
+             <tr>
+             <th class="col-1">FMS</th>
+             <th class="col">Kennung</th>
+             <th class="col">Fahrzeugtyp</th>
+             <th class="col-xs-3"></th>
+             <th class="col">Wache</th>
+             </tr>
+             </thead>
+             <tbody>`;
 
-            intoTable += `</tbody>
-                          </table>`;
+        for(let i = 0; i < tableDatabase.length; i++){
+            intoTable +=
+                `<tr>
+                 <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
+                 <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
+                 <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                 <td class="col-xs-3">
+                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/zuweisung">Personalzuweisung</a>
+                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
+                 </td>
+                 <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
+                 </tr>`;
+        }
 
-            $('#tableStatusLabel').html(intoLabel);
-            $('#tableStatusBody').html(intoTable);
-            tableDatabase.length = 0;
-        //}, 2000);
+        intoTable += `</tbody>
+                      </table>`;
+
+        $('#tableStatusLabel').html(intoLabel);
+        $('#tableStatusBody').html(intoTable);
+        tableDatabase.length = 0;
     }
 
     function playerInfos(){
@@ -742,7 +736,13 @@ overflow-y: auto;
                           </tr>`;
         }
 
-        var displayName = "";
+        function tableExtension(name, typeArrow, valueNow, valueMax, valueOnBuild){
+            var showOnTable = `${typeArrow} ${name}`;
+            if(valueMax > 0 || valueOnBuild > 0){
+                if(valueOnBuild > 0) infoContentOnBuild(showOnTable, valueNow, valueMax, valueOnBuild);
+                else infoContentMax(showOnTable, valueNow, valueMax);
+            }
+        }
 
         infoContentOneValue("Fahrzeuge", database.vehicles.all.length);
 
@@ -756,56 +756,38 @@ overflow-y: auto;
 
         if(buildings.stagingArea > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
-        if(buildings.fire.small.count > 0) infoContentOneValue(`<div style="margin-left:1em">Feuerwachen (klein)</div>`, buildings.fire.small.count);
-        if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
-            displayName = `${configTable.arrowFire} AB-Stellplätze`;
-            if(buildings.fire.small.ab.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.small.ab.build, buildings.fire.small.count * 2, buildings.fire.small.ab.onBuild);
-            else infoContentMax(displayName, buildings.fire.small.ab.build, buildings.fire.small.count * 2);
+        if(buildings.fire.small.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">Feuerwachen (klein)</div>`, buildings.fire.small.count);
+            if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
+                tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.small.ab.build, buildings.fire.small.build * 2, buildings.fire.small.ab.onBuild);
+            }
         }
 
         if(buildings.fire.normal.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Feuerwachen</div>`, buildings.fire.normal.count);
-            displayName = `${configTable.arrowFire} Großwache`;
-            if(buildings.fire.normal.big.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10));
-        }
-        if(buildings.fire.normal.rescue.build > 0 || buildings.fire.normal.rescue.onBuild > 0){
-            displayName = `${configTable.arrowFire} Rettungsdienst-Erweiterung`;
-            if(buildings.fire.normal.rescue.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build, buildings.fire.normal.rescue.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build);
-            if(buildings.rescue.normal == 0 && buildings.rescue.small == 0){
-                if(user_premium ? buildings.fire.normal.rescue.active > 15 : buildings.fire.normal.rescue.active > 20){
-                    infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(buildings.fire.normal.rescue.active / 15) : Math.floor(buildings.fire.normal.rescue.active / 20));
-                }
-                infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Notarztwagen (NAW)`, vehicles.naw, buildings.fire.normal.rescue.active);
+            if(Math.round((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
+                tableExtension(`Großwache`, configTable.arrowFire, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
             }
-        }
-        if(buildings.fire.normal.wr.build > 0 || buildings.fire.normal.wr.onBuild > 0){
-            displayName = `${configTable.arrowFire} Wasserrettungs-Erweiterung`;
-            if(buildings.fire.normal.wr.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.wr.active, buildings.fire.normal.wr.build, buildings.fire.normal.wr.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.wr.active, buildings.fire.normal.wr.build);
-        }
-        if(buildings.fire.normal.airport.build > 0 || buildings.fire.normal.airport.onBuild > 0){
-            displayName = `${configTable.arrowFire} Flughafen-Erweiterung`;
-            if(buildings.fire.normal.airport.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.airport.active, buildings.fire.normal.airport.build, buildings.fire.normal.airport.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.airport.active, buildings.fire.normal.airport.build);
-        }
-        if(buildings.fire.normal.industry.build > 0 || buildings.fire.normal.industry.onBuild > 0){
-            displayName = `${configTable.arrowFire} Werkfeuerwehr`;
-            if(buildings.fire.normal.industry.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.industry.active, buildings.fire.normal.industry.build, buildings.fire.normal.industry.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.industry.active, buildings.fire.normal.industry.build);
-        }
-        if(buildings.fire.normal.ab.build > 0 || buildings.fire.normal.ab.onBuild > 0){
-            displayName = `${configTable.arrowFire} AB-Stellplätze`;
-            if(buildings.fire.normal.ab.onBuild > 0) infoContentOnBuild(displayName, buildings.fire.normal.ab.build, buildings.fire.normal.count * 9, buildings.fire.normal.ab.onBuild);
-            else infoContentMax(displayName, buildings.fire.normal.ab.build, buildings.fire.normal.count * 9);
-        }
+            tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build, buildings.fire.normal.rescue.onBuild);
+            if(buildings.fire.normal.rescue.active > 0){
+                if(buildings.rescue.normal == 0 && buildings.rescue.small == 0){
+                    if(user_premium ? buildings.fire.normal.rescue.active > 15 : buildings.fire.normal.rescue.active > 20){
+                        infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(buildings.fire.normal.rescue.active / 15) : Math.floor(buildings.fire.normal.rescue.active / 20));
+                    }
+                    infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Notarztwagen (NAW)`, vehicles.naw, buildings.fire.normal.rescue.active);
+                }
+            }
+            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowFire, buildings.fire.normal.wr.active, buildings.fire.normal.wr.build, buildings.fire.normal.wr.onBuild);
+            tableExtension(`Flughafen-Erweiterung`, configTable.arrowFire, buildings.fire.normal.airport.active, buildings.fire.normal.airport.build, buildings.fire.normal.airport.onBuild);
+            tableExtension(`Werkfeuerwehr`, configTable.arrowFire, buildings.fire.normal.industry.active, buildings.fire.normal.industry.build, buildings.fire.normal.industry.onBuild);
+            if(buildings.fire.normal.ab.build > 0 || buildings.fire.normal.ab.onBuild > 0){
+                tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.normal.ab.build, buildings.fire.normal.count * 9, buildings.fire.normal.ab.onBuild);
+            }
 
-        if(buildings.school.fire.count > 0){
-            infoContentOneValue(`<div style="margin-left:1em">Feuerwehrschulen</div>`, buildings.school.fire.count);
-            displayName = `${configTable.arrowFire} Klassenräume`;
-            if(buildings.school.fire.rooms.onBuild > 0) infoContentOnBuild(displayName, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
-            else infoContentMax(displayName, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4);
+            if(buildings.school.fire.count > 0){
+                infoContentOneValue(`<div style="margin-left:1em">Feuerwehrschulen</div>`, buildings.school.fire.count);
+                tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
+            }
         }
 
         if(buildings.rescue.small > 0){
@@ -826,31 +808,21 @@ overflow-y: auto;
             infoContentMax(`${configTable.arrowRescue} Notarztwagen (NAW)`, vehicles.naw, (buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active));
         }
 
-        if(buildings.seg.count > 0) infoContentOneValue(`<div style="margin-left:1em">Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
-        if(buildings.seg.leader.build > 0 || buildings.seg.leader.onBuild > 0){
-            displayName = `${configTable.arrowRescue} Führung`;
-            if(buildings.seg.leader.onBuild > 0) infoContentOnBuild(displayName, buildings.seg.leader.active, buildings.seg.leader.build, buildings.seg.leader.onBuild);
-            else infoContentMax(displayName, buildings.seg.leader.active, buildings.seg.leader.build);
-        }
-        if(buildings.seg.sanD.build > 0 || buildings.seg.sanD.onBuild > 0){
-            displayName = `${configTable.arrowRescue} Sanitätsdienst`;
-            if(buildings.seg.sanD.onBuild > 0) infoContentOnBuild(displayName, buildings.seg.sanD.active, buildings.seg.sanD.build, buildings.seg.sanD.onBuild);
-            else infoContentMax(displayName, buildings.seg.sanD.active, buildings.seg.sanD.build);
-        }
-        if(buildings.seg.wr.build > 0 || buildings.seg.wr.onBuild > 0){
-            displayName = `${configTable.arrowRescue} Wasserrettungs-Erweiterung`;
-            if(buildings.seg.wr.onBuild > 0) infoContentOnBuild(displayName, buildings.seg.wr.active, buildings.seg.wr.build, buildings.seg.wr.onBuild);
-            else infoContentMax(displayName, buildings.seg.wr.active, buildings.seg.wr.build);
-        }
-        if(buildings.seg.dogs.build > 0 || buildings.seg.dogs.onBuild > 0){
-            displayName = `${configTable.arrowRescue} Rettungshundestaffel`;
-            if(buildings.seg.dogs.onBuild > 0) infoContentOnBuild(displayName, buildings.seg.dogs.active, buildings.seg.dogs.build, buildings.seg.dogs.onBuild);
-            else infoContentMax(displayName, buildings.seg.dogs.active, buildings.seg.dogs.build);
+        if(buildings.seg.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
+            tableExtension(`Führung`, configTable.arrowRescue, buildings.seg.leader.active, buildings.seg.leader.build, buildings.seg.leader.onBuild);
+            tableExtension(`Sanitätsdienst`, configTable.arrowRescue, buildings.seg.sanD.active, buildings.seg.sanD.build, buildings.seg.sanD.onBuild);
+            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, buildings.seg.wr.active, buildings.seg.wr.build, buildings.seg.wr.onBuild);
+            tableExtension(`Rettungshundestaffel`, configTable.arrowRescue, buildings.seg.dogs.active, buildings.seg.dogs.build, buildings.seg.dogs.onBuild);
         }
 
-        if(buildings.wr.count > 0 || buildings.wr.active > 0) infoContentMax(`<div style="margin-left:1em">Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
+        if(buildings.wr.count > 0 || buildings.wr.active > 0){
+            infoContentMax(`<div style="margin-left:1em">Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
+        }
 
-        if(buildings.rescueDogs.count > 0 || buildings.rescueDogs.active > 0) infoContentMax(`<div style="margin-left:1em">Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
+        if(buildings.rescueDogs.count > 0 || buildings.rescueDogs.active > 0){
+            infoContentMax(`<div style="margin-left:1em">Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
+        }
 
         if(buildings.helicopter.rescue.count > 0){
             infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
@@ -859,87 +831,37 @@ overflow-y: auto;
 
         if(buildings.school.rescue.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Rettungsdienstschulen</div>`, buildings.school.rescue.count);
-            displayName = `${configTable.arrowRescue} Klassenräume`;
-            if(buildings.school.rescue.rooms.onBuild > 0) infoContentOnBuild(displayName, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4, buildings.school.rescue.rooms.onBuild);
-            else infoContentMax(displayName, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4);
+            tableExtension(`Klassenräume`, configTable.arrowRescue, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4, buildings.school.rescue.rooms.onBuild);
         }
 
         if(buildings.police.small.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Polizeiwachen (klein)</div>`, buildings.police.small.count);
-            displayName = `${configTable.arrowPolice} Zellen`;
-            if(buildings.police.small.cell.onBuild > 0) infoContentOnBuild(displayName, buildings.police.small.cell.build, buildings.police.small.count * 2, buildings.police.small.cell.onBuild);
-            else infoContentMax(displayName, buildings.police.small.cell.build, buildings.police.small.count * 2);
+            tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.small.cell.build, buildings.police.small.count * 2, buildings.police.small.cell.onBuild);
         }
 
         if(buildings.police.normal.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Polizeiwachen</div>`, buildings.police.normal.count);
-            displayName = `${configTable.arrowPolice} Zellen`;
-            if(buildings.police.normal.cell.onBuild > 0) infoContentOnBuild(displayName, buildings.police.normal.cell.build, buildings.police.normal.count * 10, buildings.police.normal.cell.onBuild);
-            else infoContentMax(displayName, buildings.police.normal.cell.build, buildings.police.normal.count * 10);
+            tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.normal.cell.build, buildings.police.normal.count * 10, buildings.police.normal.cell.onBuild);
         }
 
-        if(buildings.bepo.count > 0) infoContentOneValue(`<div style="margin-left:1em">Bereitschaftspolizei</div>`, buildings.bepo.count);
-        if(buildings.bepo.division.second.build > 0 || buildings.bepo.division.second.onBuild > 0){
-            displayName = `${configTable.arrowPolice} 2. Zug der 1. Hundertschaft`;
-            if(buildings.bepo.division.second.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.division.second.active, buildings.bepo.division.second.build, buildings.bepo.division.second.onBuild);
-            else infoContentMax(displayName, buildings.bepo.division.second.active, buildings.bepo.division.second.build);
-        }
-        if(buildings.bepo.division.third.build > 0 || buildings.bepo.division.third.onBuild > 0){
-            displayName = `${configTable.arrowPolice} 3. Zug der 1. Hundertschaft`;
-            if(buildings.bepo.division.third.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.division.third.active, buildings.bepo.division.third.build, buildings.bepo.division.third.onBuild);
-            else infoContentMax(displayName, buildings.bepo.division.third.active, buildings.bepo.division.third.build);
-        }
-        if(buildings.bepo.mobilePrison.build > 0 || buildings.bepo.mobilePrison.onBuild > 0){
-            displayName = `${configTable.arrowPolice} Sonderfahrzeug: Gefangenenkraftwagen`;
-            if(buildings.bepo.mobilePrison.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build ,buildings.bepo.mobilePrison.onBuild);
-            else infoContentMax(displayName, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build);
-        }
-        if(buildings.bepo.waterthrower.build > 0 || buildings.bepo.waterthrower.onBuild > 0){
-            displayName = `${configTable.arrowPolice} Technischer Zug: Wasserwerfer`;
-            if(buildings.bepo.waterthrower.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.waterthrower.active, buildings.bepo.waterthrower.build ,buildings.bepo.waterthrower.onBuild);
-            else infoContentMax(displayName, buildings.bepo.waterthrower.active, buildings.bepo.waterthrower.build);
-        }
-        if(buildings.bepo.sek.first.build > 0 || buildings.bepo.sek.first.onBuild > 0){
-            displayName = `${configTable.arrowPolice} SEK: 1. Zug`;
-            if(buildings.bepo.sek.first.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.sek.first.active, buildings.bepo.sek.first.build ,buildings.bepo.sek.first.onBuild);
-            else infoContentMax(displayName, buildings.bepo.sek.first.active, buildings.bepo.sek.first.build);
-        }
-        if(buildings.bepo.sek.second.build > 0 || buildings.bepo.sek.second.onBuild > 0){
-            displayName = `${configTable.arrowPolice} SEK: 2. Zug`;
-            if(buildings.bepo.sek.second.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.sek.second.active, buildings.bepo.sek.second.build ,buildings.bepo.sek.second.onBuild);
-            else infoContentMax(displayName, buildings.bepo.sek.second.active, buildings.bepo.sek.second.build);
-        }
-        if(buildings.bepo.mek.first.build > 0 || buildings.bepo.mek.first.onBuild > 0){
-            displayName = `${configTable.arrowPolice} MEK: 1. Zug`;
-            if(buildings.bepo.mek.first.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.mek.first.active, buildings.bepo.mek.first.build ,buildings.bepo.mek.first.onBuild);
-            else infoContentMax(displayName, buildings.bepo.mek.first.active, buildings.bepo.mek.first.build);
-        }
-        if(buildings.bepo.mek.second.build > 0 || buildings.bepo.mek.second.onBuild > 0){
-            displayName = `${configTable.arrowPolice} MEK: 2. Zug`;
-            if(buildings.bepo.mek.second.onBuild > 0) infoContentOnBuild(displayName, buildings.bepo.mek.second.active, buildings.bepo.mek.second.build ,buildings.bepo.mek.second.onBuild);
-            else infoContentMax(displayName, buildings.bepo.mek.second.active, buildings.bepo.mek.second.build);
+        if(buildings.bepo.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">Bereitschaftspolizei</div>`, buildings.bepo.count);
+            tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.second.active, buildings.bepo.division.second.build, buildings.bepo.division.second.onBuild);
+            tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.third.active, buildings.bepo.division.third.build, buildings.bepo.division.third.onBuild);
+            tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build ,buildings.bepo.mobilePrison.onBuild);
+            tableExtension(`Technischer Zug: Wasserwerfer`, configTable.arrowPolice, buildings.bepo.waterthrower.active, buildings.bepo.waterthrower.build ,buildings.bepo.waterthrower.onBuild);
+            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.bepo.sek.first.active, buildings.bepo.sek.first.build, buildings.bepo.sek.first.onBuild);
+            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.bepo.sek.second.active, buildings.bepo.sek.second.build, buildings.bepo.sek.second.onBuild);
+            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.bepo.mek.first.active, buildings.bepo.mek.first.build, buildings.bepo.mek.first.onBuild);
+            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, buildings.bepo.mek.second.active, buildings.bepo.mek.second.build, buildings.bepo.mek.second.onBuild);
         }
 
-        if(buildings.polSonder.count > 0) infoContentOneValue(`<div style="margin-left:1em">Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
-        if(buildings.polSonder.sek.first.build > 0 || buildings.polSonder.sek.first.onBuild > 0){
-            displayName = `${configTable.arrowPolice} SEK: 1. Zug`;
-            if(buildings.polSonder.sek.first.onBuild > 0) infoContentOnBuild(displayName, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build ,buildings.polSonder.sek.first.onBuild);
-            else infoContentMax(displayName, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build);
-        }
-        if(buildings.polSonder.sek.second.build > 0 || buildings.polSonder.sek.second.onBuild > 0){
-            displayName = `${configTable.arrowPolice} SEK: 2. Zug`;
-            if(buildings.polSonder.sek.second.onBuild > 0) infoContentOnBuild(displayName, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build ,buildings.polSonder.sek.second.onBuild);
-            else infoContentMax(displayName, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build);
-        }
-        if(buildings.polSonder.mek.first.build > 0 || buildings.polSonder.mek.first.onBuild > 0){
-            displayName = `${configTable.arrowPolice} MEK: 1. Zug`;
-            if(buildings.polSonder.mek.first.onBuild > 0) infoContentOnBuild(displayName, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build ,buildings.polSonder.mek.first.onBuild);
-            else infoContentMax(displayName, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build);
-        }
-        if(buildings.polSonder.mek.second.build > 0 || buildings.polSonder.mek.second.onBuild > 0){
-            displayName = `${configTable.arrowPolice} MEK: 2. Zug`;
-            if(buildings.polSonder.mek.second.onBuild > 0) infoContentOnBuild(displayName, buildings.polSonder.mek.second.active, buildings.polSonder.mek.second.build ,buildings.polSonder.mek.second.onBuild);
-            else infoContentMax(displayName, buildings.polSonder.mek.second.active, buildings.polSonder.mek.second.build);
+        if(buildings.polSonder.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
+            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build, buildings.polSonder.sek.first.onBuild);
+            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build, buildings.polSonder.sek.second.onBuild);
+            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build, buildings.polSonder.mek.first.onBuild);
+            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.mek.second.active, buildings.polSonder.mek.second.build, buildings.polSonder.mek.second.onBuild);
         }
 
         if(buildings.helicopter.police.count > 0){
@@ -949,58 +871,24 @@ overflow-y: auto;
 
         if(buildings.school.police.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">Polizeischulen</div>`, buildings.school.police.count);
-            displayName = `${configTable.arrowPolice} Klassenräume`;
-            if(buildings.school.police.rooms.onBuild > 0) infoContentOnBuild(displayName, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4, buildings.school.police.rooms.onBuild);
-            else infoContentMax(displayName, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4);
+            tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4, buildings.school.police.rooms.onBuild);
         }
 
-        if(buildings.thw.count > 0) infoContentOneValue(`<div style="margin-left:1em">THW Ortsverbände</div>`, buildings.thw.count);
-        if(buildings.thw.firstTz.bg.build > 0 || buildings.thw.firstTz.bg.onBuild > 0){
-            displayName = `${configTable.arrowThw} 1. Technischer Zug: Bergungsgruppe 2`;
-            if(buildings.thw.firstTz.bg.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build, buildings.thw.firstTz.bg.onBuild);
-            else infoContentMax(displayName, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build);
-        }
-        if(buildings.thw.firstTz.zug.build > 0 || buildings.thw.firstTz.zug.onBuild > 0){
-            displayName = `${configTable.arrowThw} 1. Technischer Zug: Zugtrupp`;
-            if(buildings.thw.firstTz.zug.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build, buildings.thw.firstTz.zug.onBuild);
-            else infoContentMax(displayName, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build);
-        }
-        if(buildings.thw.fgrR.build > 0 || buildings.thw.fgrR.onBuild > 0){
-            displayName = `${configTable.arrowThw} Fachgruppe Räumen`;
-            if(buildings.thw.fgrR.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.fgrR.active, buildings.thw.fgrR.build, buildings.thw.fgrR.onBuild);
-            else infoContentMax(displayName, buildings.thw.fgrR.active, buildings.thw.fgrR.build);
-        }
-        if(buildings.thw.fgrW.build > 0 || buildings.thw.fgrW.onBuild > 0){
-            displayName = `${configTable.arrowThw} Fachgruppe Wassergefahren`;
-            if(buildings.thw.fgrW.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.fgrW.active, buildings.thw.fgrW.build, buildings.thw.fgrW.onBuild);
-            else infoContentMax(displayName, buildings.thw.fgrW.active, buildings.thw.fgrW.build);
-        }
-        if(buildings.thw.secondTz.grund.build > 0 || buildings.thw.secondTz.grund.onBuild > 0){
-            displayName = `${configTable.arrowThw} 2. Technischer Zug: Grundvoraussetzungen`;
-            if(buildings.thw.secondTz.grund.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.secondTz.grund.active, buildings.thw.secondTz.grund.build, buildings.thw.secondTz.grund.onBuild);
-            else infoContentMax(displayName, buildings.thw.secondTz.grund.active, buildings.thw.secondTz.grund.build);
-        }
-        if(buildings.thw.secondTz.bg.build > 0 || buildings.thw.secondTz.bg.onBuild > 0){
-            displayName = `${configTable.arrowThw} 2. Technischer Zug: Bergungsgruppe 2`;
-            if(buildings.thw.secondTz.bg.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.secondTz.bg.active, buildings.thw.secondTz.bg.build, buildings.thw.secondTz.bg.onBuild);
-            else infoContentMax(displayName, buildings.thw.secondTz.bg.active, buildings.thw.secondTz.bg.build);
-        }
-        if(buildings.thw.secondTz.zug.build > 0 || buildings.thw.secondTz.zug.onBuild > 0){
-            displayName = `${configTable.arrowThw} 2. Technischer Zug: Zugtrupp`;
-            if(buildings.thw.secondTz.zug.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.secondTz.zug.active, buildings.thw.secondTz.zug.build, buildings.thw.secondTz.zug.onBuild);
-            else infoContentMax(displayName, buildings.thw.secondTz.zug.active, buildings.thw.secondTz.zug.build);
-        }
-        if(buildings.thw.fgrO.build > 0 || buildings.thw.fgrO.onBuild > 0){
-            displayName = `${configTable.arrowThw} Fachgruppe Ortung`;
-            if(buildings.thw.fgrO.onBuild > 0) infoContentOnBuild(displayName, buildings.thw.fgrO.active, buildings.thw.fgrO.build, buildings.thw.fgrO.onBuild);
-            else infoContentMax(displayName, buildings.thw.fgrO.active, buildings.thw.fgrO.build);
+        if(buildings.thw.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">THW Ortsverbände</div>`, buildings.thw.count);
+            tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build, buildings.thw.firstTz.bg.onBuild);
+            tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build, buildings.thw.firstTz.zug.onBuild);
+            tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, buildings.thw.fgrR.active, buildings.thw.fgrR.build, buildings.thw.fgrR.onBuild);
+            tableExtension(`Fachgruppe Wassergefahren`, configTable.arrowThw, buildings.thw.fgrW.active, buildings.thw.fgrW.build, buildings.thw.fgrW.onBuild);
+            tableExtension(`2. Technischer Zug: Grundvoraussetzungen`, configTable.arrowThw, buildings.thw.secondTz.grund.active, buildings.thw.secondTz.grund.build, buildings.thw.secondTz.grund.onBuild);
+            tableExtension(`2. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.secondTz.bg.active, buildings.thw.secondTz.bg.build, buildings.thw.secondTz.bg.onBuild);
+            tableExtension(`2. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.secondTz.zug.active, buildings.thw.secondTz.zug.build, buildings.thw.secondTz.zug.onBuild);
+            tableExtension(`Fachgruppe Ortung`, configTable.arrowThw, buildings.thw.fgrO.active, buildings.thw.fgrO.build, buildings.thw.fgrO.onBuild);
         }
 
         if(buildings.school.thw.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">THW Bundesschulen</div>`, buildings.school.thw.count);
-            displayName = `${configTable.arrowThw} Klassenräume`;
-            if(buildings.school.thw.rooms.onBuild > 0) infoContentOnBuild(displayName, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
-            else infoContentMax(displayName, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4);
+            tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
         }
 
         if(buildings.hospital.count > 0){
@@ -1073,7 +961,7 @@ overflow-y: auto;
     });
 
     $("body").on("click", "#sortBy", function(){
-        if(options.status.count != 0) createTable(options.status.count);
+        if(options.status.count !== 0) createTable(options.status.count);
     });
 
     $("body").on("click", "#filterFw", function(){
