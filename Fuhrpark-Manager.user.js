@@ -15,7 +15,7 @@
     var showOnBuild = true; //true: zeigt Ausbauten im Ausbau; false: Ausbauten im Ausbau werden nicht gezeigt
 
     if(buttonOnRadio) $('#radio_panel_heading').after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" class="btn btn-default btn-xs">Fuhrpark-Manager</a>`);
-    else $('#menu_profile').parent().before(`<li><a style="cursor: pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
+    else $('#menu_profile').parent().before(`<li><a style="cursor:pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
 
     $("head").append(`<style>
 .modal {
@@ -215,7 +215,7 @@ overflow-y: auto;
         });
 
         if(!isNaN(options.dropdown.dispatchCenter.id)){
-            for(let i = tableDatabase.length - 1; i >= 0; i --){
+            for(let i = tableDatabase.length - 1; i >= 0; i--){
                 if(options.dropdown.dispatchCenter.id !== database.buildings.get.onDispatchCenter[tableDatabase[i].buildingId]) tableDatabase.splice(i,1);
             }
         }
@@ -782,6 +782,13 @@ overflow-y: auto;
             }
         }
 
+        function rescueVehicles(html, value){
+            if(user_premium ? value >= 15 : value >= 20){
+                infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.round(value / 15) : Math.round(value / 20));
+            }
+            infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value);
+        }
+
         infoContentOneValue("Fahrzeuge", database.vehicles.all.length);
 
         if(buildings.helicopter.rescue.count == 0) infoContentMax(`<div style="margin-left:1em">Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
@@ -809,10 +816,7 @@ overflow-y: auto;
             tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build, buildings.fire.normal.rescue.onBuild);
             if(buildings.fire.normal.rescue.active > 0){
                 if(buildings.rescue.normal == 0 && buildings.rescue.small == 0){
-                    if(user_premium ? buildings.fire.normal.rescue.active > 15 : buildings.fire.normal.rescue.active > 20){
-                        infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(buildings.fire.normal.rescue.active / 15) : Math.floor(buildings.fire.normal.rescue.active / 20));
-                    }
-                    infoContentMax(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div> Notarztwagen (NAW)`, vehicles.naw, buildings.fire.normal.rescue.active);
+                    rescueVehicles(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div>`, buildings.fire.rescue.active);
                 }
             }
             tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowFire, buildings.fire.normal.wr.active, buildings.fire.normal.wr.build, buildings.fire.normal.wr.onBuild);
@@ -831,19 +835,13 @@ overflow-y: auto;
         if(buildings.rescue.small > 0){
             infoContentOneValue(`<div style="margin-left:1em">Rettungswachen (klein)</div>`, buildings.rescue.small);
             if(buildings.rescue.normal == 0){
-                if(user_premium ? (buildings.rescue.small + buildings.fire.normal.rescue.active) > 15 : (buildings.rescue.small + buildings.fire.normal.rescue.active) > 20){
-                    infoContentMax(`${configTable.arrowRescue} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor((buildings.rescue.small + buildings.fire.normal.rescue.active) / 15) : Math.floor((buildings.rescue.small + buildings.fire.normal.rescue.active) / 20));
-                }
-                infoContentMax(`${configTable.arrowRescue} Notarztwagen (NAW)`, vehicles.naw, (buildings.rescue.small + buildings.fire.normal.rescue.active));
+                rescueVehicles(configTable.arrowRescue, buildings.rescue.small + buildings.fire.rescue.active);
             }
         }
 
         if(buildings.rescue.normal > 0){
             infoContentOneValue(`<div style="margin-left:1em">Rettungswachen</div>`, buildings.rescue.normal);
-            if(user_premium ? (buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active) > 15 : (buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active) > 20){
-                infoContentMax(`${configTable.arrowRescue} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor((buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active) / 15) : Math.floor((buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active) / 20));
-            }
-            infoContentMax(`${configTable.arrowRescue} Notarztwagen (NAW)`, vehicles.naw, (buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active));
+            rescueVehicles(configTable.arrowRescue, buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active);
         }
 
         if(buildings.seg.count > 0){
