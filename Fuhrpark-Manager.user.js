@@ -467,223 +467,227 @@ overflow-y: auto;
             if(item.building_type == 4) buildings.hospital.beds.build += item.level;
             if(item.extensions.length > 0){
                 for(let i = 0; i < item.extensions.length; i ++){
+                    var switchOptions = {"active":item.extensions[i].enabled && item.extensions[i].available,
+                                         "build":item.extensions[i].available,
+                                         "onBuild":!item.extensions[i].available && item.extensions[i].enabled && showOnBuild
+                                        };
                     switch(item.extensions[i].caption){
                         case "Großwache":
-                            if(item.extensions[i].available) buildings.fire.normal.big.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.fire.normal.big.onBuild ++;
+                            if(switchOptions.build) buildings.fire.normal.big.build ++;
+                            if(switchOptions.onBuild) buildings.fire.normal.big.onBuild ++;
                             break;
                         case "Rettungsdienst-Erweiterung":
-                            if(item.extensions[i].available) buildings.fire.normal.rescue.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.fire.normal.rescue.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.fire.normal.rescue.onBuild ++;
+                            if(switchOptions.build) buildings.fire.normal.rescue.build ++;
+                            if(switchOptions.active) buildings.fire.normal.rescue.active ++;
+                            if(switchOptions.onBuild) buildings.fire.normal.rescue.onBuild ++;
                             break;
                         case "Werkfeuerwehr":
-                            if(item.extensions[i].available) buildings.fire.normal.industry.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.fire.normal.industry.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.fire.normal.industry.onBuild ++;
+                            if(switchOptions.build) buildings.fire.normal.industry.build ++;
+                            if(switchOptions.active) buildings.fire.normal.industry.active ++;
+                            if(switchOptions.onBuild) buildings.fire.normal.industry.onBuild ++;
                             break;
                         case "Flughafen-Erweiterung":
-                            if(item.extensions[i].available) buildings.fire.normal.airport.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.fire.normal.airport.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.fire.normal.airport.onBuild ++;
+                            if(switchOptions.build) buildings.fire.normal.airport.build ++;
+                            if(switchOptions.active) buildings.fire.normal.airport.active ++;
+                            if(switchOptions.onBuild) buildings.fire.normal.airport.onBuild ++;
                             break;
                         case "Führung":
-                            if(item.extensions[i].available) buildings.seg.leader.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.seg.leader.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.seg.leader.onBuild ++;
+                            if(switchOptions.build) buildings.seg.leader.build ++;
+                            if(switchOptions.active) buildings.seg.leader.active ++;
+                            if(switchOptions.onBuild) buildings.seg.leader.onBuild ++;
                             break;
                         case "Sanitätsdienst":
-                            if(item.extensions[i].available) buildings.seg.sanD.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.seg.sanD.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.seg.sanD.onBuild ++;
+                            if(switchOptions.build) buildings.seg.sanD.build ++;
+                            if(switchOptions.active) buildings.seg.sanD.active ++;
+                            if(switchOptions.onBuild) buildings.seg.sanD.onBuild ++;
                             break;
                         case "Wasserrettungs-Erweiterung":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 0) buildings.fire.normal.wr.build ++;
                                 else if(item.building_type == 12) buildings.seg.wr.build ++;
                             }
-                            if(item.extensions[i].enabled && item.extensions[i].available){
+                            if(switchOptions.active){
                                 if(item.building_type == 0) buildings.fire.normal.wr.active ++;
                                 else if(item.building_type == 12) buildings.seg.wr.active ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 0) buildings.fire.normal.wr.onBuild ++;
                                 else if(item.building_type == 12) buildings.seg.wr.onBuild ++;
                             }
                             break;
                         case "Rettungshundestaffel":
-                            if(item.extensions[i].available) buildings.seg.dogs.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.seg.dogs.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.seg.dogs.onBuild ++;
+                            if(switchOptions.build) buildings.seg.dogs.build ++;
+                            if(switchOptions.active) buildings.seg.dogs.active ++;
+                            if(switchOptions.onBuild) buildings.seg.dogs.onBuild ++;
                             break;
                         case "Abrollbehälter-Stellplatz":
-                            if(item.extensions[i].available) item.small_building ? buildings.fire.small.ab.build ++ : buildings.fire.normal.ab.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) item.small_building ? buildings.fire.small.ab.onBuild ++ : buildings.fire.normal.ab.onBuild ++;
+                            if(switchOptions.build) item.small_building ? buildings.fire.small.ab.build ++ : buildings.fire.normal.ab.build ++;
+                            if(switchOptions.onBuild) item.small_building ? buildings.fire.small.ab.onBuild ++ : buildings.fire.normal.ab.onBuild ++;
                             break;
                         case "2. Zug der 1. Hundertschaft":
-                            if(item.extensions[i].available) buildings.bepo.division.second.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.bepo.division.second.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.bepo.division.second.onBuild ++;
+                            if(switchOptions.build) buildings.bepo.division.second.build ++;
+                            if(switchOptions.active) buildings.bepo.division.second.active ++;
+                            if(switchOptions.onBuild) buildings.bepo.division.second.onBuild ++;
                             break;
                         case "3. Zug der 1. Hundertschaft":
-                            if(item.extensions[i].available) buildings.bepo.division.third.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.bepo.division.third.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.bepo.division.third.onBuild ++;
+                            if(switchOptions.build) buildings.bepo.division.third.build ++;
+                            if(switchOptions.active) buildings.bepo.division.third.active ++;
+                            if(switchOptions.onBuild) buildings.bepo.division.third.onBuild ++;
                             break;
                         case "Sonderfahrzeug: Gefangenenkraftwagen":
-                            if(item.extensions[i].available) buildings.bepo.mobilePrison.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.bepo.mobilePrison.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.bepo.mobilePrison.onBuild ++;
+                            if(switchOptions.build) buildings.bepo.mobilePrison.build ++;
+                            if(switchOptions.active) buildings.bepo.mobilePrison.active ++;
+                            if(switchOptions.onBuild) buildings.bepo.mobilePrison.onBuild ++;
                             break;
                         case "Technischer Zug: Wasserwerfer":
-                            if(item.extensions[i].available) buildings.bepo.waterthrower.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.bepo.waterthrower.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.bepo.waterthrower.onBuild ++;
+                            if(switchOptions.build) buildings.bepo.waterthrower.build ++;
+                            if(switchOptions.active) buildings.bepo.waterthrower.active ++;
+                            if(switchOptions.onBuild) buildings.bepo.waterthrower.onBuild ++;
                             break;
                         case "SEK: 1. Zug":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 11) buildings.bepo.sek.first.build ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.first.build ++;
                             }
-                            if(item.extensions[i].enabled && item.extensions[i].available){
+                            if(switchOptions.active){
                                 if(item.building_type == 11) buildings.bepo.sek.first.active ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.first.active ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 11) buildings.bepo.sek.first.onBuild ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.first.onBuild ++;
                             }
                             break;
                         case "SEK: 2. Zug":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 11) buildings.bepo.sek.second.build ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.second.build ++;
                             }
-                            if(item.extensions[i].enabled && item.extensions[i].available){
+                            if(switchOptions.active){
                                 if(item.building_type == 11) buildings.bepo.sek.second.active ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.second.active ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 11) buildings.bepo.sek.second.onBuild ++;
                                 else if(item.building_type == 17) buildings.polSonder.sek.second.onBuild ++;
                             }
                             break;
                         case "MEK: 1. Zug":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 11) buildings.bepo.mek.first.build ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.first.build ++;
                             }
-                            if(item.extensions[i].enabled && item.extensions[i].available){
+                            if(switchOptions.active){
                                 if(item.building_type == 11) buildings.bepo.mek.first.active ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.first.active ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 11) buildings.bepo.mek.first.onBuild ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.first.onBuild ++;
                             }
                             break;
                         case "MEK: 2. Zug":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 11) buildings.bepo.mek.second.build ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.second.build ++;
                             }
-                            if(item.extensions[i].enabled && item.extensions[i].available){
+                            if(switchOptions.active){
                                 if(item.building_type == 11) buildings.bepo.mek.second.active ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.second.active ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 11) buildings.bepo.mek.second.onBuild ++;
                                 else if(item.building_type == 17) buildings.polSonder.mek.second.onBuild ++;
                             }
                             break;
                         case "1. Technischer Zug: Bergungsgruppe 2":
-                            if(item.extensions[i].available) buildings.thw.firstTz.bg.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.firstTz.bg.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.firstTz.bg.onBuild ++;
+                            if(switchOptions.build) buildings.thw.firstTz.bg.build ++;
+                            if(switchOptions.active) buildings.thw.firstTz.bg.active ++;
+                            if(switchOptions.onBuild) buildings.thw.firstTz.bg.onBuild ++;
                             break;
                         case "1. Technischer Zug: Zugtrupp":
-                            if(item.extensions[i].available) buildings.thw.firstTz.zug.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.firstTz.zug.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.firstTz.zug.onBuild ++;
+                            if(switchOptions.build) buildings.thw.firstTz.zug.build ++;
+                            if(switchOptions.active) buildings.thw.firstTz.zug.active ++;
+                            if(switchOptions.onBuild) buildings.thw.firstTz.zug.onBuild ++;
                             break;
                         case "Fachgruppe Räumen":
-                            if(item.extensions[i].available) buildings.thw.fgrR.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.fgrR.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.fgrR.onBuild ++;
+                            if(switchOptions.build) buildings.thw.fgrR.build ++;
+                            if(switchOptions.active) buildings.thw.fgrR.active ++;
+                            if(switchOptions.onBuild) buildings.thw.fgrR.onBuild ++;
                             break;
                         case "Fachgruppe Wassergefahren":
-                            if(item.extensions[i].available) buildings.thw.fgrW.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.fgrW.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.fgrW.onBuild ++;
+                            if(switchOptions.build) buildings.thw.fgrW.build ++;
+                            if(switchOptions.active) buildings.thw.fgrW.active ++;
+                            if(switchOptions.onBuild) buildings.thw.fgrW.onBuild ++;
                             break;
                         case "2. Technischer Zug - Grundvorraussetzungen":
-                            if(item.extensions[i].available) buildings.thw.secondTz.grund.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.secondTz.grund.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.secondTz.grund.onBuild ++;
+                            if(switchOptions.build) buildings.thw.secondTz.grund.build ++;
+                            if(switchOptions.active) buildings.thw.secondTz.grund.active ++;
+                            if(switchOptions.onBuild) buildings.thw.secondTz.grund.onBuild ++;
                             break;
                         case "2. Technischer Zug: Bergungsgruppe 2":
-                            if(item.extensions[i].available) buildings.thw.secondTz.bg.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.secondTz.bg.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.secondTz.bg.onBuild ++;
+                            if(switchOptions.build) buildings.thw.secondTz.bg.build ++;
+                            if(switchOptions.active) buildings.thw.secondTz.bg.active ++;
+                            if(switchOptions.onBuild) buildings.thw.secondTz.bg.onBuild ++;
                             break;
                         case "2. Technischer Zug: Zugtrupp":
-                            if(item.extensions[i].available) buildings.thw.secondTz.zug.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.secondTz.zug.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.secondTz.zug.onBuild ++;
+                            if(switchOptions.build) buildings.thw.secondTz.zug.build ++;
+                            if(switchOptions.active) buildings.thw.secondTz.zug.active ++;
+                            if(switchOptions.onBuild) buildings.thw.secondTz.zug.onBuild ++;
                             break;
                         case "Fachgruppe Ortung":
-                            if(item.extensions[i].available) buildings.thw.fgrO.build ++;
-                            if(item.extensions[i].enabled && item.extensions[i].available) buildings.thw.fgrO.active ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.thw.fgrO.onBuild ++;
+                            if(switchOptions.build) buildings.thw.fgrO.build ++;
+                            if(switchOptions.active) buildings.thw.fgrO.active ++;
+                            if(switchOptions.onBuild) buildings.thw.fgrO.onBuild ++;
                             break;
                         case "Allgemeine Innere":
-                            if(item.extensions[i].available) buildings.hospital.extension.ina.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.ina.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.ina.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.ina.onBuild ++;
                             break;
                         case "Allgemeine Chirurgie":
-                            if(item.extensions[i].available) buildings.hospital.extension.ach.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.ach.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.ach.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.ach.onBuild ++;
                             break;
                         case "Gynäkologie":
-                            if(item.extensions[i].available) buildings.hospital.extension.gyn.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.gyn.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.gyn.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.gyn.onBuild ++;
                             break;
                         case "Urologie":
-                            if(item.extensions[i].available) buildings.hospital.extension.uro.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.uro.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.uro.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.uro.onBuild ++;
                             break;
                         case "Unfallchirurgie":
-                            if(item.extensions[i].available) buildings.hospital.extension.uch.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.uch.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.uch.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.uch.onBuild ++;
                             break;
                         case "Neurologie":
-                            if(item.extensions[i].available) buildings.hospital.extension.nrl.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.nrl.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.nrl.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.nrl.onBuild ++;
                             break;
                         case "Neurochirurgie":
-                            if(item.extensions[i].available) if(item.extensions[i].available) buildings.hospital.extension.nch.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.nch.onBuild ++;
+                            if(switchOptions.build) if(switchOptions.build) buildings.hospital.extension.nch.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.nch.onBuild ++;
                             break;
                         case "Kardiologie":
-                            if(item.extensions[i].available) buildings.hospital.extension.kar.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.kar.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.kar.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.kar.onBuild ++;
                             break;
                         case "Kardiochirurgie":
-                            if(item.extensions[i].available) buildings.hospital.extension.kch.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) buildings.hospital.extension.kch.onBuild ++;
+                            if(switchOptions.build) buildings.hospital.extension.kch.build ++;
+                            if(switchOptions.onBuild) buildings.hospital.extension.kch.onBuild ++;
                             break;
                         case "Zelle":
-                            if(item.extensions[i].available) item.small_building ? buildings.police.small.cell.build ++ : buildings.police.normal.cell.build ++;
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild) item.small_building ? buildings.police.small.cell.onBuild ++ : buildings.police.normal.cell.onBuild ++;
+                            if(switchOptions.build) item.small_building ? buildings.police.small.cell.build ++ : buildings.police.normal.cell.build ++;
+                            if(switchOptions.onBuild) item.small_building ? buildings.police.small.cell.onBuild ++ : buildings.police.normal.cell.onBuild ++;
                             break;
                         case "Weiterer Klassenraum":
-                            if(item.extensions[i].available){
+                            if(switchOptions.build){
                                 if(item.building_type == 1) buildings.school.fire.rooms.build ++;
                                 else if(item.building_type == 3) buildings.school.rescue.rooms.build ++;
                                 else if(item.building_type == 8) buildings.school.police.rooms.build ++;
                                 else if(item.building_type == 10) buildings.school.thw.rooms.build ++;
                             }
-                            if(!item.extensions[i].available && item.extensions[i].enabled && showOnBuild){
+                            if(switchOptions.onBuild){
                                 if(item.building_type == 1) buildings.school.fire.rooms.onBuild ++;
                                 else if(item.building_type == 3) buildings.school.rescue.rooms.onBuild ++;
                                 else if(item.building_type == 8) buildings.school.police.rooms.onBuild ++;
