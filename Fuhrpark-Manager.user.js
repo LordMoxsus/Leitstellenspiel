@@ -113,21 +113,26 @@ overflow-y: auto;
                     </div>
                 </div>`);
 
-    var options = {"filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
-                   "dropdown":{"vehicles":{"ownClass":$('#filterType').find(':selected').data('vehicle'),
-                                           "type":parseInt($('#filterType').val())
-                                          },
-                               "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())},
-                               "sort":['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend']
-                              },
-                   "status":{"count":0}
-                  };
-    var database = {"credits":{},
-                    "buildings":{"all":{},
-                                 "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
-                                },
-                    "vehicles":{"all":{},"types":{}}
-                   };
+    var options = {
+        "filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
+        "dropdown":{
+            "vehicles":{
+                "ownClass":$('#filterType').find(':selected').data('vehicle'),
+                "type":parseInt($('#filterType').val())
+            },
+            "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())},
+            "sort":['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend']
+        },
+        "status":{"count":0}
+    };
+    var database = {
+        "credits":{},
+        "buildings":{
+            "all":{},
+            "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
+        },
+        "vehicles":{"all":{},"types":{}}
+    };
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
@@ -151,10 +156,11 @@ overflow-y: auto;
             database.buildings.all = dataBuildings[0];
             database.vehicles.all = dataVehicles[0];
             database.credits = dataCredits[0];
-            var dropdown = {"dispatchCenter":`<option selected>alle Leitstellen</option>`,
-                            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
-                            "database":{"class":[],"types":[]}
-                           };
+            var dropdown = {
+                "dispatchCenter":`<option selected>alle Leitstellen</option>`,
+                "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
+                "database":{"class":[],"types":[]}
+            };
             $.each(dataBuildings[0], function(key, item){
                 database.buildings.get.typeId[item.id] = item.building_type;
                 database.buildings.get.name[item.id] = item.caption;
@@ -294,105 +300,132 @@ overflow-y: auto;
 
         var infoBuildingsDatabase = database.buildings.all.slice(0);
         var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0};
-        var buildings ={"fire":{"normal":{"count":0,
-                                          "big":{"build":0,"onBuild":0},
-                                          "rescue":{"build":0,"active":0,"onBuild":0},
-                                          "industry":{"build":0,"active":0,"onBuild":0},
-                                          "airport":{"build":0,"active":0,"onBuild":0},
-                                          "wr":{"build":0,"active":0,"onBuild":0},
-                                          "ab":{"build":0,"onBuild":0}
-                                         },
-                                "small":{"count":0,
-                                         "ab":{"build":0,"onBuild":0}
-                                        },
-                               },
-                        "rescue":{"normal":0,"small":0},
-                        "police":{"normal":{"count":0,
-                                            "cell":{"build":0,"onBuild":0}
-                                           },
-                                  "small":{"count":0,
-                                           "cell":{"build":0,"onBuild":0}
-                                          }
-                                 },
-                        "seg":{"count":0,
-                               "leader":{"build":0,"active":0,"onBuild":0},
-                               "sanD":{"build":0,"active":0,"onBuild":0},
-                               "wr":{"build":0,"active":0,"onBuild":0},
-                               "dogs":{"build":0,"active":0,"onBuild":0}
-                              },
-                        "bepo":{"count":0,
-                                "division":{"second":{"build":0,"active":0,"onBuild":0},
-                                            "third":{"build":0,"active":0,"onBuild":0},
-                                           },
-                                "waterthrower":{"build":0,"active":0,"onBuild":0},
-                                "mobilePrison":{"build":0,"active":0,"onBuild":0},
-                                "sek":{"first":{"build":0,"active":0,"onBuild":0},
-                                       "second":{"build":0,"active":0,"onBuild":0},
-                                      },
-                                "mek":{"first":{"build":0,"active":0,"onBuild":0},
-                                       "second":{"build":0,"active":0,"onBuild":0}
-                                      }
-                               },
-                        "polSonder":{"count":0,
-                                     "sek":{"first":{"build":0,"active":0,"onBuild":0},
-                                            "second":{"build":0,"active":0,"onBuild":0},
-                                           },
-                                     "mek":{"first":{"build":0,"active":0,"onBuild":0},
-                                            "second":{"build":0,"active":0,"onBuild":0}
-                                           }
-                                    },
-                        "wr":{"count":0,"active":0},
-                        "rescueDogs":{"count":0,"active":0},
-                        "helicopter":{"rescue":{"count":0,"active":0},
-                                      "police":{"count":0,"active":0}
-                                     },
-                        "thw":{"count":0,
-                               "firstTz":{"bg":{"build":0,"active":0,"onBuild":0},
-                                          "zug":{"build":0,"active":0,"onBuild":0}
-                                         },
-                               "secondTz":{"grund":{"build":0,"active":0,"onBuild":0},
-                                           "bg":{"build":0,"active":0,"onBuild":0},
-                                           "zug":{"build":0,"active":0,"onBuild":0}
-                                          },
-                               "fgrO":{"build":0,"active":0,"onBuild":0},
-                               "fgrR":{"build":0,"active":0,"onBuild":0},
-                               "fgrW":{"build":0,"active":0,"onBuild":0}
-                              },
-                        "school":{"fire":{"count":0,
-                                          "rooms":{"build":0,"onBuild":0}
-                                         },
-                                  "rescue":{"count":0,
-                                            "rooms":{"build":0,"onBuild":0}
-                                           },
-                                  "police":{"count":0,
-                                            "rooms":{"build":0,"onBuild":0}
-                                           },
-                                  "thw":{"count":0,
-                                         "rooms":{"build":0,"onBuild":0}
-                                        },
-                                 },
-                        "hospital":{"count":0,
-                                    "beds":{"build":0,"onBuild":0},
-                                    "extension":{"ina":{"build":0,"onBuild":0},
-                                                 "ach":{"build":0,"onBuild":0},
-                                                 "gyn":{"build":0,"onBuild":0},
-                                                 "uro":{"build":0,"onBuild":0},
-                                                 "uch":{"build":0,"onBuild":0},
-                                                 "nrl":{"build":0,"onBuild":0},
-                                                 "nch":{"build":0,"onBuild":0},
-                                                 "kar":{"build":0,"onBuild":0},
-                                                 "kch":{"build":0,"onBuild":0}
-                                                },
-                                   },
-                        "dispatchCenter":0,
-                        "stagingArea":0
-                       };
-        var configTable = {"arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
-                           "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
-                           "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
-                           "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
-                           "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`
-                          };
+        var buildings ={
+            "fire":{
+                "normal":{
+                    "count":0,
+                    "big":{"build":0,"onBuild":0},
+                    "rescue":{"build":0,"active":0,"onBuild":0},
+                    "industry":{"build":0,"active":0,"onBuild":0},
+                    "airport":{"build":0,"active":0,"onBuild":0},
+                    "wr":{"build":0,"active":0,"onBuild":0},
+                    "ab":{"build":0,"onBuild":0}
+                },
+                "small":{
+                    "count":0,
+                    "ab":{"build":0,"onBuild":0}
+                },
+            },
+            "rescue":{"normal":0,"small":0},
+            "police":{
+                "normal":{
+                    "count":0,
+                    "cell":{"build":0,"onBuild":0}
+                },
+                "small":{
+                    "count":0,
+                    "cell":{"build":0,"onBuild":0}
+                }
+            },
+            "seg":{
+                "count":0,
+                "leader":{"build":0,"active":0,"onBuild":0},
+                "sanD":{"build":0,"active":0,"onBuild":0},
+                "wr":{"build":0,"active":0,"onBuild":0},
+                "dogs":{"build":0,"active":0,"onBuild":0}
+            },
+            "bepo":{
+                "count":0,
+                "division":{
+                    "second":{"build":0,"active":0,"onBuild":0},
+                    "third":{"build":0,"active":0,"onBuild":0},
+                },
+                "waterthrower":{"build":0,"active":0,"onBuild":0},
+                "mobilePrison":{"build":0,"active":0,"onBuild":0},
+                "sek":{
+                    "first":{"build":0,"active":0,"onBuild":0},
+                    "second":{"build":0,"active":0,"onBuild":0},
+                },
+                "mek":{
+                    "first":{"build":0,"active":0,"onBuild":0},
+                    "second":{"build":0,"active":0,"onBuild":0}
+                }
+            },
+            "polSonder":{
+                "count":0,
+                "sek":{
+                    "first":{"build":0,"active":0,"onBuild":0},
+                    "second":{"build":0,"active":0,"onBuild":0},
+                },
+                "mek":{
+                    "first":{"build":0,"active":0,"onBuild":0},
+                    "second":{"build":0,"active":0,"onBuild":0}
+                }
+            },
+            "wr":{"count":0,"active":0},
+            "rescueDogs":{"count":0,"active":0},
+            "helicopter":{
+                "rescue":{"count":0,"active":0},
+                "police":{"count":0,"active":0}
+            },
+            "thw":{
+                "count":0,
+                "firstTz":{
+                    "bg":{"build":0,"active":0,"onBuild":0},
+                    "zug":{"build":0,"active":0,"onBuild":0}
+                },
+                "secondTz":{
+                    "grund":{"build":0,"active":0,"onBuild":0},
+                    "bg":{"build":0,"active":0,"onBuild":0},
+                    "zug":{"build":0,"active":0,"onBuild":0}
+                },
+                "fgrO":{"build":0,"active":0,"onBuild":0},
+                "fgrR":{"build":0,"active":0,"onBuild":0},
+                "fgrW":{"build":0,"active":0,"onBuild":0}
+            },
+            "school":{
+                "fire":{
+                    "count":0,
+                    "rooms":{"build":0,"onBuild":0}
+                },
+                "rescue":{
+                    "count":0,
+                    "rooms":{"build":0,"onBuild":0}
+                },
+                "police":{
+                    "count":0,
+                    "rooms":{"build":0,"onBuild":0}
+                },
+                "thw":{
+                    "count":0,
+                    "rooms":{"build":0,"onBuild":0}
+                },
+            },
+            "hospital":{
+                "count":0,
+                "beds":{"build":0,"onBuild":0},
+                "extension":{
+                    "ina":{"build":0,"onBuild":0},
+                    "ach":{"build":0,"onBuild":0},
+                    "gyn":{"build":0,"onBuild":0},
+                    "uro":{"build":0,"onBuild":0},
+                    "uch":{"build":0,"onBuild":0},
+                    "nrl":{"build":0,"onBuild":0},
+                    "nch":{"build":0,"onBuild":0},
+                    "kar":{"build":0,"onBuild":0},
+                    "kch":{"build":0,"onBuild":0}
+                },
+            },
+            "dispatchCenter":0,
+            "stagingArea":0
+        };
+        var configTable = {
+            "arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
+            "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
+            "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
+            "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
+            "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`
+        };
 
         $.each(database.vehicles.all, function(key, item){
             switch(item.vehicle_type){
@@ -467,10 +500,11 @@ overflow-y: auto;
             if(item.building_type == 4) buildings.hospital.beds.build += item.level;
             if(item.extensions.length > 0){
                 for(let i = 0; i < item.extensions.length; i ++){
-                    var switchOptions = {"active":item.extensions[i].enabled && item.extensions[i].available,
-                                         "build":item.extensions[i].available,
-                                         "onBuild":!item.extensions[i].available && item.extensions[i].enabled && showOnBuild
-                                        };
+                    var switchOptions = {
+                        "active":item.extensions[i].enabled && item.extensions[i].available,
+                        "build":item.extensions[i].available,
+                        "onBuild":!item.extensions[i].available && item.extensions[i].enabled && showOnBuild
+                    };
                     switch(item.extensions[i].caption){
                         case "Großwache":
                             if(switchOptions.build) buildings.fire.normal.big.build ++;
