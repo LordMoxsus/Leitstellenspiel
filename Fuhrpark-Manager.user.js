@@ -783,11 +783,11 @@ overflow-y: auto;
             if(buildings.fire.normal.ab.build > 0 || buildings.fire.normal.ab.onBuild > 0){
                 tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.normal.ab.build, buildings.fire.normal.count * 9, buildings.fire.normal.ab.onBuild);
             }
+        }
 
-            if(buildings.school.fire.count > 0){
-                infoContentOneValue(`<div style="margin-left:1em">Feuerwehrschulen</div>`, buildings.school.fire.count);
-                tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
-            }
+        if(buildings.school.fire.count > 0){
+            infoContentOneValue(`<div style="margin-left:1em">Feuerwehrschulen</div>`, buildings.school.fire.count);
+            tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
         }
 
         if(buildings.rescue.small > 0){
@@ -888,7 +888,7 @@ overflow-y: auto;
 
         if(buildings.school.thw.count > 0){
             infoContentOneValue(`<div style="margin-left:1em">THW Bundesschulen</div>`, buildings.school.thw.count);
-            tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
+            tableExtension(`Klassenräume`, configTable.arrowThw, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
         }
 
         if(buildings.hospital.count > 0){
