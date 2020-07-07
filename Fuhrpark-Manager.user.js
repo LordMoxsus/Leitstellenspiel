@@ -159,14 +159,14 @@ overflow-y: auto;
             var dropdown = {
                 "dispatchCenter":`<option selected>alle Leitstellen</option>`,
                 "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
-                "database":{"class":[],"types":[]}
+                "database":{"class":[],"types":[],"dispatchCenter":[]}
             };
             $.each(dataBuildings[0], function(key, item){
                 database.buildings.get.typeId[item.id] = item.building_type;
                 database.buildings.get.name[item.id] = item.caption;
                 database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
                 if(item.building_type == 7){
-                    dropdown.dispatchCenter += `<option value="${item.id}">${item.caption}</option>"`;
+                    dropdown.database.dispatchCenter.push({"id": item.id, "name": item.caption});
                 }
             });
             $.each(database.vehicles.types, function(key, item){
@@ -175,6 +175,14 @@ overflow-y: auto;
             $.each(dataVehicles[0], function(key, item){
                 if(item.vehicle_type_caption) dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
             });
+            if(dropdown.database.dispatchCenter.length > 0){
+                if(dropdown.database.dispatchCenter.length >= 2){
+                    dropdown.database.dispatchCenter.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+                }
+                for(let i = 0; i < dropdown.database.dispatchCenter.length; i++){
+                    dropdown.dispatchCenter += `<option value="${dropdown.database.dispatchCenter[i].id}">${dropdown.database.dispatchCenter[i].name}</option>`;
+                }
+            }
             dropdown.database.types.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
             for(let i = 0; i < dropdown.database.types.length; i++){
                 dropdown.vehicleTypes += `<option value="${dropdown.database.types[i].typeId}">${dropdown.database.types[i].name}</option>`;
@@ -798,7 +806,7 @@ overflow-y: auto;
 
         isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", database.buildings.all.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, database.buildings.all.length);
 
-        infoContentMax(`<div style="margin-left:1em">Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(database.buildings.all.length / 25) > 0 ? Math.ceil(database.buildings.all.length / 25) : 1);
+        infoContentMax(`${configTable.marginLeft}Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(database.buildings.all.length / 25) > 0 ? Math.ceil(database.buildings.all.length / 25) : 1);
 
         if(buildings.stagingArea > 0) infoContentOneValue(`${configTable.marginLeft}Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
