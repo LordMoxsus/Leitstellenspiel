@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      1.13.0
+// @version      2.0.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -8,7 +8,7 @@
 // ==/UserScript==
 /* global $ */
 
-(function() {
+(async function() {
     'use strict';
 
     var buttonOnRadio = true; //true: zeigt Button im Funk-Fenster; false: zeigt Button im Header
@@ -113,8 +113,27 @@ overflow-y: auto;
                     </div>
                 </div>`);
 
+    if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    if(!localStorage.aVehicles || JSON.parse(localStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/vehicles').done(data => localStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+
+    var aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
+    var aVehicles = JSON.parse(localStorage.aVehicles).value;
+    var aBuildings = JSON.parse(localStorage.aBuildings).value;
+    var aCredits = JSON.parse(localStorage.aCredits).value;
     var options = {
-        "filter":{"fire":true,"rescue":true,"thw":true,"police":true,"wr":true,"helicopter":true,"bepo":true,"seg":true},
+        "filter":{
+            "fire":{"status":true,"counter":0,"timer":null},
+            "rescue":{"status":true,"counter":0,"timer":null},
+            "thw":{"status":true,"counter":0,"timer":null},
+            "police":{"status":true,"counter":0,"timer":null},
+            "wr":{"status":true,"counter":0,"timer":null},
+            "helicopter":{"status":true,"counter":0,"timer":null},
+            "bepo":{"status":true,"counter":0,"timer":null},
+            "seg":{"status":true,"counter":0,"timer":null},
+            "delay":700
+        },
         "dropdown":{
             "vehicles":{
                 "ownClass":$('#filterType').find(':selected').data('vehicle'),
@@ -126,89 +145,74 @@ overflow-y: auto;
         "status":{"count":0}
     };
     var database = {
-        "credits":{},
         "buildings":{
-            "all":{},
             "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
-        },
-        "vehicles":{"all":{},"types":{}}
+        }
     };
+
+    var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
+    $.each(aVehicleTypes, (k,v) => {
+        v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
+    });
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
     }
 
-    $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(function(data){
-        var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
-        $.each(data, (k,v) => {
-            v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
-        });
-        database.vehicles.types = data;
-    });
+    function createDropdown(){
 
-    function loadApi(){
-
-        $.when(
-            $.getJSON('/api/buildings'),
-            $.getJSON('/api/vehicles'),
-            $.getJSON('/api/credits')
-        ).done(function(dataBuildings, dataVehicles, dataCredits){
-            database.buildings.all = dataBuildings[0];
-            database.vehicles.all = dataVehicles[0];
-            database.credits = dataCredits[0];
-            var dropdown = {
-                "dispatchCenter":`<option selected>alle Leitstellen</option>`,
-                "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
-                "database":{"class":[],"types":[],"dispatchCenter":[]}
-            };
-            $.each(dataBuildings[0], function(key, item){
-                database.buildings.get.typeId[item.id] = item.building_type;
-                database.buildings.get.name[item.id] = item.caption;
-                database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
-                if(item.building_type == 7){
-                    dropdown.database.dispatchCenter.push({"id": item.id, "name": item.caption});
-                }
-            });
-            $.each(database.vehicles.types, function(key, item){
-                dropdown.database.types.push({"typeId": key, "name": item.name});
-            });
-            $.each(dataVehicles[0], function(key, item){
-                if(item.vehicle_type_caption) dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
-            });
-            if(dropdown.database.dispatchCenter.length > 0){
-                if(dropdown.database.dispatchCenter.length >= 2){
-                    dropdown.database.dispatchCenter.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-                }
-                for(let i = 0; i < dropdown.database.dispatchCenter.length; i++){
-                    dropdown.dispatchCenter += `<option value="${dropdown.database.dispatchCenter[i].id}">${dropdown.database.dispatchCenter[i].name}</option>`;
-                }
+        var dropdown = {
+            "dispatchCenter":`<option selected>alle Leitstellen</option>`,
+            "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
+            "database":{"class":[],"types":[],"dispatchCenter":[]}
+        };
+        $.each(aBuildings, function(key, item){
+            database.buildings.get.typeId[item.id] = item.building_type;
+            database.buildings.get.name[item.id] = item.caption;
+            database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
+            if(item.building_type == 7){
+                dropdown.database.dispatchCenter.push({"id": item.id, "name": item.caption});
             }
-            dropdown.database.types.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdown.database.types.length; i++){
-                dropdown.vehicleTypes += `<option value="${dropdown.database.types[i].typeId}">${dropdown.database.types[i].name}</option>`;
-            }
-            if(dropdown.database.class.length > 0){
-                if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
-                for(let i = 0; i < dropdown.database.class.length; i++){
-                    if(i > 0 && dropdown.database.class[i].ownClass !== dropdown.database.class[i - 1].ownClass){
-                        dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database[i].ownClass}</option>`;
-                    }
-                    else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
-                }
-            }
-            $('#filterDispatchCenter').html(dropdown.dispatchCenter);
-            $('#filterType').html(dropdown.vehicleTypes);
-            options.dropdown.vehicles.type = parseInt($('#filterType').val());
-            options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
-            options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
         });
+        $.each(aVehicleTypes, function(key, item){
+            dropdown.database.types.push({"typeId": key, "name": item.name});
+        });
+        $.each(aVehicles, function(key, item){
+            if(item.vehicle_type_caption) dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
+        });
+        if(dropdown.database.dispatchCenter.length > 0){
+            if(dropdown.database.dispatchCenter.length >= 2){
+                dropdown.database.dispatchCenter.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+            }
+            for(let i = 0; i < dropdown.database.dispatchCenter.length; i++){
+                dropdown.dispatchCenter += `<option value="${dropdown.database.dispatchCenter[i].id}">${dropdown.database.dispatchCenter[i].name}</option>`;
+            }
+        }
+        dropdown.database.types.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
+        for(let i = 0; i < dropdown.database.types.length; i++){
+            dropdown.vehicleTypes += `<option value="${dropdown.database.types[i].typeId}">${dropdown.database.types[i].name}</option>`;
+        }
+        if(dropdown.database.class.length > 0){
+            if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
+            for(let i = 0; i < dropdown.database.class.length; i++){
+                if(i > 0 && dropdown.database.class[i].ownClass !== dropdown.database.class[i - 1].ownClass){
+                    dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database[i].ownClass}</option>`;
+                }
+                else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
+            }
+        }
+        $('#filterDispatchCenter').html(dropdown.dispatchCenter);
+        $('#filterType').html(dropdown.vehicleTypes);
+        options.dropdown.vehicles.type = parseInt($('#filterType').val());
+        options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
+        options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
     }
 
     function createTable(statusIndex) {
 
         var tableDatabase = [];
 
-        $.each(database.vehicles.all, function(key, item){
+        $.each(aVehicles, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
             if(isNaN(statusIndex)){
                 if(isNaN(options.dropdown.vehicles.type)) tableDatabase.push(pushContent);
@@ -234,14 +238,14 @@ overflow-y: auto;
             }
         }
 
-        if(!options.filter.fire) filterDatabase("0", "18");
-        if(!options.filter.rescue) filterDatabase("2", "20");
-        if(!options.filter.thw) filterDatabase("9", "9");
-        if(!options.filter.police) filterDatabase("6", "19");
-        if(!options.filter.wr) filterDatabase("15", "15");
-        if(!options.filter.helicopter) filterDatabase("5", "13");
-        if(!options.filter.bepo) filterDatabase("11", "17");
-        if(!options.filter.seg) filterDatabase("12", "21");
+        if(!options.filter.fire.status) filterDatabase("0", "18");
+        if(!options.filter.rescue.status) filterDatabase("2", "20");
+        if(!options.filter.thw.status) filterDatabase("9", "9");
+        if(!options.filter.police.status) filterDatabase("6", "19");
+        if(!options.filter.wr.status) filterDatabase("15", "15");
+        if(!options.filter.helicopter.status) filterDatabase("5", "13");
+        if(!options.filter.bepo.status) filterDatabase("11", "17");
+        if(!options.filter.seg.status) filterDatabase("12", "21");
 
         switch($('#sortBy').val()){
             case "Status":
@@ -287,7 +291,7 @@ overflow-y: auto;
                 `<tr>
                  <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                  <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                 <td class="col">${!tableDatabase[i].ownClass ? database.vehicles.types[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                 <td class="col">${!tableDatabase[i].ownClass ? aVehicleTypes[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
                  <td class="col-xs-3 btn-group btn-group-xs" role="group" aria-label="Small button group">
                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/zuweisung">Personalzuweisung</a>
@@ -306,7 +310,7 @@ overflow-y: auto;
 
     function playerInfos(){
 
-        var infoBuildingsDatabase = database.buildings.all.slice(0);
+        var infoBuildingsDatabase = aBuildings.slice(0);
         var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0};
         var buildings ={
             "fire":{
@@ -436,7 +440,7 @@ overflow-y: auto;
             "marginLeft":`<div style="margin-left:1em">`
         };
 
-        $.each(database.vehicles.all, function(key, item){
+        $.each(aVehicles, function(key, item){
             switch(item.vehicle_type){
                 case 31: vehicles.rth ++;
                     break;
@@ -742,11 +746,11 @@ overflow-y: auto;
             }
         });
 
-        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${database.credits.user_id}">${database.credits.user_name} (${database.credits.user_id})</span>
+        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${aCredits.user_id}">${aCredits.user_name} (${aCredits.user_id})</span>
                                      <span style="margin-left:4em"></span>
-                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(database.credits.user_toplist_position / 20) > 1 ?
-                                                                                                       `/toplist?page=${Math.ceil(database.credits.user_toplist_position / 20)}` :
-                                                                                                       `/toplist`}">${database.credits.user_toplist_position.toLocaleString()}</span></div>`);
+                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(aCredits.user_toplist_position / 20) > 1 ?
+                                                                                                       `/toplist?page=${Math.ceil(aCredits.user_toplist_position / 20)}` :
+                                                                                                       `/toplist`}">${aCredits.user_toplist_position.toLocaleString()}</span></div>`);
 
         let userInfos =
                 `<table class="table">
@@ -798,15 +802,15 @@ overflow-y: auto;
             infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value);
         }
 
-        infoContentOneValue("Fahrzeuge", database.vehicles.all.length);
+        infoContentOneValue("Fahrzeuge", aVehicles.length);
 
-        if(buildings.helicopter.rescue.count == 0) infoContentMax(`${configTable.marginLeft}Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+        if(buildings.helicopter.rescue.count == 0) infoContentMax(`${configTable.marginLeft}Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
 
-        if(buildings.helicopter.police.count == 0) infoContentMax(`${configTable.marginLeft}Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+        if(buildings.helicopter.police.count == 0) infoContentMax(`${configTable.marginLeft}Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
 
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", database.buildings.all.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, database.buildings.all.length);
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, aBuildings.length);
 
-        infoContentMax(`${configTable.marginLeft}Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(database.buildings.all.length / 25) > 0 ? Math.ceil(database.buildings.all.length / 25) : 1);
+        infoContentMax(`${configTable.marginLeft}Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1);
 
         if(buildings.stagingArea > 0) infoContentOneValue(`${configTable.marginLeft}Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
@@ -871,7 +875,7 @@ overflow-y: auto;
 
         if(buildings.helicopter.rescue.count > 0){
             infoContentMax(`${configTable.marginLeft}Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
-            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
         }
 
         if(buildings.school.rescue.count > 0){
@@ -911,7 +915,7 @@ overflow-y: auto;
 
         if(buildings.helicopter.police.count > 0){
             infoContentMax(`${configTable.marginLeft}Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
-            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(database.buildings.all.length / 25) > 4 ? Math.floor(database.buildings.all.length / 25) : 4);
+            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
         }
 
         if(buildings.school.police.count > 0){
@@ -979,7 +983,7 @@ overflow-y: auto;
         database.buildings.get.typeId.length = 0;
         database.buildings.get.name.length = 0;
         database.buildings.get.onDispatchCenter.length = 0;
-        loadApi();
+        createDropdown();
     });
 
     $("body").on("click", "#tableStatusBody span", function(){
@@ -1010,51 +1014,283 @@ overflow-y: auto;
     });
 
     $("body").on("click", "#filterFw", function(){
-        options.filter.fire = !options.filter.fire;
-        $('#filterFw').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.fire.counter ++;
+
+        if(options.filter.fire.counter === 1){
+            options.filter.fire.timer = setTimeout(function(){
+                options.filter.fire.status = !options.filter.fire.status;
+                $('#filterFw').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.fire.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.fire.timer);
+            options.filter.fire.status = true;
+            $('#filterFw').removeClass().addClass('label label-success');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.fire.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterRd", function(){
-        options.filter.rescue = !options.filter.rescue;
-        $('#filterRd').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.rescue.counter ++;
+
+        if(options.filter.rescue.counter === 1){
+            options.filter.rescue.timer = setTimeout(function(){
+                options.filter.rescue.status = !options.filter.rescue.status;
+                $('#filterRd').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.rescue.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.rescue.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = true;
+            $('#filterRd').removeClass().addClass('label label-success');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.rescue.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterThw", function(){
-        options.filter.thw = !options.filter.thw;
-        $('#filterThw').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.thw.counter ++;
+
+        if(options.filter.thw.counter === 1){
+            options.filter.thw.timer = setTimeout(function(){
+                options.filter.thw.status = !options.filter.thw.status;
+                $('#filterThw').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.thw.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.thw.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = true;
+            $('#filterThw').removeClass().addClass('label label-success');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.thw.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterPol", function(){
-        options.filter.police = !options.filter.police;
-        $('#filterPol').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.police.counter ++;
+
+        if(options.filter.police.counter === 1){
+            options.filter.police.timer = setTimeout(function(){
+                options.filter.police.status = !options.filter.police.status;
+                $('#filterPol').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.police.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.police.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = true;
+            $('#filterPol').removeClass().addClass('label label-success');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.police.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterWr", function(){
-        options.filter.wr = !options.filter.wr;
-        $('#filterWr').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.wr.counter ++;
+
+        if(options.filter.wr.counter === 1){
+            options.filter.wr.timer = setTimeout(function(){
+                options.filter.wr.status = !options.filter.wr.status;
+                $('#filterWr').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.wr.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.wr.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = true;
+            $('#filterWr').removeClass().addClass('label label-success');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.wr.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterHeli", function(){
-        options.filter.helicopter = !options.filter.helicopter;
-        $('#filterHeli').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.helicopter.counter ++;
+
+        if(options.filter.helicopter.counter === 1){
+            options.filter.helicopter.timer = setTimeout(function(){
+                options.filter.helicopter.status = !options.filter.helicopter.status;
+                $('#filterHeli').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.helicopter.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.helicopter.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = true;
+            $('#filterHeli').removeClass().addClass('label label-success');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.helicopter.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterBp", function(){
-        options.filter.bepo = !options.filter.bepo;
-        $('#filterBp').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.bepo.counter ++;
+
+        if(options.filter.bepo.counter === 1){
+            options.filter.bepo.timer = setTimeout(function(){
+                options.filter.bepo.status = !options.filter.bepo.status;
+                $('#filterBp').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.bepo.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.bepo.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = true;
+            $('#filterBp').removeClass().addClass('label label-success');
+            options.filter.seg.status = false;
+            $('#filterSeg').removeClass().addClass('label label-danger');
+            options.filter.bepo.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#filterSeg", function(){
-        options.filter.seg = !options.filter.seg;
-        $('#filterSeg').toggleClass("label-success label-danger");
-        if(options.status.count !== 0) createTable(options.status.count);
+
+        options.filter.seg.counter ++;
+
+        if(options.filter.seg.counter === 1){
+            options.filter.seg.timer = setTimeout(function(){
+                options.filter.bepo.status = !options.filter.bepo.status;
+                $('#filterSeg').toggleClass("label-success label-danger");
+                if(options.status.count !== 0) createTable(options.status.count);
+                options.filter.seg.counter = 0;
+            }, options.filter.delay);
+        }
+        else{
+            clearTimeout(options.filter.seg.timer);
+            options.filter.fire.status = false;
+            $('#filterFw').removeClass().addClass('label label-danger');
+            options.filter.rescue.status = false;
+            $('#filterRd').removeClass().addClass('label label-danger');
+            options.filter.thw.status = false;
+            $('#filterThw').removeClass().addClass('label label-danger');
+            options.filter.police.status = false;
+            $('#filterPol').removeClass().addClass('label label-danger');
+            options.filter.wr.status = false;
+            $('#filterWr').removeClass().addClass('label label-danger');
+            options.filter.helicopter.status = false;
+            $('#filterHeli').removeClass().addClass('label label-danger');
+            options.filter.bepo.status = false;
+            $('#filterBp').removeClass().addClass('label label-danger');
+            options.filter.seg.status = true;
+            $('#filterSeg').removeClass().addClass('label label-success');
+            options.filter.seg.counter = 0;
+            if(options.status.count !== 0) createTable(options.status.count);
+        }
     });
 
     $("body").on("click", "#player", function(){
