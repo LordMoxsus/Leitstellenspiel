@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.0.0
+// @version      2.0.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -196,7 +196,7 @@ overflow-y: auto;
             if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
             for(let i = 0; i < dropdown.database.class.length; i++){
                 if(i > 0 && dropdown.database.class[i].ownClass !== dropdown.database.class[i - 1].ownClass){
-                    dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database[i].ownClass}</option>`;
+                    dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
                 }
                 else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
             }
@@ -1264,7 +1264,7 @@ overflow-y: auto;
 
         if(options.filter.seg.counter === 1){
             options.filter.seg.timer = setTimeout(function(){
-                options.filter.bepo.status = !options.filter.bepo.status;
+                options.filter.seg.status = !options.filter.seg.status;
                 $('#filterSeg').toggleClass("label-success label-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.seg.counter = 0;
