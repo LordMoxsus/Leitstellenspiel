@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.0.1
+// @version      2.1.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -311,7 +311,7 @@ overflow-y: auto;
     function playerInfos(){
 
         var infoBuildingsDatabase = aBuildings.slice(0);
-        var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0};
+        var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0,"onDispatchCenter":[]};
         var buildings ={
             "fire":{
                 "normal":{
@@ -451,12 +451,18 @@ overflow-y: auto;
                 case 74: vehicles.naw ++;
                     break;
             }
+            vehicles.onDispatchCenter.push({"name":item.caption,"lst":database.buildings.get.onDispatchCenter[item.building_id]});
         });
 
         if(!isNaN(options.dropdown.dispatchCenter.id)){
             for(let i = infoBuildingsDatabase.length - 1; i >= 0; i --){
                 if(infoBuildingsDatabase[i].leitstelle_building_id && infoBuildingsDatabase[i].leitstelle_building_id !== options.dropdown.dispatchCenter.id){
                     infoBuildingsDatabase.splice(i,1);
+                }
+            }
+            for(let i = vehicles.onDispatchCenter.length - 1; i >= 0; i --){
+                if(vehicles.onDispatchCenter[i].lst !== options.dropdown.dispatchCenter.id){
+                    vehicles.onDispatchCenter.splice(i,1);
                 }
             }
         }
@@ -802,7 +808,7 @@ overflow-y: auto;
             infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value);
         }
 
-        infoContentOneValue("Fahrzeuge", aVehicles.length);
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length) : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length);
 
         if(buildings.helicopter.rescue.count == 0) infoContentMax(`${configTable.marginLeft}Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
 
