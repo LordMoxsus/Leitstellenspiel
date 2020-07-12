@@ -113,11 +113,6 @@ overflow-y: auto;
                     </div>
                 </div>`);
 
-    if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aVehicles || JSON.parse(localStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/vehicles').done(data => localStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-
     var aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
     var aVehicles = JSON.parse(localStorage.aVehicles).value;
     var aBuildings = JSON.parse(localStorage.aBuildings).value;
@@ -144,16 +139,21 @@ overflow-y: auto;
         },
         "status":{"count":0}
     };
+
+    async function refreshApi(){
+        if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aVehicles || JSON.parse(localStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/vehicles').done(data => localStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    }
+
+    refreshApi();
+
     var database = {
         "buildings":{
             "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
         }
     };
-
-    var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
-    $.each(aVehicleTypes, (k,v) => {
-        v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
-    });
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
@@ -166,6 +166,10 @@ overflow-y: auto;
             "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
             "database":{"class":[],"types":[],"dispatchCenter":[]}
         };
+        var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
+        $.each(aVehicleTypes, (k,v) => {
+            v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
+        });
         $.each(aBuildings, function(key, item){
             database.buildings.get.typeId[item.id] = item.building_type;
             database.buildings.get.name[item.id] = item.caption;
@@ -206,6 +210,11 @@ overflow-y: auto;
         options.dropdown.vehicles.type = parseInt($('#filterType').val());
         options.dropdown.vehicles.ownClass = $('#filterType').find(':selected').data('vehicle');
         options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
+    }
+
+    async function apiDropdown(){
+        await refreshApi();
+        createDropdown();
     }
 
     function createTable(statusIndex) {
@@ -989,7 +998,7 @@ overflow-y: auto;
         database.buildings.get.typeId.length = 0;
         database.buildings.get.name.length = 0;
         database.buildings.get.onDispatchCenter.length = 0;
-        createDropdown();
+        apiDropdown();
     });
 
     $("body").on("click", "#tableStatusBody span", function(){
