@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.1.1
+// @version      2.2.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -113,22 +113,10 @@ overflow-y: auto;
                     </div>
                 </div>`);
 
-    if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aVehicles || JSON.parse(localStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/vehicles').done(data => localStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-
-    async function refreshApi(){
-        if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aVehicles || JSON.parse(localStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/vehicles').done(data => localStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    }
-
-    var aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
-    var aVehicles = JSON.parse(localStorage.aVehicles).value;
-    var aBuildings = JSON.parse(localStorage.aBuildings).value;
-    var aCredits = JSON.parse(localStorage.aCredits).value;
+    var aVehicleTypes = {};
+    var aVehicles = {};
+    var aBuildings = {};
+    var aCredits = {};
     var options = {
         "filter":{
             "fire":{"status":true,"counter":0,"timer":null},
@@ -160,6 +148,43 @@ overflow-y: auto;
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
+    }
+
+    function getVehicles(){
+        $.getJSON('/api/vehicles').done(function(data){
+            aVehicles = data;
+        });
+    }
+
+    async function refreshApi(){
+        if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+
+        aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
+        aBuildings = JSON.parse(localStorage.aBuildings).value;
+        aCredits = JSON.parse(localStorage.aCredits).value;
+    }
+
+    await refreshApi();
+    await getVehicles();
+
+    setInterval(async function(){
+        await getVehicles();
+    }, 5 * 1000 * 60);
+
+    let radioMessageOrig = radioMessage;
+    radioMessage = e => {
+        radioMessageOrig(e);
+        if(e.user_id == user_id){
+            for(let i in aVehicles){
+                if(aVehicles[i].id == e.id){
+                    aVehicles[i].fms_real = e.fms_real;
+                    aVehicles[i].fms = e.fms;
+                    break;
+                }
+            }
+        }
     }
 
     function createDropdown(){
