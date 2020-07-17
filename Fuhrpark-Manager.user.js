@@ -71,16 +71,16 @@ overflow-y: auto;
                              </div>
                               <div class="pull-left">
                                <div class="btn-group btn-group-xs" role="group" aria-label="Small button group" style="display:flex">
-                                <a id="fms1" class="btn btn-primary btn-xs" style="flex:1">Status 1</a>
-                                <a id="fms2" class="btn btn-primary btn-xs" style="flex:1">Status 2</a>
-                                <a id="fms3" class="btn btn-primary btn-xs" style="flex:1">Status 3</a>
-                                <a id="fms4" class="btn btn-primary btn-xs" style="flex:1">Status 4</a>
-                                <a id="fms5" class="btn btn-primary btn-xs" style="flex:1">Status 5</a>
-                                <a id="fms6" class="btn btn-primary btn-xs" style="flex:1">Status 6</a>
-                                <a id="fms7" class="btn btn-primary btn-xs" style="flex:1">Status 7</a>
-                                <a id="fms9" class="btn btn-primary btn-xs" style="flex:1">Status 9</a>
-                                <a id="complete" class="btn btn-info btn-xs" style="flex:1">alle Fahrzeuge</a>
-                                <a id="player" class="btn btn-warning btn-xs" style="flex:1">Spielerinfos</a>
+                                <a id="fms1" class="btn btn-info btn-xs" style="flex:1">Status 1</a>
+                                <a id="fms2" class="btn btn-info btn-xs" style="flex:1">Status 2</a>
+                                <a id="fms3" class="btn btn-info btn-xs" style="flex:1">Status 3</a>
+                                <a id="fms4" class="btn btn-info btn-xs" style="flex:1">Status 4</a>
+                                <a id="fms5" class="btn btn-info btn-xs" style="flex:1">Status 5</a>
+                                <a id="fms6" class="btn btn-info btn-xs" style="flex:1">Status 6</a>
+                                <a id="fms7" class="btn btn-info btn-xs" style="flex:1">Status 7</a>
+                                <a id="fms9" class="btn btn-info btn-xs" style="flex:1">Status 9</a>
+                                <a id="complete" class="btn btn-warning btn-xs" style="flex:1">alle Fahrzeuge</a>
+                                <a id="player" class="btn btn-default btn-xs" style="flex:1">Spielerinfos</a>
                                </div>
                                <div class="btn-group btn-group-xs" role="group" aria-label="Small button group" style="display:flex">
                                 <a id="filterFw" class="btn btn-success btn-xs" style="flex:1">Feuerwehr</a>
