@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.2.1
+// @version      2.3.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -50,7 +50,7 @@ overflow-y: auto;
                             <div class="modal-header">
                              <div class="pull-left">
                               <h5>Fuhrpark-Manager</h5>
-                             </div><br>
+                             </div>
                              <button type="button"
                                         class="close"
                                         data-dismiss="modal"
@@ -58,41 +58,41 @@ overflow-y: auto;
                                 >
                                     <span aria-hidden="true">&times;</span>
                                 </button><br>
-                              <div class="pull-left">
-                               <div class="btn-group btn-group-xs" role="group" aria-label="Small button group">
-                                <button id="fms1" class="btn btn-primary btn-xs">Status 1</button>
-                                <button id="fms2" class="btn btn-primary btn-xs">Status 2</button>
-                                <button id="fms3" class="btn btn-primary btn-xs">Status 3</button>
-                                <button id="fms4" class="btn btn-primary btn-xs">Status 4</button>
-                                <button id="fms5" class="btn btn-primary btn-xs">Status 5</button>
-                                <button id="fms6" class="btn btn-primary btn-xs">Status 6</button>
-                                <button id="fms7" class="btn btn-primary btn-xs">Status 7</button>
-                                <button id="fms9" class="btn btn-primary btn-xs">Status 9</button>
-                                <button id="complete" class="btn btn-info btn-xs">alle Fahrzeuge</button>
-                                <button id="player" class="btn btn-warning btn-xs">Spielerinfos</button>
-                               </div>
-                             </div><br><br>
-                             <div class="pull-left">
-                              <select id="filterDispatchCenter" class="custom-select">
+                             <div class="pull-right">
+                              <select id="filterDispatchCenter" class="custom-select" style="width:15em">
                                <option selected>wird geladen ...</option>
                               </select><br>
-                              <select id="filterType" class="custom-select">
+                              <select id="filterType" class="custom-select" style="width:15em">
                                <option selected>wird geladen ...</option>
                               </select><br>
-                              <select id="sortBy" class="custom-select">
+                              <select id="sortBy" class="custom-select" style="width:15em">
                                <option selected>unsortiert</option>
                               </select>
                              </div>
-                             <div class="pull-right">
-                              <a id="filterFw" class="label label-success">Feuerwehr</a>
-                              <a id="filterRd" class="label label-success">Rettungsdienst</a>
-                              <a id="filterThw" class="label label-success">THW</a>
-                              <a id="filterPol" class="label label-success">Polizei</a>
-                              <a id="filterWr" class="label label-success">Wasserrettung</a>
-                              <a id="filterHeli" class="label label-success">Hubschrauber</a>
-                              <a id="filterBp" class="label label-success">BePo/Pol-Sonder</a>
-                              <a id="filterSeg" class="label label-success">SEG/RHS</a>
-                             </div><br><br>
+                              <div class="pull-left">
+                               <div class="btn-group btn-group-xs" role="group" aria-label="Small button group" style="display:flex">
+                                <a id="fms1" class="btn btn-primary btn-xs" style="flex:1">Status 1</a>
+                                <a id="fms2" class="btn btn-primary btn-xs" style="flex:1">Status 2</a>
+                                <a id="fms3" class="btn btn-primary btn-xs" style="flex:1">Status 3</a>
+                                <a id="fms4" class="btn btn-primary btn-xs" style="flex:1">Status 4</a>
+                                <a id="fms5" class="btn btn-primary btn-xs" style="flex:1">Status 5</a>
+                                <a id="fms6" class="btn btn-primary btn-xs" style="flex:1">Status 6</a>
+                                <a id="fms7" class="btn btn-primary btn-xs" style="flex:1">Status 7</a>
+                                <a id="fms9" class="btn btn-primary btn-xs" style="flex:1">Status 9</a>
+                                <a id="complete" class="btn btn-info btn-xs" style="flex:1">alle Fahrzeuge</a>
+                                <a id="player" class="btn btn-warning btn-xs" style="flex:1">Spielerinfos</a>
+                               </div>
+                               <div class="btn-group btn-group-xs" role="group" aria-label="Small button group" style="display:flex">
+                                <a id="filterFw" class="btn btn-success btn-xs" style="flex:1">Feuerwehr</a>
+                                <a id="filterRd" class="btn btn-success btn-xs" style="flex:1">Rettungsdienst</a>
+                                <a id="filterThw" class="btn btn-success btn-xs" style="flex:1">THW</a>
+                                <a id="filterPol" class="btn btn-success btn-xs" style="flex:1">Polizei</a>
+                                <a id="filterWr" class="btn btn-success btn-xs" style="flex:1">Wasserrettung</a>
+                                <a id="filterHeli" class="btn btn-success btn-xs" style="flex:1">Hubschrauber</a>
+                                <a id="filterBp" class="btn btn-success btn-xs" style="flex:1">BePo/Pol-Sonder</a>
+                                <a id="filterSeg" class="btn btn-success btn-xs" style="flex:1">SEG/RHS</a>
+                               </div>
+                             </div>
                                 <h5 class="modal-title" id="tableStatusLabel">
                                 </h5>
                             </div>
@@ -309,7 +309,8 @@ overflow-y: auto;
         }
 
         let intoLabel =
-            `<div class="pull-right">Status ${statusIndex}: ${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
+            `<div class="pull-left">${isNaN(statusIndex) ? `kein Statusfilter gesetzt` : `Status ${statusIndex}`}</div>
+             <div class="pull-right" style="margin-right:4em">${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
         let intoTable =
             `<table class="table">
              <thead>
@@ -789,11 +790,10 @@ overflow-y: auto;
             }
         });
 
-        $('#tableStatusLabel').html(`<div class="pull-right">Statistik <span class="lightbox-open" style="cursor:pointer" href="/profile/${aCredits.user_id}">${aCredits.user_name} (${aCredits.user_id})</span>
-                                     <span style="margin-left:4em"></span>
-                                     Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(aCredits.user_toplist_position / 20) > 1 ?
-                                                                                                       `/toplist?page=${Math.ceil(aCredits.user_toplist_position / 20)}` :
-                                                                                                       `/toplist`}">${aCredits.user_toplist_position.toLocaleString()}</span></div>`);
+        $('#tableStatusLabel').html(`<div class="pull-left"><span class="lightbox-open" style="cursor:pointer" href="/profile/${aCredits.user_id}">${aCredits.user_name} (${aCredits.user_id})</span></div>
+                                     <div class="pull-right" style="margin-right:4em">Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(aCredits.user_toplist_position / 20) > 1 ?
+                                                                                                                                     `/toplist?page=${Math.ceil(aCredits.user_toplist_position / 20)}` :
+                                                                                                                                     `/toplist`}">${aCredits.user_toplist_position.toLocaleString()}</span></div>`);
 
         let userInfos =
                 `<table class="table">
@@ -1063,7 +1063,7 @@ overflow-y: auto;
         if(options.filter.fire.counter === 1){
             options.filter.fire.timer = setTimeout(function(){
                 options.filter.fire.status = !options.filter.fire.status;
-                $('#filterFw').toggleClass("label-success label-danger");
+                $('#filterFw').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.fire.counter = 0;
             }, options.filter.delay);
@@ -1071,21 +1071,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.fire.timer);
             options.filter.fire.status = true;
-            $('#filterFw').removeClass().addClass('label label-success');
+            $('#filterFw').removeClass().addClass('btn btn-success btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.fire.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1098,7 +1098,7 @@ overflow-y: auto;
         if(options.filter.rescue.counter === 1){
             options.filter.rescue.timer = setTimeout(function(){
                 options.filter.rescue.status = !options.filter.rescue.status;
-                $('#filterRd').toggleClass("label-success label-danger");
+                $('#filterRd').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.rescue.counter = 0;
             }, options.filter.delay);
@@ -1106,21 +1106,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.rescue.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = true;
-            $('#filterRd').removeClass().addClass('label label-success');
+            $('#filterRd').removeClass().addClass('btn btn-success btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1133,7 +1133,7 @@ overflow-y: auto;
         if(options.filter.thw.counter === 1){
             options.filter.thw.timer = setTimeout(function(){
                 options.filter.thw.status = !options.filter.thw.status;
-                $('#filterThw').toggleClass("label-success label-danger");
+                $('#filterThw').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.thw.counter = 0;
             }, options.filter.delay);
@@ -1141,21 +1141,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.thw.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = true;
-            $('#filterThw').removeClass().addClass('label label-success');
+            $('#filterThw').removeClass().addClass('btn btn-success btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1168,7 +1168,7 @@ overflow-y: auto;
         if(options.filter.police.counter === 1){
             options.filter.police.timer = setTimeout(function(){
                 options.filter.police.status = !options.filter.police.status;
-                $('#filterPol').toggleClass("label-success label-danger");
+                $('#filterPol').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.police.counter = 0;
             }, options.filter.delay);
@@ -1176,21 +1176,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.police.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = true;
-            $('#filterPol').removeClass().addClass('label label-success');
+            $('#filterPol').removeClass().addClass('btn btn-success btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1203,7 +1203,7 @@ overflow-y: auto;
         if(options.filter.wr.counter === 1){
             options.filter.wr.timer = setTimeout(function(){
                 options.filter.wr.status = !options.filter.wr.status;
-                $('#filterWr').toggleClass("label-success label-danger");
+                $('#filterWr').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.wr.counter = 0;
             }, options.filter.delay);
@@ -1211,21 +1211,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.wr.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = true;
-            $('#filterWr').removeClass().addClass('label label-success');
+            $('#filterWr').removeClass().addClass('btn btn-success btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1238,7 +1238,7 @@ overflow-y: auto;
         if(options.filter.helicopter.counter === 1){
             options.filter.helicopter.timer = setTimeout(function(){
                 options.filter.helicopter.status = !options.filter.helicopter.status;
-                $('#filterHeli').toggleClass("label-success label-danger");
+                $('#filterHeli').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.helicopter.counter = 0;
             }, options.filter.delay);
@@ -1246,21 +1246,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.helicopter.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = true;
-            $('#filterHeli').removeClass().addClass('label label-success');
+            $('#filterHeli').removeClass().addClass('btn btn-success btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1273,7 +1273,7 @@ overflow-y: auto;
         if(options.filter.bepo.counter === 1){
             options.filter.bepo.timer = setTimeout(function(){
                 options.filter.bepo.status = !options.filter.bepo.status;
-                $('#filterBp').toggleClass("label-success label-danger");
+                $('#filterBp').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.bepo.counter = 0;
             }, options.filter.delay);
@@ -1281,21 +1281,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.bepo.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = true;
-            $('#filterBp').removeClass().addClass('label label-success');
+            $('#filterBp').removeClass().addClass('btn btn-success btn-xs');
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('label label-danger');
+            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1308,7 +1308,7 @@ overflow-y: auto;
         if(options.filter.seg.counter === 1){
             options.filter.seg.timer = setTimeout(function(){
                 options.filter.seg.status = !options.filter.seg.status;
-                $('#filterSeg').toggleClass("label-success label-danger");
+                $('#filterSeg').toggleClass("btn-success btn-danger");
                 if(options.status.count !== 0) createTable(options.status.count);
                 options.filter.seg.counter = 0;
             }, options.filter.delay);
@@ -1316,21 +1316,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.seg.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('label label-danger');
+            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('label label-danger');
+            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('label label-danger');
+            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('label label-danger');
+            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('label label-danger');
+            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('label label-danger');
+            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('label label-danger');
+            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
             options.filter.seg.status = true;
-            $('#filterSeg').removeClass().addClass('label label-success');
+            $('#filterSeg').removeClass().addClass('btn btn-success btn-xs');
             options.filter.seg.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
