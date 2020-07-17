@@ -58,7 +58,7 @@ overflow-y: auto;
                                 >
                                     <span aria-hidden="true">&times;</span>
                                 </button>
-                             <div class="pull-right" style="padding-top:1em">
+                             <div class="pull-right" style="padding-top:2.5em">
                               <select id="filterDispatchCenter" class="custom-select" style="width:15em">
                                <option selected>wird geladen ...</option>
                               </select><br>
@@ -309,8 +309,8 @@ overflow-y: auto;
         }
 
         let intoLabel =
-            `<div class="pull-left">${isNaN(statusIndex) ? `kein Statusfilter gesetzt` : `Status ${statusIndex}`}</div>
-             <div class="pull-right" style="margin-right:4em">${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
+            `<div class="pull-left">${isNaN(statusIndex) ? `keinen Statusfilter gesetzt` : `Status ${statusIndex}`}</div>
+             <div class="pull-right" style="margin-right:3em">${tableDatabase.length.toLocaleString()} Fahrzeuge</div>`;
         let intoTable =
             `<table class="table">
              <thead>
@@ -327,7 +327,7 @@ overflow-y: auto;
         for(let i = 0; i < tableDatabase.length; i++){
             intoTable +=
                 `<tr>
-                 <td class="col-1"><span style="cursor: pointer" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
+                 <td class="col-1"><span style="cursor:${tableDatabase[i].status == 2 || tableDatabase[i].status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
                  <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
                  <td class="col">${!tableDatabase[i].ownClass ? aVehicleTypes[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
                  <td class="col-xs-3 btn-group btn-group-xs" role="group" aria-label="Small button group">
@@ -791,7 +791,7 @@ overflow-y: auto;
         });
 
         $('#tableStatusLabel').html(`<div class="pull-left"><span class="lightbox-open" style="cursor:pointer" href="/profile/${aCredits.user_id}">${aCredits.user_name} (${aCredits.user_id})</span></div>
-                                     <div class="pull-right" style="margin-right:4em">Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(aCredits.user_toplist_position / 20) > 1 ?
+                                     <div class="pull-right" style="margin-right:3em">Toplist-Platz: <span class="lightbox-open" style="cursor:pointer" href="${Math.ceil(aCredits.user_toplist_position / 20) > 1 ?
                                                                                                                                      `/toplist?page=${Math.ceil(aCredits.user_toplist_position / 20)}` :
                                                                                                                                      `/toplist`}">${aCredits.user_toplist_position.toLocaleString()}</span></div>`);
 
