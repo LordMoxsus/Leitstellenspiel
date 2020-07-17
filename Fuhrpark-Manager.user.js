@@ -57,8 +57,8 @@ overflow-y: auto;
                                         aria-label="Close"
                                 >
                                     <span aria-hidden="true">&times;</span>
-                                </button><br>
-                             <div class="pull-right">
+                                </button>
+                             <div class="pull-right" style="padding-top:1em">
                               <select id="filterDispatchCenter" class="custom-select" style="width:15em">
                                <option selected>wird geladen ...</option>
                               </select><br>
