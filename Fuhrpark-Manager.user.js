@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.2.0
+// @version      2.2.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -840,7 +840,7 @@ overflow-y: auto;
 
         function rescueVehicles(html, value){
             if(user_premium ? value >= 15 : value >= 20){
-                infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.round(value / 15) : Math.round(value / 20));
+                infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(value / 15) : Math.floor(value / 20));
             }
             infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value);
         }
@@ -866,7 +866,7 @@ overflow-y: auto;
 
         if(buildings.fire.normal.count > 0){
             infoContentOneValue(`${configTable.marginLeft}Feuerwachen</div>`, buildings.fire.normal.count);
-            if(Math.round((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
+            if(Math.floor((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
                 tableExtension(`Großwache`, configTable.arrowFire, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
             }
             tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build, buildings.fire.normal.rescue.onBuild);
