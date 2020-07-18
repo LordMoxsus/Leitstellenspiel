@@ -1017,6 +1017,13 @@ overflow-y: auto;
         $('#tableStatusBody').html(userInfos);
     }
 
+    var btn = {
+        "s":"btn btn-success btn-xs",
+        "d":"btn btn-danger btn-xs",
+        "i":"btn btn-info btn-xs",
+        "w":"btn btn-warning btn-xs"
+    };
+
     $("body").on("click", "#vehicleManagement", function(){
         $('#filterDispatchCenter').html(`<option selected>wird geladen ...</option>`);
         $('#filterType').html(`<option selected>wird geladen ...</option>`);
@@ -1026,6 +1033,15 @@ overflow-y: auto;
         database.buildings.get.typeId.length = 0;
         database.buildings.get.name.length = 0;
         database.buildings.get.onDispatchCenter.length = 0;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         apiDropdown();
     });
 
@@ -1071,21 +1087,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.fire.timer);
             options.filter.fire.status = true;
-            $('#filterFw').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterFw').removeClass().addClass(btn.s);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.fire.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1106,21 +1122,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.rescue.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = true;
-            $('#filterRd').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterRd').removeClass().addClass(btn.s);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.rescue.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1141,21 +1157,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.thw.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = true;
-            $('#filterThw').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterThw').removeClass().addClass(btn.s);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.thw.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1176,21 +1192,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.police.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = true;
-            $('#filterPol').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterPol').removeClass().addClass(btn.s);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.police.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1211,21 +1227,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.wr.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = true;
-            $('#filterWr').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterWr').removeClass().addClass(btn.s);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.wr.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1246,21 +1262,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.helicopter.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = true;
-            $('#filterHeli').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.s);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.helicopter.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1281,21 +1297,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.bepo.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = true;
-            $('#filterBp').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterBp').removeClass().addClass(btn.s);
             options.filter.seg.status = false;
-            $('#filterSeg').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.d);
             options.filter.bepo.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1316,21 +1332,21 @@ overflow-y: auto;
         else{
             clearTimeout(options.filter.seg.timer);
             options.filter.fire.status = false;
-            $('#filterFw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterFw').removeClass().addClass(btn.d);
             options.filter.rescue.status = false;
-            $('#filterRd').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterRd').removeClass().addClass(btn.d);
             options.filter.thw.status = false;
-            $('#filterThw').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterThw').removeClass().addClass(btn.d);
             options.filter.police.status = false;
-            $('#filterPol').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterPol').removeClass().addClass(btn.d);
             options.filter.wr.status = false;
-            $('#filterWr').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterWr').removeClass().addClass(btn.d);
             options.filter.helicopter.status = false;
-            $('#filterHeli').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterHeli').removeClass().addClass(btn.d);
             options.filter.bepo.status = false;
-            $('#filterBp').removeClass().addClass('btn btn-danger btn-xs');
+            $('#filterBp').removeClass().addClass(btn.d);
             options.filter.seg.status = true;
-            $('#filterSeg').removeClass().addClass('btn btn-success btn-xs');
+            $('#filterSeg').removeClass().addClass(btn.s);
             options.filter.seg.counter = 0;
             if(options.status.count !== 0) createTable(options.status.count);
         }
@@ -1338,51 +1354,141 @@ overflow-y: auto;
 
     $("body").on("click", "#player", function(){
         options.status.count = 0;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         playerInfos();
     });
 
     $("body").on("click", "#complete", function(){
         options.status.count = "1 bis 9";
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.s);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms1", function(){
         options.status.count = 1;
+        $('#fms1').removeClass().addClass(btn.s);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms2", function(){
         options.status.count = 2;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.s);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms3", function(){
         options.status.count = 3;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.s);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms4", function(){
         options.status.count = 4;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.s);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms5", function(){
         options.status.count = 5;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.s);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms6", function(){
         options.status.count = 6;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.s);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms7", function(){
         options.status.count = 7;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.s);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
     $("body").on("click", "#fms9", function(){
         options.status.count = 9;
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.s);
+        $('#complete').removeClass().addClass(btn.w);
         createTable(options.status.count);
     });
 
