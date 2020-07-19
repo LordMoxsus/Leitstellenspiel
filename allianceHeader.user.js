@@ -2,8 +2,8 @@
 // @name         Alliance-Header
 // @version      1.1.0
 // @author       DrTraxx
-// @include      *://www.leitstellenspiel.de/*
-// @include      *://leitstellenspiel.de/*
+// @include      *://www.leitstellenspiel.de/
+// @include      *://leitstellenspiel.de/
 // @grant        none
 // ==/UserScript==
 /* global $ */
