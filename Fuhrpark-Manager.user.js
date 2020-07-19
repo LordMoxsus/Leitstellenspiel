@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.3.0
+// @version      2.4.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -812,12 +812,30 @@ overflow-y: auto;
                           </tr>`;
         }
 
+        function percentage(name, value){
+            var percent = Math.round(value / (infoBuildingsDatabase.length - buildings.dispatchCenter) * 100);
+            userInfos += `<tr>
+                          <td class="col">${name}</div></td>
+                          <td class="col-1"><center>${value} (${percent}&percnt;)</center></td>
+                          </tr>`;
+        }
+
         function infoContentMax(name, valueNow, valueMax){
             userInfos += `<tr>
                           <td class="col">${name}</td>
                           <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
                                                                       `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
                                                                       `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()}</center></td>
+                          </tr>`;
+        }
+
+        function percentageMax(name, valueNow, valueMax){
+            var percent = Math.round(valueMax / (infoBuildingsDatabase.length - buildings.dispatchCenter) * 100);
+            userInfos += `<tr>
+                          <td class="col">${name}</td>
+                          <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
+                                                                      `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
+                                                                      `<span style="color:limegreen">${valueNow.toLocaleString()}</span>`} / ${valueMax.toLocaleString()} (${percent}&percnt;)</center></td>
                           </tr>`;
         }
 
@@ -858,14 +876,14 @@ overflow-y: auto;
         if(buildings.stagingArea > 0) infoContentOneValue(`${configTable.marginLeft}Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
 
         if(buildings.fire.small.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Feuerwachen (klein)</div>`, buildings.fire.small.count);
+            percentage(`${configTable.marginLeft}Feuerwachen (klein)</div>`, buildings.fire.small.count);
             if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
                 tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.small.ab.build, buildings.fire.small.build * 2, buildings.fire.small.ab.onBuild);
             }
         }
 
         if(buildings.fire.normal.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Feuerwachen</div>`, buildings.fire.normal.count);
+            percentage(`${configTable.marginLeft}Feuerwachen</div>`, buildings.fire.normal.count);
             if(Math.floor((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
                 tableExtension(`Großwache`, configTable.arrowFire, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
             }
@@ -884,24 +902,24 @@ overflow-y: auto;
         }
 
         if(buildings.school.fire.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Feuerwehrschulen</div>`, buildings.school.fire.count);
+            percentage(`${configTable.marginLeft}Feuerwehrschulen</div>`, buildings.school.fire.count);
             tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
         }
 
         if(buildings.rescue.small > 0){
-            infoContentOneValue(`${configTable.marginLeft}Rettungswachen (klein)</div>`, buildings.rescue.small);
+            percentage(`${configTable.marginLeft}Rettungswachen (klein)</div>`, buildings.rescue.small);
             if(buildings.rescue.normal == 0){
                 rescueVehicles(configTable.arrowRescue, buildings.rescue.small + buildings.fire.rescue.active);
             }
         }
 
         if(buildings.rescue.normal > 0){
-            infoContentOneValue(`${configTable.marginLeft}Rettungswachen</div>`, buildings.rescue.normal);
+            percentage(`${configTable.marginLeft}Rettungswachen</div>`, buildings.rescue.normal);
             rescueVehicles(configTable.arrowRescue, buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active);
         }
 
         if(buildings.seg.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
+            percentage(`${configTable.marginLeft}Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
             tableExtension(`Führung`, configTable.arrowRescue, buildings.seg.leader.active, buildings.seg.leader.build, buildings.seg.leader.onBuild);
             tableExtension(`Sanitätsdienst`, configTable.arrowRescue, buildings.seg.sanD.active, buildings.seg.sanD.build, buildings.seg.sanD.onBuild);
             tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, buildings.seg.wr.active, buildings.seg.wr.build, buildings.seg.wr.onBuild);
@@ -909,35 +927,35 @@ overflow-y: auto;
         }
 
         if(buildings.wr.count > 0 || buildings.wr.active > 0){
-            infoContentMax(`${configTable.marginLeft}Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
+            percentageMax(`${configTable.marginLeft}Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
         }
 
         if(buildings.rescueDogs.count > 0 || buildings.rescueDogs.active > 0){
-            infoContentMax(`${configTable.marginLeft}Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
+            percentageMax(`${configTable.marginLeft}Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
         }
 
         if(buildings.helicopter.rescue.count > 0){
-            infoContentMax(`${configTable.marginLeft}Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
+            percentageMax(`${configTable.marginLeft}Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
             infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
         }
 
         if(buildings.school.rescue.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Rettungsdienstschulen</div>`, buildings.school.rescue.count);
+            percentage(`${configTable.marginLeft}Rettungsdienstschulen</div>`, buildings.school.rescue.count);
             tableExtension(`Klassenräume`, configTable.arrowRescue, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4, buildings.school.rescue.rooms.onBuild);
         }
 
         if(buildings.police.small.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Polizeiwachen (klein)</div>`, buildings.police.small.count);
+            percentage(`${configTable.marginLeft}Polizeiwachen (klein)</div>`, buildings.police.small.count);
             tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.small.cell.build, buildings.police.small.count * 2, buildings.police.small.cell.onBuild);
         }
 
         if(buildings.police.normal.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Polizeiwachen</div>`, buildings.police.normal.count);
+            percentage(`${configTable.marginLeft}Polizeiwachen</div>`, buildings.police.normal.count);
             tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.normal.cell.build, buildings.police.normal.count * 10, buildings.police.normal.cell.onBuild);
         }
 
         if(buildings.bepo.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Bereitschaftspolizei</div>`, buildings.bepo.count);
+            percentage(`${configTable.marginLeft}Bereitschaftspolizei</div>`, buildings.bepo.count);
             tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.second.active, buildings.bepo.division.second.build, buildings.bepo.division.second.onBuild);
             tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.third.active, buildings.bepo.division.third.build, buildings.bepo.division.third.onBuild);
             tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build ,buildings.bepo.mobilePrison.onBuild);
@@ -949,7 +967,7 @@ overflow-y: auto;
         }
 
         if(buildings.polSonder.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
+            percentage(`${configTable.marginLeft}Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
             tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build, buildings.polSonder.sek.first.onBuild);
             tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build, buildings.polSonder.sek.second.onBuild);
             tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build, buildings.polSonder.mek.first.onBuild);
@@ -957,17 +975,17 @@ overflow-y: auto;
         }
 
         if(buildings.helicopter.police.count > 0){
-            infoContentMax(`${configTable.marginLeft}Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
+            percentageMax(`${configTable.marginLeft}Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
             infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
         }
 
         if(buildings.school.police.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Polizeischulen</div>`, buildings.school.police.count);
+            percentage(`${configTable.marginLeft}Polizeischulen</div>`, buildings.school.police.count);
             tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4, buildings.school.police.rooms.onBuild);
         }
 
         if(buildings.thw.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}THW Ortsverbände</div>`, buildings.thw.count);
+            percentage(`${configTable.marginLeft}THW Ortsverbände</div>`, buildings.thw.count);
             tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build, buildings.thw.firstTz.bg.onBuild);
             tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build, buildings.thw.firstTz.zug.onBuild);
             tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, buildings.thw.fgrR.active, buildings.thw.fgrR.build, buildings.thw.fgrR.onBuild);
@@ -979,12 +997,12 @@ overflow-y: auto;
         }
 
         if(buildings.school.thw.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}THW Bundesschulen</div>`, buildings.school.thw.count);
+            percentage(`${configTable.marginLeft}THW Bundesschulen</div>`, buildings.school.thw.count);
             tableExtension(`Klassenräume`, configTable.arrowThw, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
         }
 
         if(buildings.hospital.count > 0){
-            infoContentOneValue(`${configTable.marginLeft}Krankenhäuser</div>`, buildings.hospital.count);
+            percentage(`${configTable.marginLeft}Krankenhäuser</div>`, buildings.hospital.count);
             infoContentMax(`${configTable.arrowHospital} Betten`, buildings.hospital.beds.build + (buildings.hospital.count * 10), buildings.hospital.count * 30);
             if(buildings.hospital.extension.ina.onBuild > 0 || buildings.hospital.extension.ach.onBuild > 0 || buildings.hospital.extension.gyn.onBuild > 0 ||
                buildings.hospital.extension.uro.onBuild > 0 || buildings.hospital.extension.uch.onBuild > 0 || buildings.hospital.extension.nrl.onBuild > 0 ||
