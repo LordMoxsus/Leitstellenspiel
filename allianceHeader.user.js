@@ -23,7 +23,7 @@
     }
 
     if(candidatureCount > 0 && (alliance_admin || alliance_coadmin)) $('#candidature').css({"backgroundColor":"LightGreen"});
-    if($('#alliance_message_new').attr('style') == "display: inline-block;") $('#alliance_messages_header').css({"backgroundColor":"LightGreen"});
+    if($('#alliance_message_new').attr('style') !== "display:none") $('#alliance_messages_header').css({"backgroundColor":"LightGreen"});
     if($('#alliance_forum_new').attr('style') !== "display:none") $('#alliance_forum_header').css({"backgroundColor":"LightGreen"});
 
     let allianceCandidatureCountOrig = allianceCandidatureCount;
