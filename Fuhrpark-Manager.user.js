@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.4.0
+// @version      2.4.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -301,10 +301,10 @@ overflow-y: auto;
                 tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
                 break;
             case "Typ-aufsteigend":
-                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? 1 : -1);
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypes[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypes[b.typeId].name.toUpperCase()) ? 1 : -1);
                 break;
             case "Typ-absteigend":
-                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : database.vehicles.types[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : database.vehicles.types[b.typeId].name.toUpperCase()) ? -1 : 1);
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypes[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypes[b.typeId].name.toUpperCase()) ? -1 : 1);
                 break;
         }
 
