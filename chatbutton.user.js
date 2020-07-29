@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         chatbutton
-// @version      1.0.0
+// @version      1.1.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -13,11 +13,13 @@
 
     $('#alliance_chat_header_info').after(
         `<div class="btn-group">
-           <a class="btn btn-default btn-xs" id="btnAddressInfo">Ortsangaben</a>
+           <a class="btn btn-default btn-xs" id="btnAddressInfo">Ortsang.</a>
            <a class="btn btn-danger btn-xs" id="btnAddressLa">LA</a>
-           <a class="btn btn-default btn-xs" id="btnPushNotOwn">fremde Einsätze</a>
+           <a class="btn btn-default btn-xs" id="btnPushNotOwn">Fremd-E</a>
            <a class="btn btn-danger btn-xs" id="btnPushLa">LA</a>
-           <a class="btn btn-default btn-xs" id="btnPermaPush">perm. Einsätze</a>
+           <a class="btn btn-default btn-xs" id="btnSmall">Klein-E</a>
+           <a class="btn btn-danger btn-xs" id="btnSmallLa">LA</a>
+           <a class="btn btn-default btn-xs" id="btnPermaPush">perm. Eins.</a>
            <a class="btn btn-danger btn-xs" id="btnPermaLa">LA</a>
            <a class="btn btn-default btn-xs" id="btnSpam">Spam</a>
            <a class="btn btn-danger btn-xs" id="btnSpamLa">LA</a>
@@ -49,6 +51,18 @@
 
     $("body").on("click", "#btnPermaPush", function(){
         var value = $('#alliance_chat_message').val() + ' Bitte Einsätze nicht permanent pushen.';
+        $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
+        $('#alliance_chat_message').val('');
+    });
+
+    $("body").on("click", "#btnSmall", function(){
+        var value = $('#alliance_chat_message').val() + ' Bitte keine Kleineinsätze freigeben.';
+        $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
+        $('#alliance_chat_message').val('');
+    });
+
+    $("body").on("click", "#btnSmallLa", function(){
+        var value = $('#alliance_chat_message').val() + ' Bitte keine Kleineinsätze freigeben. Letzte Aufforderung!';
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
