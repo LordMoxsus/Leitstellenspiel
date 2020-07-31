@@ -24,6 +24,8 @@
     var msgSpam = localStorage.cbtnMsgSpam;
     var msgLast = 'Letzte Aufforderung!';
 
+    if(!alliance_admin || !alliance_coadmin || alliance_id !== 19) return false;
+
     $('#alliance_chat_header_info').after(
         `<div class="btn-group">
            <a class="btn btn-default btn-xs" id="btnAddressInfo" title="${msgAddress}">Ortsang.</a>
