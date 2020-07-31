@@ -16,7 +16,6 @@
     if(!localStorage.cbtnMsgSmall) localStorage.cbtnMsgSmall = 'Bitte keine Kleineinsätze freigeben.';
     if(!localStorage.cbtnMsgPermaPush) localStorage.cbtnMsgPermaPush = 'Bitte Einsätze nicht permanent pushen.';
     if(!localStorage.cbtnMsgSpam) localStorage.cbtnMsgSpam = 'Bitte nicht spamen.';
-    if(alliance_admin || alliance_coadmin && alliance_id == 19) return true;
     if(alliance_id !== 19) return false;
 
     var msgAddress = localStorage.cbtnMsgAddress;
@@ -26,7 +25,6 @@
     var msgSpam = localStorage.cbtnMsgSpam;
     var msgLast = 'Letzte Aufforderung!';
 
-    if(alliance_admin || alliance_coadmin && alliance_id == 19) return true;
     if(alliance_id !== 19) return false;
 
     $('#alliance_chat_header_info').after(
@@ -54,7 +52,6 @@
            </div>
         </div>`);
 
-    if(alliance_admin || alliance_coadmin && alliance_id == 19) return true;
     if(alliance_id !== 19) return false;
 
     $("body").on("click", "#btnAddressInfo", function(){
