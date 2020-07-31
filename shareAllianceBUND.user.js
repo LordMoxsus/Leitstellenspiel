@@ -54,9 +54,10 @@
             .done(() => {
             $.when(
                 $.get('/missions/' + missionId + '/alliance'))
-                .done(
-                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : missionAddress, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}));
-            setTimeout(() => {window.location.reload()}, 1000);
+                .done(() => {
+                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : missionAddress, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
+                setTimeout(() => {window.location.reload()}, 1000);
+            });
         });
     });
 
