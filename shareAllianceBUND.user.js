@@ -22,7 +22,7 @@
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
     var shareLink = $('#mission_alliance_share_btn').attr('href');
     var credits = 0;
-    var missionAddress = $('#mission_general_info').children('small')[0].innerText.split('|')[0].trim();
+    var missionAddress = $('#mission_general_info').children()[2].innerText.split('|')[0].trim();
 
     if(!missionTypeId || !shareLink) return false;
 
