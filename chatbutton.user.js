@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         chatbutton
-// @version      1.2.1
+// @version      1.2.2
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -70,7 +70,7 @@
     });
 
     $("body").on("click", "#btnPushNotOwn", function(){
-        var value = $('#alliance_chat_message').val() + ' ' + msgPushNotOwn + ' ' + msgLast;
+        var value = $('#alliance_chat_message').val() + ' ' + msgPushNotOwn;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
