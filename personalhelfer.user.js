@@ -24,8 +24,6 @@
     var hire = false;
     var cssHide = {"display":"none"};
     var cssShow = {"display":""};
-    console.log(buildingId);
-    console.log(building);
 
     if(noPersonalBuildings.includes(building.building_type)) return false;
 
