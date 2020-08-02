@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Personalhelfer
-// @version      1.0.0
+// @version      1.0.1
 // @description  Werbephasen und Personalsoll in der Gebaeudeuebersicht auswaehlen
 // @author       DrTraxx
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/buildings\/.*\
@@ -24,6 +24,8 @@
     var hire = false;
     var cssHide = {"display":"none"};
     var cssShow = {"display":""};
+    console.log(buildingId);
+    console.log(building);
 
     if(noPersonalBuildings.includes(building.building_type)) return false;
 
@@ -33,8 +35,8 @@
             hire = true;
         }
     }).done(() =>{
-        $('#tabs').parent()
-            .before(`<div class="btn-group input-group">
+        $('dl[class="dl-horizontal"]')
+            .after(`<div class="btn-group input-group">
                        <a id="hire_do_1" class="btn btn-default" style="display:${!hire ? `` : `none`}">1 Tag werben</a>
                        <a id="hire_do_2" class="btn btn-default" style="display:${!hire ? `` : `none`}">2 Tage werben</a>
                        <a id="hire_do_3" class="btn btn-default" style="display:${!hire ? `` : `none`}">3 Tage werben</a>
