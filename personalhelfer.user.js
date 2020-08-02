@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Personalhelfer
-// @version      1.1.0
+// @version      1.1.1
 // @description  Werbephasen und Personalsoll in der Gebaeudeuebersicht auswaehlen
 // @author       DrTraxx
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/buildings\/.*\
@@ -20,7 +20,7 @@
     var hireStart = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde gestartet.</div>`;
     var hireEnd = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde beendet.</div>`;
     var building = aBuildings.filter((obj) => obj.id == buildingId)[0];
-    var maxPersonal = $('dl[class*="dl-horizontal"]').children('dd')[2].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1] ? $('dl[class*="dl-horizontal"]').children('dd')[2].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1].trim() : 0;
+    var maxPersonal = $('dl[class*="dl-horizontal"]').children('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1] ? $('dl[class*="dl-horizontal"]').children('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1].trim() : 0;
     var noPersonalBuildings = [1,3,4,7,8,10,14];
     var hire = false;
     var cssHide = {"display":"none"};
