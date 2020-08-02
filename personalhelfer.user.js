@@ -33,7 +33,7 @@
             hire = true;
         }
     }).done(() =>{
-        $('dl[class="dl-horizontal"]')
+        $('dl[class*="dl-horizontal"]')
             .after(`<div class="btn-group input-group">
                        <a id="hire_do_1" class="btn btn-default" style="display:${!hire ? `` : `none`}">1 Tag werben</a>
                        <a id="hire_do_2" class="btn btn-default" style="display:${!hire ? `` : `none`}">2 Tage werben</a>
