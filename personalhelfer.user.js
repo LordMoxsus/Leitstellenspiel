@@ -97,10 +97,9 @@
         var value = $('#setPersonal').val();
         if(!value || value < 0 || value > 300) alert("Bitte Ganzzahl zwischen 0 und 300 angeben.");
         else{
-            $.post('/buildings/' + buildingId + '?personal_count_target_only=1', {"building" : {"personal_count_target" : value}, "_method" : "put", "authenticity_token" : $("meta[name=csrf-token]").attr("content")})
-                .done(setTimeout(() => {
-                window.location.reload();
-            }, 1000));
+            $.post('/buildings/' + buildingId + '?personal_count_target_only=1', {"building" : {"personal_count_target" : value}, "_method" : "put", "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, (data) => {
+                if(data == value) window.location.reload();
+            });
         }
     });
 
