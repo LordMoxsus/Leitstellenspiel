@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Personalhelfer
-// @version      1.1.1
+// @version      1.2.0
 // @description  Werbephasen und Personalsoll in der Gebaeudeuebersicht auswaehlen
 // @author       DrTraxx
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/buildings\/.*\
@@ -11,23 +11,15 @@
 (async function() {
     'use strict';
 
-    if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    if(!$('#vehicle_table') || !$('#vehicle_table')[0]) return false;
 
-    if(!$('span[class*="glyphicon glyphicon-pencil"]').parent('a[class="btn btn-default"]').attr('href')) return false;
-
-    var aBuildings = JSON.parse(localStorage.aBuildings).value;
     var buildingId = $('span[class*="glyphicon glyphicon-pencil"]').parent('a[class="btn btn-default"]').attr('href').replace('/buildings/','').replace('/edit','');
     var hireStart = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde gestartet.</div>`;
     var hireEnd = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde beendet.</div>`;
-    var building = aBuildings.filter((obj) => obj.id == buildingId)[0];
-    var maxPersonal = $('dl[class*="dl-horizontal"]').children('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1] ? $('dl[class*="dl-horizontal"]').children('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1].trim() : 0;
-    var noPersonalBuildings = [1,3,4,7,8,10,14];
+    var maxPersonal = $('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1] ? $('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1].trim() : 0;
     var hire = false;
     var cssHide = {"display":"none"};
     var cssShow = {"display":""};
-
-    if(noPersonalBuildings.includes(building.building_type)) return false;
-
 
     $.get('/buildings/' + buildingId + '/hire', function(data){
         if($('a[href*="/buildings/' + buildingId + '/hire_do/0"]', data)[0]){
