@@ -13,7 +13,7 @@
 
     if(!$('#vehicle_table') || !$('#vehicle_table')[0]) return false;
 
-    var buildingId = $('span[class*="glyphicon glyphicon-pencil"]').parent('a[class="btn btn-default"]').attr('href').replace('/buildings/','').replace('/edit','');
+    var buildingId = $('span[class*="glyphicon glyphicon-pencil"]').parent('a[class="btn btn-default"]').attr('href').replace(/\D+/g,'');
     var hireStart = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde gestartet.</div>`;
     var hireEnd = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde beendet.</div>`;
     var maxPersonal = $('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1] ? $('dd:contains("Angestellte")')[0].innerText.replace(/[a-zA-Z]./g,'').replace(',','').trim().split(':')[1].trim() : 0;
