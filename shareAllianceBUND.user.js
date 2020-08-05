@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.2.1
+// @version      1.2.2
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -14,7 +14,7 @@
 
     if(!localStorage.aMissions || JSON.parse(localStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/einsaetze.json').done(data => localStorage.setItem('aMissions', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
     if(!localStorage.sabJumpNext) localStorage.sabJumpNext = false;
-    if(!$('#mission_next_mission_btn').attr('href')) return false;
+    if(!$('#mission_help').attr('href')) return false;
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
