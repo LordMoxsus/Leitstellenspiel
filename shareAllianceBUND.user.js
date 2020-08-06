@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.2.2
+// @version      1.3.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -48,7 +48,10 @@
                     <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item btn btn-${jumpNext ? `success` : `danger`} btn-xs" id="btnJumpNext">zum nächsten Einsatz springen</a>
+                    <div class="dropdown-item form-check">
+                      <input type="checkbox" class="form-check-input" id="cbxJumpNext" ${jumpNext ? `checked`: ``}>
+                      <label class="form-check-label" for="cbxJumpNext">nächster Einsatz</label>
+                    </div>
                   </div>
                 </div>`);
 
@@ -86,9 +89,8 @@
         }
     });
 
-    $("body").on("click", "#btnJumpNext", function(){
-        jumpNext = !jumpNext;
-        $('#btnJumpNext').toggleClass('btn-success btn-danger');
+    $("body").on("click", "#cbxJumpNext", function(){
+        jumpNext = $('#cbxJumpNext')[0].checked;
         localStorage.sabJumpNext = jumpNext;
         if(!jumpNext){
             $('#jumpArrow').css({"display":"none"});
