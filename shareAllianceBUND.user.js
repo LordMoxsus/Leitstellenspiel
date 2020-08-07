@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.4.0
+// @version      1.5.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -15,11 +15,13 @@
     if(!localStorage.aMissions || JSON.parse(localStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/einsaetze.json').done(data => localStorage.setItem('aMissions', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
     if(!localStorage.sabJumpNext) localStorage.sabJumpNext = false;
     if(!localStorage.sabShowCredits) localStorage.sabShowCredits = false;
+    if(!localStorage.sabOptionalText) localStorage.sabOptionalText = JSON.stringify({"bol":false,"value":""});
     if(!$('#mission_help').attr('href')) return false;
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
     var showCredits = JSON.parse(localStorage.sabShowCredits);
+    var optionalText = JSON.parse(localStorage.sabOptionalText);
     var missionId = $('#mission_progress_info >> div').attr('id').replace('mission_bar_holder_','');
     var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace('/missions/','');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
@@ -60,7 +62,12 @@
                       <input type="checkbox" class="form-check-input" id="cbxShowCredits" ${showCredits ? `checked`: ``}>
                       <label class="form-check-label" for="cbxShowCredits" title="Durchschn. Verdienst in die Rückmeldung schreiben">zeige Verdienst</label>
                     </div>
+                    <div class="dropdown-item form-check">
+                      <input type="checkbox" class="form-check-input" id="cbxOptionalText" ${optionalText.bol ? `checked`: ``}>
+                      <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
+                    </div>
                   </div>
+                  <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${optionalText.value ? optionalText.value : ``}" id="iptOptionalText" style="width:20em;display:${optionalText.bol ? `` : `none`}">
                 </div>`);
 
     function alarmAndShare(){
@@ -68,6 +75,13 @@
         var checkedVehicles = [];
         var postValue = missionAddress;
         if(showCredits) postValue += "; ca. " + credits.toLocaleString() + " Credits";
+        if(optionalText && $('#iptOptionalText').val()){
+            postValue += " => " + $('#iptOptionalText').val();
+        }
+        if(optionalText){
+            optionalText.value = $('#iptOptionalText').val();
+            localStorage.sabOptionalText = JSON.stringify({"bol":optionalText.bol,"value":optionalText.value});
+        }
 
         $('.vehicle_checkbox').each(function(){
             if($(this)[0].checked){
@@ -112,6 +126,16 @@
     $("body").on("click", "#cbxShowCredits", function(){
         showCredits = $('#cbxShowCredits')[0].checked;
         localStorage.sabShowCredits = showCredits;
+    });
+
+    $("body").on("click", "#cbxOptionalText", function(){
+        optionalText.bol = $('#cbxOptionalText')[0].checked;
+        localStorage.sabOptionalText = JSON.stringify({"bol":optionalText.bol, "value":optionalText.value});
+        if(!optionalText.bol){
+            $('#iptOptionalText').css({"display":"none"});
+        } else {
+            $('#iptOptionalText').css({"display":""});
+        }
     });
 
 })();
