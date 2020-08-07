@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.5.2
+// @version      1.5.3
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -47,13 +47,13 @@
 
     $('#mission_finish_now_btn').parent()
         .after(`<div class="btn-group dropup">
-                  <a class="btn btn-success btn-sm" id="shareBund" title="Alarmieren, im Verband freigeben und eine Rückmeldung mit der Adresse in den Chat senden.">
+                  <a class="btn btn-success btn-sm" id="shareBund" title="Alarmieren, im Verband freigeben und eine Rückmeldung mit der Adresse in den Chat senden." style="height:32px">
                     <img class="icon icons8-Phone-Filled" src="/images/icons8-phone_filled.svg" width="16" height="16">
                     <img class="icon icons8-Share" src="/images/icons8-share.svg" width="16" height="16">
                     <span class="glyphicon glyphicon-info-sign"></span>
-                    <span class="glyphicon glyphicon-arrow-right" id="jumpArrow" style="display:${jumpNext ? `` : `none`}"></span>
+                    <span class="glyphicon glyphicon-arrow-right" id="jumpArrow" style="display:${jumpNext ? `inline` : `none`}"></span>
                  </a>
-                  <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height:32px">
                     <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
                   </button>
                   <div class="dropdown-menu">
@@ -70,7 +70,7 @@
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
                     </div>
                   </div>
-                  <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${optionalText.value ? optionalText.value : ``}" id="iptOptionalText" style="width:20em;display:${optionalText.bol ? `` : `none`}">
+                  <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${optionalText.value ? optionalText.value : ``}" id="iptOptionalText" style="height:32px;width:20em;display:${optionalText.bol ? `inherit` : `none`}">
                 </div>`);
 
     function alarmAndShare(){
@@ -122,7 +122,7 @@
         if(!jumpNext){
             $('#jumpArrow').css({"display":"none"});
         } else {
-            $('#jumpArrow').css({"display":""});
+            $('#jumpArrow').css({"display":"inline"});
         }
     });
 
@@ -137,7 +137,7 @@
         if(!optionalText.bol){
             $('#iptOptionalText').css({"display":"none"});
         } else {
-            $('#iptOptionalText').css({"display":""});
+            $('#iptOptionalText').css({"display":"inherit"});
         }
     });
 
