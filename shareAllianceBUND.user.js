@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.3.0
+// @version      1.4.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -14,27 +14,31 @@
 
     if(!localStorage.aMissions || JSON.parse(localStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/einsaetze.json').done(data => localStorage.setItem('aMissions', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
     if(!localStorage.sabJumpNext) localStorage.sabJumpNext = false;
+    if(!localStorage.sabShowCredits) localStorage.sabShowCredits = false;
     if(!$('#mission_help').attr('href')) return false;
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
+    var showCredits = JSON.parse(localStorage.sabShowCredits);
     var missionId = $('#mission_progress_info >> div').attr('id').replace('mission_bar_holder_','');
     var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace('/missions/','');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
     var shareLink = $('#mission_alliance_share_btn').attr('href');
     var credits = 0;
+    var braSiWa = false;
     var missionAddress = $('#mission_general_info').children()[2].innerText.split('|')[0].trim();
 
-    if(!missionTypeId || !shareLink) return false;
+    if(!shareLink) return false;
 
     for(let i = 0; i < aMissions.length; i++){
         if(aMissions[i].id == missionTypeId){
             credits = aMissions[i].average_credits;
+            if(aMissions[i].additional.guard_mission) braSiWa = true;
             break;
         }
     }
 
-    if(credits <= 2500) return false;
+    if(credits <= 2500 && !braSiWa) return false;
 
     $('#mission_finish_now_btn').parent()
         .after(`<div class="btn-group dropup">
@@ -50,7 +54,11 @@
                   <div class="dropdown-menu">
                     <div class="dropdown-item form-check">
                       <input type="checkbox" class="form-check-input" id="cbxJumpNext" ${jumpNext ? `checked`: ``}>
-                      <label class="form-check-label" for="cbxJumpNext">nächster Einsatz</label>
+                      <label class="form-check-label" for="cbxJumpNext" title="zum nächsten Einsatz springen">nächster Einsatz</label>
+                    </div>
+                    <div class="dropdown-item form-check">
+                      <input type="checkbox" class="form-check-input" id="cbxShowCredits" ${showCredits ? `checked`: ``}>
+                      <label class="form-check-label" for="cbxShowCredits" title="Durchschn. Verdienst in die Rückmeldung schreiben">zeige Verdienst</label>
                     </div>
                   </div>
                 </div>`);
@@ -58,6 +66,8 @@
     function alarmAndShare(){
 
         var checkedVehicles = [];
+        var postValue = missionAddress;
+        if(showCredits) postValue += "; ca. " + credits.toLocaleString() + " Credits";
 
         $('.vehicle_checkbox').each(function(){
             if($(this)[0].checked){
@@ -71,7 +81,7 @@
             $.when(
                 $.get('/missions/' + missionId + '/alliance'))
                 .done(() => {
-                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : missionAddress, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
+                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
                 setTimeout(() => {jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload()}, 1000);
             });
         });
@@ -97,6 +107,11 @@
         } else {
             $('#jumpArrow').css({"display":""});
         }
+    });
+
+    $("body").on("click", "#cbxShowCredits", function(){
+        showCredits = $('#cbxShowCredits')[0].checked;
+        localStorage.sabShowCredits = showCredits;
     });
 
 })();
