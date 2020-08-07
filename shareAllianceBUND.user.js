@@ -36,7 +36,7 @@
         if(aMissions[i].id == missionTypeId){
             if(aMissions[i].additional.guard_mission){
                 braSiWa = true;
-                credits = $('#col_left:contains("Verdienst")').children('br').siblings('br')[1].nextSibling.data.replace(/\D+/g,'');
+                credits = parseInt($('#col_left:contains("Verdienst")').children('br').siblings('br')[1].nextSibling.data.replace(/\D+/g,''));
             }
             else credits = aMissions[i].average_credits;
             break;
