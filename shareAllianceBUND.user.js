@@ -43,7 +43,7 @@
         }
     }
 
-    //if(credits <= 2500 && !braSiWa) return false;
+    if(credits <= 2500 && !braSiWa) return false;
 
     $('#mission_finish_now_btn').parent()
         .after(`<div class="btn-group dropup">
