@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.5.4
+// @version      1.5.5
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -43,7 +43,7 @@
         }
     }
 
-    if(credits <= 2500 && !braSiWa) return false;
+    //if(credits <= 2500 && !braSiWa) return false;
 
     $('#mission_finish_now_btn').parent()
         .after(`<div class="btn-group dropup">
@@ -78,7 +78,7 @@
         var checkedVehicles = [];
         var postValue = missionAddress;
         if(showCredits) postValue += braSiWa ? "; " + credits.toLocaleString() + " Credits" : "; ca. " + credits.toLocaleString() + " Credits";
-        if(optionalText && $('#iptOptionalText').val()){
+        if(optionalText.bol && $('#iptOptionalText').val()){
             postValue += " => " + $('#iptOptionalText').val();
         }
         if(optionalText){
