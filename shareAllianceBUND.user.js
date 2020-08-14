@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.5.5
+// @version      1.6.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -17,6 +17,10 @@
     if(!localStorage.sabShowCredits) localStorage.sabShowCredits = false;
     if(!localStorage.sabOptionalText) localStorage.sabOptionalText = JSON.stringify({"bol":false,"value":""});
     if(!$('#mission_help').attr('href')) return false;
+    if(sessionStorage.sabReturnAlert){
+        $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
+        sessionStorage.removeItem('sabReturnAlert');
+    }
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
@@ -77,6 +81,8 @@
 
         var checkedVehicles = [];
         var postValue = missionAddress;
+        var alertMission = "";
+
         if(showCredits) postValue += braSiWa ? "; " + credits.toLocaleString() + " Credits" : "; ca. " + credits.toLocaleString() + " Credits";
         if(optionalText.bol && $('#iptOptionalText').val()){
             postValue += " => " + $('#iptOptionalText').val();
@@ -92,14 +98,18 @@
             }
         });
 
-        $.when(
-            $.get('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}))
-            .done(() => {
-            $.when(
-                $.get('/missions/' + missionId + '/alliance'))
-                .done(() => {
-                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
-                setTimeout(() => {jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload()}, 1000);
+        $.get('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data){
+            if($('div[class*="alert fade in"]', data)[0]) alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
+            $.post('/missions/' + missionId + '/alliance',function(data){
+                if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
+                else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
+                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data){
+                    if($('div[class*="alert fade in"]', data)[0]){
+                        alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
+                        sessionStorage.sabReturnAlert = alertMission;
+                        jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
+                    }
+                });
             });
         });
     }
