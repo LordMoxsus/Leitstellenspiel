@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.7.1
+// @version      1.7.2
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -75,7 +75,7 @@
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
                     </div>
                     <div class="dropdown-item input-group btn-group">
-                      <input type="text" class="form-control form-control-sm" value="${localStorage.sabShortKey}" id="iptShortKey" title="Strg (Mac: control) + Shift + key" style="width:3em;height:22px">
+                      <input type="text" class="form-control form-control-sm" value="${localStorage.sabShortKey}" id="iptShortKey" title="Strg (Mac: control) + Shift + key" style="width:4em;height:22px">
                       <a class="btn btn-info btn-xs" href="https://keycode.info/" target="_blank" title="Short-Key suchen">Short-Key</a>
                     </div>
                   </div>
