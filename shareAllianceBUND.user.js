@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.6.0
+// @version      1.7.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -16,6 +16,7 @@
     if(!localStorage.sabJumpNext) localStorage.sabJumpNext = false;
     if(!localStorage.sabShowCredits) localStorage.sabShowCredits = false;
     if(!localStorage.sabOptionalText) localStorage.sabOptionalText = JSON.stringify({"bol":false,"value":""});
+    if(!localStorage.sabShortKey) localStorage.sabShortKey = 89;
     if(!$('#mission_help').attr('href')) return false;
     if(sessionStorage.sabReturnAlert){
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
@@ -57,7 +58,7 @@
                     <span class="glyphicon glyphicon-info-sign"></span>
                     <span class="glyphicon glyphicon-arrow-right" id="jumpArrow" style="display:${jumpNext ? `inline` : `none`}"></span>
                  </a>
-                  <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height:32px">
+                  <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height:32px" id="btnSabOptions">
                     <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
                   </button>
                   <div class="dropdown-menu">
@@ -72,6 +73,10 @@
                     <div class="dropdown-item form-check">
                       <input type="checkbox" class="form-check-input" id="cbxOptionalText" ${optionalText.bol ? `checked`: ``}>
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
+                    </div>
+                    <div class="dropdown-item input-group btn-group">
+                      <input type="text" class="form-control form-control-sm" value="${localStorage.sabShortKey}" id="iptShortKey" title="Strg (Mac: control) + Shift + key" style="width:3em;height:22px">
+                      <a class="btn btn-info btn-xs" href="https://keycode.info/" target="_blank" title="Short-Key suchen">Short-Key</a>
                     </div>
                   </div>
                   <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${optionalText.value ? optionalText.value : ``}" id="iptOptionalText" style="height:32px;width:20em;display:${optionalText.bol ? `inherit` : `none`}">
@@ -118,11 +123,19 @@
         alarmAndShare();
     });
 
-    //triggert die function mit Strg + Shift + y
+    //triggert die function mit Strg + Shift + key
     $("body").keydown(function(e) {
-        if(e.ctrlKey && e.shiftKey && e.which == 89) {
+        if(e.ctrlKey && e.shiftKey && e.which == $('#iptShortKey').val()) {
             alarmAndShare();
             return false;
+        }
+    });
+
+    $("body").on("click", "#btnSabOptions", function(){
+        if(isNaN(parseInt($('#iptShortKey').val()))){
+            alert("Short-Key prüfen!");
+        } else {
+            localStorage.sabShortKey = $('#iptShortKey').val();
         }
     });
 
