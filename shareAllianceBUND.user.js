@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.7.0
+// @version      1.7.1
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -33,7 +33,7 @@
     var shareLink = $('#mission_alliance_share_btn').attr('href');
     var credits = 0;
     var braSiWa = false;
-    var missionAddress = $('#mission_general_info').children()[2].innerText.split('|')[0].trim();
+    var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
 
     if(!shareLink) return false;
 
