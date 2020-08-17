@@ -104,16 +104,14 @@
         });
 
         $.get('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data){
-            if($('div[class*="alert fade in"]', data)[0]) alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
+            if(checkedVehicles.length > 0) alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
             $.post('/missions/' + missionId + '/alliance',function(data){
                 if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
                 else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
                 $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data){
-                    if($('div[class*="alert fade in"]', data)[0]){
                         alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
                         sessionStorage.sabReturnAlert = alertMission;
                         jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
-                    }
                 });
             });
         });
