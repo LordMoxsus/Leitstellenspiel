@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.4.1
+// @version      2.5.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -11,11 +11,7 @@
 (async function() {
     'use strict';
 
-    var buttonOnRadio = true; //true: zeigt Button im Funk-Fenster; false: zeigt Button im Header
-    var showOnBuild = true; //true: zeigt Ausbauten im Ausbau; false: Ausbauten im Ausbau werden nicht gezeigt
-
-    if(buttonOnRadio) $('#radio_panel_heading').after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" class="btn btn-default btn-xs">Fuhrpark-Manager</a>`);
-    else $('#menu_profile').parent().before(`<li><a style="cursor:pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
+    if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"buttonOnRadio":true,"buttonOnNavbar":false,"showOnBuild":true});
 
     $("head").append(`<style>
 .modal {
@@ -34,6 +30,21 @@ z-index: 9999;
 .modal-body{
 height: 650px;
 overflow-y: auto;
+}
+.treeView {
+cursor: pointer;
+}
+
+.fumNested {
+display: none;
+}
+
+.fumActive {
+display: table-row;
+cursor: default;
+}
+.noTree {
+cursor: default;
 }
 </style>`);
 
@@ -101,6 +112,8 @@ overflow-y: auto;
                              <div class="pull-left">
                                 v ${GM_info.script.version}
                              </div>
+                             <div class="btn-group pull-right">
+                                <a class="btn btn-success" id="btnSettingsFuM" title="Einstellungen"><div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div></a>
                                 <button type="button"
                                         id="tableStatusCloseButton"
                                         class="btn btn-danger"
@@ -108,6 +121,7 @@ overflow-y: auto;
                                 >
                                     Schließen
                                 </button>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -137,7 +151,12 @@ overflow-y: auto;
             "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())},
             "sort":['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend']
         },
-        "status":{"count":0}
+        "status":{"count":0},
+        "general":{
+            "buttonOnRadio":JSON.parse(localStorage.fum_options).buttonOnRadio,
+            "buttonOnNavbar":JSON.parse(localStorage.fum_options).buttonOnNavbar,
+            "showOnBuild":JSON.parse(localStorage.fum_options).showOnBuild
+        }
     };
 
     var database = {
@@ -145,6 +164,16 @@ overflow-y: auto;
             "get":{"typeId":{},"name":{},"onDispatchCenter":{}}
         }
     };
+
+    if(options.general.buttonOnRadio) {
+        $('#radio_panel_heading')
+            .after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" class="btn btn-default btn-xs">Fuhrpark-Manager</a>`);
+    }
+    if(options.general.buttonOnNavbar) {
+        $('#menu_profile')
+            .parent()
+            .before(`<li><a style="cursor:pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
+    }
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
@@ -250,7 +279,9 @@ overflow-y: auto;
         var tableDatabase = [];
 
         $.each(aVehicles, function(key, item){
-            var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type, "buildingId": item.building_id, "ownClass": item.vehicle_type_caption};
+            var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type,
+                               "buildingId": item.building_id, "ownClass": item.vehicle_type_caption, "pers":item.assigned_personnel_count, "maxPers":item.max_personnel_override,
+                               "workStart":item.working_hour_start, "workEnd": item.working_hour_end, "delay":item.alarm_delay};
             if(isNaN(statusIndex)){
                 if(isNaN(options.dropdown.vehicles.type)) tableDatabase.push(pushContent);
                 else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption) tableDatabase.push(pushContent);
@@ -325,16 +356,18 @@ overflow-y: auto;
              <tbody>`;
 
         for(let i = 0; i < tableDatabase.length; i++){
+            var e = tableDatabase[i];
             intoTable +=
                 `<tr>
-                 <td class="col-1"><span style="cursor:${tableDatabase[i].status == 2 || tableDatabase[i].status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${tableDatabase[i].status}" id="tableFms_${tableDatabase[i].id}">${tableDatabase[i].status}</span>
-                 <td class="col"><a class="lightbox-open" href="/vehicles/${tableDatabase[i].id}">${tableDatabase[i].name}</a></td>
-                 <td class="col">${!tableDatabase[i].ownClass ? aVehicleTypes[tableDatabase[i].typeId].name : tableDatabase[i].ownClass}</td>
+                 <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
+                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}">${e.name}</a><br>
+                  <small>Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr; Ausrückverzögerung: ${e.delay.toLocaleString()} Sekunden</td>
+                 <td class="col">${!e.ownClass ? aVehicleTypes[e.typeId].name : e.ownClass}</td>
                  <td class="col-xs-3 btn-group btn-group-xs" role="group" aria-label="Small button group">
-                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
-                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${tableDatabase[i].id}/zuweisung">Personalzuweisung</a>
+                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
+                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : aVehicleTypes[e.typeId].personal})</a>
                  </td>
-                 <td class="col"><a class="lightbox-open" href="/buildings/${tableDatabase[i].buildingId}">${database.buildings.get.name[tableDatabase[i].buildingId]}</a></td>
+                 <td class="col"><a class="lightbox-open" href="/buildings/${e.buildingId}">${database.buildings.get.name[e.buildingId]}</a></td>
                  </tr>`;
         }
 
@@ -350,155 +383,46 @@ overflow-y: auto;
 
         var infoBuildingsDatabase = aBuildings.slice(0);
         var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0,"onDispatchCenter":[]};
-        var buildings ={
-            "fire":{
-                "normal":{
-                    "count":0,
-                    "big":{"build":0,"onBuild":0},
-                    "rescue":{"build":0,"active":0,"onBuild":0},
-                    "industry":{"build":0,"active":0,"onBuild":0},
-                    "airport":{"build":0,"active":0,"onBuild":0},
-                    "wr":{"build":0,"active":0,"onBuild":0},
-                    "ab":{"build":0,"onBuild":0}
-                },
-                "small":{
-                    "count":0,
-                    "ab":{"build":0,"onBuild":0}
-                },
-            },
-            "rescue":{"normal":0,"small":0},
-            "police":{
-                "normal":{
-                    "count":0,
-                    "cell":{"build":0,"onBuild":0}
-                },
-                "small":{
-                    "count":0,
-                    "cell":{"build":0,"onBuild":0}
-                }
-            },
-            "seg":{
-                "count":0,
-                "leader":{"build":0,"active":0,"onBuild":0},
-                "sanD":{"build":0,"active":0,"onBuild":0},
-                "wr":{"build":0,"active":0,"onBuild":0},
-                "dogs":{"build":0,"active":0,"onBuild":0}
-            },
-            "bepo":{
-                "count":0,
-                "division":{
-                    "second":{"build":0,"active":0,"onBuild":0},
-                    "third":{"build":0,"active":0,"onBuild":0},
-                },
-                "waterthrower":{"build":0,"active":0,"onBuild":0},
-                "mobilePrison":{"build":0,"active":0,"onBuild":0},
-                "sek":{
-                    "first":{"build":0,"active":0,"onBuild":0},
-                    "second":{"build":0,"active":0,"onBuild":0},
-                },
-                "mek":{
-                    "first":{"build":0,"active":0,"onBuild":0},
-                    "second":{"build":0,"active":0,"onBuild":0}
-                }
-            },
-            "polSonder":{
-                "count":0,
-                "sek":{
-                    "first":{"build":0,"active":0,"onBuild":0},
-                    "second":{"build":0,"active":0,"onBuild":0},
-                },
-                "mek":{
-                    "first":{"build":0,"active":0,"onBuild":0},
-                    "second":{"build":0,"active":0,"onBuild":0}
-                }
-            },
-            "wr":{"count":0,"active":0},
-            "rescueDogs":{"count":0,"active":0},
-            "helicopter":{
-                "rescue":{"count":0,"active":0},
-                "police":{"count":0,"active":0}
-            },
-            "thw":{
-                "count":0,
-                "firstTz":{
-                    "bg":{"build":0,"active":0,"onBuild":0},
-                    "zug":{"build":0,"active":0,"onBuild":0}
-                },
-                "secondTz":{
-                    "grund":{"build":0,"active":0,"onBuild":0},
-                    "bg":{"build":0,"active":0,"onBuild":0},
-                    "zug":{"build":0,"active":0,"onBuild":0}
-                },
-                "fgrO":{"build":0,"active":0,"onBuild":0},
-                "fgrR":{"build":0,"active":0,"onBuild":0},
-                "fgrW":{"build":0,"active":0,"onBuild":0}
-            },
-            "school":{
-                "fire":{
-                    "count":0,
-                    "rooms":{"build":0,"onBuild":0}
-                },
-                "rescue":{
-                    "count":0,
-                    "rooms":{"build":0,"onBuild":0}
-                },
-                "police":{
-                    "count":0,
-                    "rooms":{"build":0,"onBuild":0}
-                },
-                "thw":{
-                    "count":0,
-                    "rooms":{"build":0,"onBuild":0}
-                },
-            },
-            "hospital":{
-                "count":0,
-                "beds":{"build":0,"onBuild":0},
-                "extension":{
-                    "ina":{"build":0,"onBuild":0},
-                    "ach":{"build":0,"onBuild":0},
-                    "gyn":{"build":0,"onBuild":0},
-                    "uro":{"build":0,"onBuild":0},
-                    "uch":{"build":0,"onBuild":0},
-                    "nrl":{"build":0,"onBuild":0},
-                    "nch":{"build":0,"onBuild":0},
-                    "kar":{"build":0,"onBuild":0},
-                    "kch":{"build":0,"onBuild":0}
-                },
-            },
-            "dispatchCenter":0,
-            "stagingArea":0
-        };
+        var fire = {};
+        var rescue = {};
+        var seg = {};
+        var police = {};
+        var bepo = {};
+        var polSonder = {};
+        var thw = {};
+        var hospitals = {};
+        var otherBuildings = {};
+        var premiumCount = user_premium ? 15 : 20;
         var configTable = {
             "arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
             "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
             "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
             "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
             "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`,
-            "marginLeft":`<div style="margin-left:1em">`
+            "marginLeft":`<div style="margin-left:1em">%PLATZHALTER%</div>`
         };
 
         $.each(aVehicles, function(key, item){
             switch(item.vehicle_type){
-                case 31: vehicles.rth ++;
+                case 31: vehicles.rth++;
                     break;
-                case 61: vehicles.polHeli ++;
+                case 61: vehicles.polHeli++;
                     break;
-                case 73: vehicles.grtw ++;
+                case 73: vehicles.grtw++;
                     break;
-                case 74: vehicles.naw ++;
+                case 74: vehicles.naw++;
                     break;
             }
             vehicles.onDispatchCenter.push({"name":item.caption,"lst":database.buildings.get.onDispatchCenter[item.building_id]});
         });
 
         if(!isNaN(options.dropdown.dispatchCenter.id)){
-            for(let i = infoBuildingsDatabase.length - 1; i >= 0; i --){
+            for(let i = infoBuildingsDatabase.length - 1; i >= 0; i--){
                 if(infoBuildingsDatabase[i].leitstelle_building_id && infoBuildingsDatabase[i].leitstelle_building_id !== options.dropdown.dispatchCenter.id){
                     infoBuildingsDatabase.splice(i,1);
                 }
             }
-            for(let i = vehicles.onDispatchCenter.length - 1; i >= 0; i --){
+            for(let i = vehicles.onDispatchCenter.length - 1; i >= 0; i--){
                 if(vehicles.onDispatchCenter[i].lst !== options.dropdown.dispatchCenter.id){
                     vehicles.onDispatchCenter.splice(i,1);
                 }
@@ -507,282 +431,340 @@ overflow-y: auto;
 
         $.each(infoBuildingsDatabase, function(key, item){
             switch(item.building_type){
-                case 0: item.small_building ? buildings.fire.small.count ++ : buildings.fire.normal.count ++;
+                case 0:
+                    if(item.small_building) fire.small > 0 ? fire.small++ : fire.small = 1;
+                    else fire.normal > 0 ? fire.normal++ : fire.normal = 1;
                     break;
-                case 1: buildings.school.fire.count ++;
+                case 1:
+                    fire.school > 0 ? fire.school++ : fire.school = 1;
                     break;
-                case 2: item.small_building ? buildings.rescue.small ++ : buildings.rescue.normal ++;
+                case 2:
+                    if(item.small_building) rescue.small > 0 ? rescue.small++ : rescue.small = 1;
+                    else rescue.normal > 0 ? rescue.normal++ : rescue.normal = 1;
                     break;
-                case 3: buildings.school.rescue.count ++;
+                case 3:
+                    rescue.school > 0 ? rescue.school++ : rescue.school = 1;
                     break;
-                case 4: buildings.hospital.count ++;
+                case 4:
+                    hospitals.count > 0 ? hospitals.count++ : hospitals.count = 1;
+                    hospitals.beds > 0 ? hospitals.beds += item.level : hospitals.beds = item.level;
                     break;
                 case 5:
+                    if(!rescue.helicopter) rescue.helicopter = 0;
+                    if(!rescue.activeHelicopter) rescue.activeHelicopter = 0;
                     if(item.enabled){
-                        item.level > 0 ? buildings.helicopter.rescue.count += (item.level + 1) : buildings.helicopter.rescue.count ++;
-                        item.level > 0 ? buildings.helicopter.rescue.active += (item.level + 1) : buildings.helicopter.rescue.active ++;
+                        item.level > 0 ? rescue.helicopter += (item.level + 1) : rescue.helicopter++;
+                        item.level > 0 ? rescue.activeHelicopter += (item.level + 1) : rescue.activeHelicopter++;
                     }
-                    else item.level > 0 ? buildings.helicopter.rescue.count += (item.level + 1) : buildings.helicopter.rescue.count ++;
+                    else {
+                        item.level > 0 ? rescue.helicopter += (item.level + 1) : rescue.helicopter++;
+                    }
                     break;
-                case 6: item.small_building ? buildings.police.small.count ++ : buildings.police.normal.count ++;
+                case 6:
+                    if(item.small_building) police.small > 0 ? police.small++ : police.small = 1;
+                    else police.normal > 0 ? police.normal++ : police.normal = 1;
                     break;
-                case 7: buildings.dispatchCenter ++;
+                case 7:
+                    otherBuildings.lst > 0 ? otherBuildings.lst++ : otherBuildings.lst = 1;
                     break;
-                case 8: buildings.school.police.count ++;
+                case 8:
+                    police.school > 0 ? police.school++ : police.school = 1;
                     break;
-                case 9: buildings.thw.count ++;
+                case 9:
+                    thw.count > 0 ? thw.count++ : thw.count = 1;
                     break;
-                case 10: buildings.school.thw.count ++;
+                case 10:
+                    thw.school > 0 ? thw.school++ : thw.school = 1;
                     break;
-                case 11: buildings.bepo.count ++;
+                case 11:
+                    bepo.count > 0 ? bepo.count++ : bepo.count = 1;
                     break;
-                case 12: buildings.seg.count ++;
+                case 12:
+                    seg.count > 0 ? seg.count++ : seg.count = 1;
                     break;
                 case 13:
+                    if(!police.helicopter) police.helicopter = 0;
+                    if(!police.activeHelicopter) police.activeHelicopter = 0;
                     if(item.enabled){
-                        item.level > 0 ? buildings.helicopter.police.count += (item.level + 1) : buildings.helicopter.police.count ++;
-                        item.level > 0 ? buildings.helicopter.police.active += (item.level + 1) : buildings.helicopter.police.active ++;
+                        item.level > 0 ? police.helicopter += (item.level + 1) : police.helicopter++;
+                        item.level > 0 ? police.activeHelicopter += (item.level + 1) : police.activeHelicopter++;
                     }
-                    else item.level > 0 ? buildings.helicopter.police.count += (item.level + 1) : buildings.helicopter.police.count ++;
+                    else item.level > 0 ? police.helicopter += (item.level + 1) : police.helicopter++;
                     break;
-                case 14: buildings.stagingArea ++;
+                case 14:
+                    otherBuildings.bsr > 0 ? otherBuildings.bsr++ : otherBuildings.bsr = 1;
                     break;
-                case 15: item.enabled ? buildings.wr.active ++ : buildings.wr.count ++;
+                case 15:
+                    otherBuildings.wr = 0;
+                    otherBuildings.activeWr = 0;
+                    item.enabled ? otherBuildings.activeWr++ : otherBuildings.wr++;
                     break;
-                case 17: buildings.polSonder.count ++;
+                case 17:
+                    polSonder.count > 0 ? polSonder.count++ : polSonder.count = 1;
                     break;
-                case 21: item.enabled ? buildings.rescueDogs.active ++ : buildings.rescueDogs.count ++;
+                case 21:
+                    if(!otherBuildings.rescueDogs) otherBuildings.rescueDogs = 0;
+                    if(!otherBuildings.activeRescueDogs) otherBuildings.activeRescueDogs = 0;
+                    item.enabled ? otherBuildings.activeRescueDogs++ : otherBuildings.rescueDogs++;
                     break;
             }
-            if(item.building_type == 4) buildings.hospital.beds.build += item.level;
             if(item.extensions.length > 0){
-                for(let i = 0; i < item.extensions.length; i ++){
+                for(let i = 0; i < item.extensions.length; i++){
                     var switchOptions = {
                         "active":item.extensions[i].enabled && item.extensions[i].available,
                         "build":item.extensions[i].available,
-                        "onBuild":!item.extensions[i].available && item.extensions[i].enabled && showOnBuild
+                        "onBuild":!item.extensions[i].available && item.extensions[i].enabled && options.general.showOnBuild
                     };
                     switch(item.extensions[i].caption){
                         case "Großwache":
-                            if(switchOptions.build) buildings.fire.normal.big.build ++;
-                            if(switchOptions.onBuild) buildings.fire.normal.big.onBuild ++;
+                            if(switchOptions.build) fire.big > 0 ? fire.big++ : fire.big = 1;
+                            if(switchOptions.onBuild) fire.onBuildBig > 0 ? fire.onBuildBig++ : fire.onBuildBig = 1;
                             break;
                         case "Rettungsdienst-Erweiterung":
-                            if(switchOptions.build) buildings.fire.normal.rescue.build ++;
-                            if(switchOptions.active) buildings.fire.normal.rescue.active ++;
-                            if(switchOptions.onBuild) buildings.fire.normal.rescue.onBuild ++;
+                            if(switchOptions.build) fire.rescue > 0 ? fire.rescue++ : fire.rescue = 1;
+                            if(switchOptions.active) fire.activeRescue > 0 ? fire.activeRescue++ : fire.activeRescue = 1;
+                            if(switchOptions.onBuild) fire.onBuildRescue > 0 ? fire.onBuildRescue++ : fire.onBuildRescue = 1;
                             break;
                         case "Werkfeuerwehr":
-                            if(switchOptions.build) buildings.fire.normal.industry.build ++;
-                            if(switchOptions.active) buildings.fire.normal.industry.active ++;
-                            if(switchOptions.onBuild) buildings.fire.normal.industry.onBuild ++;
+                            if(switchOptions.build) fire.wf > 0 ? fire.wf++ : fire.wf = 1;
+                            if(switchOptions.active) fire.activeWf > 0 ? fire.activeWf++ : fire.activeWf = 1;
+                            if(switchOptions.onBuild) fire.onBuildWf > 0 ? fire.onBuildWf++ : fire.onBuildWf = 1;
                             break;
                         case "Flughafen-Erweiterung":
-                            if(switchOptions.build) buildings.fire.normal.airport.build ++;
-                            if(switchOptions.active) buildings.fire.normal.airport.active ++;
-                            if(switchOptions.onBuild) buildings.fire.normal.airport.onBuild ++;
+                            if(switchOptions.build) fire.airport > 0 ? fire.airport++ : fire.airport = 1;
+                            if(switchOptions.active) fire.activeAirport > 0 ? fire.activeAirport++ : fire.activeAirport = 1;
+                            if(switchOptions.onBuild) fire.onBuildAirport > 0 ? fire.onBuildAirport++ : fire.onBuildAirport = 1;
                             break;
                         case "Führung":
-                            if(switchOptions.build) buildings.seg.leader.build ++;
-                            if(switchOptions.active) buildings.seg.leader.active ++;
-                            if(switchOptions.onBuild) buildings.seg.leader.onBuild ++;
+                            if(switchOptions.build) seg.leader > 0 ? seg.leader++ : seg.leader = 1;
+                            if(switchOptions.active) seg.activeLeader > 0 ? seg.activeLeader++ : seg.activeLeader = 1;
+                            if(switchOptions.onBuild) seg.onBuildLeader > 0 ? seg.onBuildLeader++ : seg.onBuildLeader = 1;
                             break;
                         case "Sanitätsdienst":
-                            if(switchOptions.build) buildings.seg.sanD.build ++;
-                            if(switchOptions.active) buildings.seg.sanD.active ++;
-                            if(switchOptions.onBuild) buildings.seg.sanD.onBuild ++;
+                            if(switchOptions.build) seg.sanD > 0 ? seg.sanD++ : seg.sanD = 1;
+                            if(switchOptions.active) seg.activeSanD > 0 ? seg.activeSanD++ : seg.activeSanD = 1;
+                            if(switchOptions.onBuild) seg.onBuildSanD > 0 ? seg.onBuildSanD++ : seg.onBuildSanD = 1;
                             break;
                         case "Wasserrettungs-Erweiterung":
                             if(switchOptions.build){
-                                if(item.building_type == 0) buildings.fire.normal.wr.build ++;
-                                else if(item.building_type == 12) buildings.seg.wr.build ++;
+                                if(item.building_type == 0) fire.wr > 0 ? fire.wr++ : fire.wr = 1;
+                                else if(item.building_type == 12) seg.wr > 0 ? seg.wr++ : seg.wr = 1;
                             }
                             if(switchOptions.active){
-                                if(item.building_type == 0) buildings.fire.normal.wr.active ++;
-                                else if(item.building_type == 12) buildings.seg.wr.active ++;
+                                if(item.building_type == 0) fire.activeWr > 0 ? fire.activeWr++ : fire.activeWr = 1;
+                                else if(item.building_type == 12) seg.activeWr > 0 ? seg.activeWr++ : seg.activeWr = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 0) buildings.fire.normal.wr.onBuild ++;
-                                else if(item.building_type == 12) buildings.seg.wr.onBuild ++;
+                                if(item.building_type == 0) fire.onBuildWr > 0 ? fire.onBuildWr++ : fire.onBuildWr = 1;
+                                else if(item.building_type == 12) seg.onBuildWr > 0 ? seg.onBuildWr++ : seg.onBuildWr = 1;
                             }
                             break;
                         case "Rettungshundestaffel":
-                            if(switchOptions.build) buildings.seg.dogs.build ++;
-                            if(switchOptions.active) buildings.seg.dogs.active ++;
-                            if(switchOptions.onBuild) buildings.seg.dogs.onBuild ++;
+                            if(switchOptions.build) seg.rescueDogs > 0 ? seg.rescueDogs++ : seg.rescueDogs = 1;
+                            if(switchOptions.active) seg.activeRescueDogs > 0 ? seg.activeRescueDogs++ : seg.activeRescueDogs = 1;
+                            if(switchOptions.onBuild) seg.onBuildRescueDogs > 0 ? seg.onBuildRescueDogs++ : seg.onBuildRescueDogs = 1;
                             break;
                         case "Abrollbehälter-Stellplatz":
-                            if(switchOptions.build) item.small_building ? buildings.fire.small.ab.build ++ : buildings.fire.normal.ab.build ++;
-                            if(switchOptions.onBuild) item.small_building ? buildings.fire.small.ab.onBuild ++ : buildings.fire.normal.ab.onBuild ++;
+                            if(switchOptions.build) {
+                                if(item.small_building) fire.abSmall > 0 ? fire.abSmall++ : fire.abSmall = 1;
+                                else fire.abNormal > 0 ? fire.abNormal++ : fire.abNormal = 1;
+                            }
+                            if(switchOptions.onBuild) {
+                                if(item.small_building) fire.onBuildAbSmall > 0 ? fire.onBuildAbSmall++ : fire.onBuildAbSmall = 1;
+                                else fire.onBuildAbNormal > 0 ? fire.onBuildAbNormal++ : fire.onBuildAbNormal = 1;
+                            }
                             break;
                         case "2. Zug der 1. Hundertschaft":
-                            if(switchOptions.build) buildings.bepo.division.second.build ++;
-                            if(switchOptions.active) buildings.bepo.division.second.active ++;
-                            if(switchOptions.onBuild) buildings.bepo.division.second.onBuild ++;
+                            if(switchOptions.build) bepo.division2 > 0 ? bepo.division2++ : bepo.division2 = 1;
+                            if(switchOptions.active) bepo.activeDivision2 > 0 ? bepo.activeDivision2++ : bepo.activeDivision2 = 1;
+                            if(switchOptions.onBuild) bepo.onBuildDivision2 > 0 ? bepo.onBuildDivision2++ : bepo.onBuildDivision2 = 1;
                             break;
                         case "3. Zug der 1. Hundertschaft":
-                            if(switchOptions.build) buildings.bepo.division.third.build ++;
-                            if(switchOptions.active) buildings.bepo.division.third.active ++;
-                            if(switchOptions.onBuild) buildings.bepo.division.third.onBuild ++;
+                            if(switchOptions.build) bepo.division3 > 0 ? bepo.division3++ : bepo.division3 = 1;
+                            if(switchOptions.active) bepo.activeDivision3 > 0 ? bepo.activeDivision3++ : bepo.activeDivision3 = 1;
+                            if(switchOptions.onBuild) bepo.onBuildDivision3 > 0 ? bepo.onBuildDivision3++ : bepo.onBuildDivision3 = 1;
                             break;
                         case "Sonderfahrzeug: Gefangenenkraftwagen":
-                            if(switchOptions.build) buildings.bepo.mobilePrison.build ++;
-                            if(switchOptions.active) buildings.bepo.mobilePrison.active ++;
-                            if(switchOptions.onBuild) buildings.bepo.mobilePrison.onBuild ++;
+                            if(switchOptions.build) bepo.mobilePrison > 0 ? bepo.mobilePrison++ : bepo.mobilePrison = 1;
+                            if(switchOptions.active) bepo.activeMobilePrison > 0 ? bepo.activeMobilePrison++ : bepo.activeMobilePrison = 1;
+                            if(switchOptions.onBuild) bepo.onBuildMobilePrison > 0 ? bepo.onBuildMobilePrison++ : bepo.onBuildMobilePrison = 1;
                             break;
                         case "Technischer Zug: Wasserwerfer":
-                            if(switchOptions.build) buildings.bepo.waterthrower.build ++;
-                            if(switchOptions.active) buildings.bepo.waterthrower.active ++;
-                            if(switchOptions.onBuild) buildings.bepo.waterthrower.onBuild ++;
+                            if(switchOptions.build) bepo.waterthrower > 0 ? bepo.waterthrower++ : bepo.waterthrower = 1;
+                            if(switchOptions.active) bepo.activeWaterthrower > 0 ? bepo.activeWaterthrower++ : bepo.activeWaterthrower = 1;
+                            if(switchOptions.onBuild) bepo.onBuildWaterthrower > 0 ? bepo.onBuildWaterthrower++ : bepo.onBuildWaterthrower = 1;
                             break;
                         case "SEK: 1. Zug":
                             if(switchOptions.build){
-                                if(item.building_type == 11) buildings.bepo.sek.first.build ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.first.build ++;
+                                if(item.building_type == 11) bepo.sek1 > 0 ? bepo.sek1++ : bepo.sek1 = 1;
+                                else if(item.building_type == 17) polSonder.sek1 > 0 ? polSonder.sek1++ : polSonder.sek1 = 1;
                             }
                             if(switchOptions.active){
-                                if(item.building_type == 11) buildings.bepo.sek.first.active ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.first.active ++;
+                                if(item.building_type == 11) bepo.activeSek1 > 0 ? bepo.activeSek1++ : bepo.activeSek1 = 1;
+                                else if(item.building_type == 17) polSonder.activeSek1 > 0 ? polSonder.activeSek1++ : polSonder.activeSek1 = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 11) buildings.bepo.sek.first.onBuild ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.first.onBuild ++;
+                                if(item.building_type == 11) bepo.onBuildSek1 > 0 ? bepo.onBuildSek1++ : bepo.onBuildSek1 = 1;
+                                else if(item.building_type == 17) polSonder.onBuildSek1 > 0 ? polSonder.onBuildSek1++ : polSonder.onBuildSek1 = 1;
                             }
                             break;
                         case "SEK: 2. Zug":
                             if(switchOptions.build){
-                                if(item.building_type == 11) buildings.bepo.sek.second.build ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.second.build ++;
+                                if(item.building_type == 11) bepo.sek2 > 0 ? bepo.sek2++ : bepo.sek2 = 1;
+                                else if(item.building_type == 17) polSonder.sek2 > 0 ? polSonder.sek2++ : polSonder.sek2 = 1;
                             }
                             if(switchOptions.active){
-                                if(item.building_type == 11) buildings.bepo.sek.second.active ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.second.active ++;
+                                if(item.building_type == 11) bepo.activeSek2 > 0 ? bepo.activeSek2++ : bepo.activeSek2 = 1;
+                                else if(item.building_type == 17) polSonder.ActiveSek2 > 0 ? polSonder.ActiveSek2++ : polSonder.ActiveSek2 = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 11) buildings.bepo.sek.second.onBuild ++;
-                                else if(item.building_type == 17) buildings.polSonder.sek.second.onBuild ++;
+                                if(item.building_type == 11) bepo.onBuildSek2 > 0 ? bepo.onBuildSek2++ : bepo.onBuildSek2 = 1;
+                                else if(item.building_type == 17) polSonder.onBuildSek2 > 0 ? polSonder.onBuildSek2++ : polSonder.onBuildSek2 = 1;
                             }
                             break;
                         case "MEK: 1. Zug":
                             if(switchOptions.build){
-                                if(item.building_type == 11) buildings.bepo.mek.first.build ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.first.build ++;
+                                if(item.building_type == 11) bepo.mek1 > 0 ? bepo.mek1++ :bepo.mek1 = 1;
+                                else if(item.building_type == 17) polSonder.mek1 > 0 ? polSonder.mek1++ : polSonder.mek1 = 1;
                             }
                             if(switchOptions.active){
-                                if(item.building_type == 11) buildings.bepo.mek.first.active ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.first.active ++;
+                                if(item.building_type == 11) bepo.activeMek1 > 0 ? bepo.activeMek1++ : bepo.activeMek1 = 1;
+                                else if(item.building_type == 17) polSonder.activeMek1 > 0 ? polSonder.activeMek1++ : polSonder.activeMek1 = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 11) buildings.bepo.mek.first.onBuild ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.first.onBuild ++;
+                                if(item.building_type == 11) bepo.onBuildMek1 > 0 ? bepo.onBuildMek1++ : bepo.onBuildMek1 = 1;
+                                else if(item.building_type == 17) polSonder.onBuildMek1 > 0 ? polSonder.onBuildMek1++ : polSonder.onBuildMek1 = 1;
                             }
                             break;
                         case "MEK: 2. Zug":
                             if(switchOptions.build){
-                                if(item.building_type == 11) buildings.bepo.mek.second.build ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.second.build ++;
+                                if(item.building_type == 11) bepo.mek2 > 0 ? bepo.mek2++ :bepo.mek2 = 1;
+                                else if(item.building_type == 17) polSonder.mek2 > 0 ? polSonder.mek2++ : polSonder.mek2 = 1;
                             }
                             if(switchOptions.active){
-                                if(item.building_type == 11) buildings.bepo.mek.second.active ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.second.active ++;
+                                if(item.building_type == 11) bepo.activeMek2 > 0 ? bepo.activeMek2++ : bepo.activeMek2 = 1;
+                                else if(item.building_type == 17) polSonder.activeMek2 > 0 ? polSonder.activeMek2++ : polSonder.activeMek2 = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 11) buildings.bepo.mek.second.onBuild ++;
-                                else if(item.building_type == 17) buildings.polSonder.mek.second.onBuild ++;
+                                if(item.building_type == 11) bepo.onBuildMek2 > 0 ? bepo.onBuildMek2++ : bepo.onBuildMek2 = 1;
+                                else if(item.building_type == 17) polSonder.onBuildMek2 > 0 ? polSonder.onBuildMek2++ : polSonder.onBuildMek2 = 1;
+                            }
+                            break;
+                        case "Diensthundestaffel":
+                            if(switchOptions.build){
+                                if(item.building_type == 6) police.guardDogs > 0 ? police.guardDogs++ : police.guardDogs = 1;
+                                else if(item.building_type == 11) bepo.guardDogs > 0 ? bepo.guardDogs++ : bepo.guardDogs = 1;
+                                else if(item.building_type == 17) polSonder.guardDogs > 0 ? polSonder.guardDogs++ : polSonder.guardDogs = 1;
+                            }
+                            if(switchOptions.active){
+                                if(item.building_type == 6) police.activeGuardDogs > 0 ? police.activeGuardDogs++ : police.activeGuardDogs = 1;
+                                else if(item.building_type == 11) bepo.activeGuardDogs > 0 ? bepo.activeGuardDogs++ : bepo.activeGuardDogs = 1;
+                                else if(item.building_type == 17) polSonder.activeGuardDogs > 0 ? polSonder.activeGuardDogs++ : polSonder.activeGuardDogs = 1;
+                            }
+                            if(switchOptions.onBuild){
+                                if(item.building_type == 6) police.onBuildGuardDogs > 0 ? police.onBuildGuardDogs++ : police.onBuildGuardDogs = 1;
+                                else if(item.building_type == 11) bepo.onBuildGuardDogs > 0 ? bepo.onBuildGuardDogs++ : bepo.onBuildGuardDogs = 1;
+                                else if(item.building_type == 17) polSonder.onBuildGuardDogs > 0 ? polSonder.onBuildGuardDogs++ : polSonder.onBuildGuardDogs = 1;
                             }
                             break;
                         case "1. Technischer Zug: Bergungsgruppe 2":
-                            if(switchOptions.build) buildings.thw.firstTz.bg.build ++;
-                            if(switchOptions.active) buildings.thw.firstTz.bg.active ++;
-                            if(switchOptions.onBuild) buildings.thw.firstTz.bg.onBuild ++;
+                            if(switchOptions.build) thw.tz1Bg > 0 ? thw.tz1Bg++ : thw.tz1Bg = 1;
+                            if(switchOptions.active) thw.activeTz1Bg > 0 ? thw.activeTz1Bg++ : thw.activeTz1Bg = 1;
+                            if(switchOptions.onBuild) thw.onBuildTz1Bg > 0 ? thw.onBuildTz1Bg++ : thw.onBuildTz1Bg = 1;
                             break;
                         case "1. Technischer Zug: Zugtrupp":
-                            if(switchOptions.build) buildings.thw.firstTz.zug.build ++;
-                            if(switchOptions.active) buildings.thw.firstTz.zug.active ++;
-                            if(switchOptions.onBuild) buildings.thw.firstTz.zug.onBuild ++;
+                            if(switchOptions.build) thw.tz1Zug > 0 ? thw.tz1Zug++ : thw.tz1Zug = 1;
+                            if(switchOptions.active) thw.activeTz1Zug > 0 ? thw.activeTz1Zug++ : thw.activeTz1Zug = 1;
+                            if(switchOptions.onBuild) thw.onBuildTz1Zug > 0 ? thw.onBuildTz1Zug++ : thw.onBuildTz1Zug = 1;
                             break;
                         case "Fachgruppe Räumen":
-                            if(switchOptions.build) buildings.thw.fgrR.build ++;
-                            if(switchOptions.active) buildings.thw.fgrR.active ++;
-                            if(switchOptions.onBuild) buildings.thw.fgrR.onBuild ++;
+                            if(switchOptions.build) thw.fgrR > 0 ? thw.fgrR++ : thw.fgrR = 1;
+                            if(switchOptions.active) thw.activeFgrR > 0 ? thw.activeFgrR++ : thw.activeFgrR = 1;
+                            if(switchOptions.onBuild) thw.onBuildFgrR > 0 ? thw.onBuildFgrR++ : thw.onBuildFgrR = 1;
                             break;
                         case "Fachgruppe Wassergefahren":
-                            if(switchOptions.build) buildings.thw.fgrW.build ++;
-                            if(switchOptions.active) buildings.thw.fgrW.active ++;
-                            if(switchOptions.onBuild) buildings.thw.fgrW.onBuild ++;
+                            if(switchOptions.build) thw.fgrW > 0 ? thw.fgrW++ : thw.fgrW = 1;
+                            if(switchOptions.active) thw.activeFgrW > 0 ? thw.activeFgrW++ : thw.activeFgrW = 1;
+                            if(switchOptions.onBuild) thw.onBuildFgrW > 0 ? thw.onBuildFgrW++ : thw.onBuildFgrW = 1;
                             break;
                         case "2. Technischer Zug - Grundvorraussetzungen":
-                            if(switchOptions.build) buildings.thw.secondTz.grund.build ++;
-                            if(switchOptions.active) buildings.thw.secondTz.grund.active ++;
-                            if(switchOptions.onBuild) buildings.thw.secondTz.grund.onBuild ++;
+                            if(switchOptions.build) thw.tz2Grund > 0 ? thw.tz2Grund++ : thw.tz2Grund = 1;
+                            if(switchOptions.active) thw.activeTz2Grund > 0 ? thw.activeTz2Grund++ : thw.activeTz2Grund = 1;
+                            if(switchOptions.onBuild) thw.onBuildTz2Grung > 0 ? thw.onBuildTz2Grung++ : thw.onBuildTz2Grung = 1;
                             break;
                         case "2. Technischer Zug: Bergungsgruppe 2":
-                            if(switchOptions.build) buildings.thw.secondTz.bg.build ++;
-                            if(switchOptions.active) buildings.thw.secondTz.bg.active ++;
-                            if(switchOptions.onBuild) buildings.thw.secondTz.bg.onBuild ++;
+                            if(switchOptions.build) thw.tz2Bg > 0 ? thw.tz2Bg++ : thw.tz2Bg = 1;
+                            if(switchOptions.active) thw.activeTz2Bg > 0 ? thw.activeTz2Bg++ : thw.activeTz2Bg = 1;
+                            if(switchOptions.onBuild) thw.onBuildTz2Bg > 0 ? thw.onBuildTz2Bg++ : thw.onBuildTz2Bg = 1;
                             break;
                         case "2. Technischer Zug: Zugtrupp":
-                            if(switchOptions.build) buildings.thw.secondTz.zug.build ++;
-                            if(switchOptions.active) buildings.thw.secondTz.zug.active ++;
-                            if(switchOptions.onBuild) buildings.thw.secondTz.zug.onBuild ++;
+                            if(switchOptions.build) thw.tz2Zug > 0 ? thw.tz2Zug++ : thw.tz2Zug = 1;
+                            if(switchOptions.active) thw.activeTz2Zug > 0 ? thw.activeTz2Zug++ : thw.activeTz2Zug = 1;
+                            if(switchOptions.onBuild) thw.onBuildTz2Zug > 0 ? thw.onBuildTz2Zug++ : thw.onBuildTz2Zug = 1;
                             break;
                         case "Fachgruppe Ortung":
-                            if(switchOptions.build) buildings.thw.fgrO.build ++;
-                            if(switchOptions.active) buildings.thw.fgrO.active ++;
-                            if(switchOptions.onBuild) buildings.thw.fgrO.onBuild ++;
+                            if(switchOptions.build) thw.fgrO > 0 ? thw.fgrO++ : thw.fgrO = 1;
+                            if(switchOptions.active) thw.activeFgrO > 0 ? thw.activeFgrO++ : thw.activeFgrO = 1;
+                            if(switchOptions.onBuild) thw.onBuildFgrO > 0 ? thw.onBuildFgrO++ : thw.onBuildFgrO = 1;
                             break;
                         case "Allgemeine Innere":
-                            if(switchOptions.build) buildings.hospital.extension.ina.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.ina.onBuild ++;
+                            if(switchOptions.build) hospitals.ina > 0 ? hospitals.ina++ : hospitals.ina = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildIna > 0 ? hospitals.onBuildIna++ : hospitals.onBuildIna = 1;
                             break;
                         case "Allgemeine Chirurgie":
-                            if(switchOptions.build) buildings.hospital.extension.ach.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.ach.onBuild ++;
+                            if(switchOptions.build) hospitals.ach > 0 ? hospitals.ach++ : hospitals.ach = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildAch > 0 ? hospitals.onBuildAch++ : hospitals.onBuildAch = 1;
                             break;
                         case "Gynäkologie":
-                            if(switchOptions.build) buildings.hospital.extension.gyn.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.gyn.onBuild ++;
+                            if(switchOptions.build) hospitals.gyn > 0 ? hospitals.gyn++ : hospitals.gyn = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildGyn > 0 ? hospitals.onBuildGyn++ : hospitals.onBuildGyn = 1;
                             break;
                         case "Urologie":
-                            if(switchOptions.build) buildings.hospital.extension.uro.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.uro.onBuild ++;
+                            if(switchOptions.build) hospitals.uro > 0 ? hospitals.uro++ : hospitals.uro = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildUro > 0 ? hospitals.onBuildUro++ : hospitals.onBuildUro = 1;
                             break;
                         case "Unfallchirurgie":
-                            if(switchOptions.build) buildings.hospital.extension.uch.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.uch.onBuild ++;
+                            if(switchOptions.build) hospitals.uch > 0 ? hospitals.uch++ : hospitals.uch = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildUch > 0 ? hospitals.onBuildUch++ : hospitals.onBuildUch = 1;
                             break;
                         case "Neurologie":
-                            if(switchOptions.build) buildings.hospital.extension.nrl.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.nrl.onBuild ++;
+                            if(switchOptions.build) hospitals.nrl > 0 ? hospitals.nrl++ : hospitals.nrl = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildNrl > 0 ? hospitals.onBuildNrl++ : hospitals.onBuildNrl = 1;
                             break;
                         case "Neurochirurgie":
-                            if(switchOptions.build) if(switchOptions.build) buildings.hospital.extension.nch.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.nch.onBuild ++;
+                            if(switchOptions.build) hospitals.nch > 0 ? hospitals.nch++ : hospitals.nch = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildNch > 0 ? hospitals.onBuildNch++ : hospitals.onBuildNch = 1;
                             break;
                         case "Kardiologie":
-                            if(switchOptions.build) buildings.hospital.extension.kar.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.kar.onBuild ++;
+                            if(switchOptions.build) hospitals.kar > 0 ? hospitals.kar++ : hospitals.kar = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildKar > 0 ? hospitals.onBuildKar++ : hospitals.onBuildKar = 1;
                             break;
                         case "Kardiochirurgie":
-                            if(switchOptions.build) buildings.hospital.extension.kch.build ++;
-                            if(switchOptions.onBuild) buildings.hospital.extension.kch.onBuild ++;
+                            if(switchOptions.build) hospitals.kch > 0 ? hospitals.kch++ : hospitals.kch = 1;
+                            if(switchOptions.onBuild) hospitals.onBuildKch > 0 ? hospitals.onBuildKch++ : hospitals.onBuildKch = 1;
                             break;
                         case "Zelle":
-                            if(switchOptions.build) item.small_building ? buildings.police.small.cell.build ++ : buildings.police.normal.cell.build ++;
-                            if(switchOptions.onBuild) item.small_building ? buildings.police.small.cell.onBuild ++ : buildings.police.normal.cell.onBuild ++;
+                            if(switchOptions.build) {
+                                if(item.small_building) police.cellSmall > 0 ? police.cellSmall++ : police.cellSmall = 1;
+                                else police.cellNormal > 0 ? police.cellNormal++ : police.cellNormal = 1;
+                            }
+                            if(switchOptions.onBuild) {
+                                if(item.small_building) police.onBuildCellSmall > 0 ? police.onBuildCellSmall++ : police.onBuildCellSmall = 1;
+                                else police.onBuildCellNormal > 0 ? police.onBuildCellNormal++ : police.onBuildCellNormal = 1;
+                            }
                             break;
                         case "Weiterer Klassenraum":
                             if(switchOptions.build){
-                                if(item.building_type == 1) buildings.school.fire.rooms.build ++;
-                                else if(item.building_type == 3) buildings.school.rescue.rooms.build ++;
-                                else if(item.building_type == 8) buildings.school.police.rooms.build ++;
-                                else if(item.building_type == 10) buildings.school.thw.rooms.build ++;
+                                if(item.building_type == 1) fire.classroom > 0 ? fire.classroom++ : fire.classroom = 1;
+                                else if(item.building_type == 3) rescue.classroom > 0 ? rescue.classroom++ : rescue.classroom = 1;
+                                else if(item.building_type == 8) police.classroom > 0 ? police.classroom++ : police.classroom = 1;
+                                else if(item.building_type == 10) thw.classroom > 0 ? thw.classroom++ : thw.classroom = 1;
                             }
                             if(switchOptions.onBuild){
-                                if(item.building_type == 1) buildings.school.fire.rooms.onBuild ++;
-                                else if(item.building_type == 3) buildings.school.rescue.rooms.onBuild ++;
-                                else if(item.building_type == 8) buildings.school.police.rooms.onBuild ++;
-                                else if(item.building_type == 10) buildings.school.thw.rooms.onBuild ++;
+                                if(item.building_type == 1) fire.onBuildClassroom > 0 ? fire.onBuildClassroom++ : fire.onBuildClassroom = 1;
+                                else if(item.building_type == 3) rescue.onBuildClassroom > 0 ? rescue.onBuildClassroom++ : rescue.onBuildClassroom = 1;
+                                else if(item.building_type == 8) police.onBuildClassroom > 0 ? police.onBuildClassroom++ : police.onBuildClassroom = 1;
+                                else if(item.building_type == 10) thw.onBuildClassroom > 0 ? thw.onBuildClassroom++ : thw.onBuildClassroom = 1;
                             }
                             break;
                     }
@@ -800,28 +782,32 @@ overflow-y: auto;
                  <thead>
                  <tr>
                  <th class="col">Bezeichnung<br>&nbsp;</th>
-                 <th class="col-1"><center>Anzahl<br>${showOnBuild ? `ist (aktiv) / max / Ausbau` : `ist (aktiv) / max`}</center></th>
+                 <th class="col-1"><center>Anzahl<br>${options.general.showOnBuild ? `ist (aktiv) / max / Ausbau` : `ist (aktiv) / max`}</center></th>
                  </tr>
                  </thead>
                  <tbody>`;
 
-        function infoContentOneValue(name, value){
-            userInfos += `<tr>
+        function infoContentOneValue(name, value, cssClass){
+            if(value === undefined) value = 0;
+            userInfos += `<tr class="${cssClass}">
                           <td class="col">${name}</td>
                           <td class="col-1"><center>${value.toLocaleString()}</center></td>
                           </tr>`;
         }
 
-        function percentage(name, value){
-            var percent = Math.round(value / (infoBuildingsDatabase.length - buildings.dispatchCenter) * 100);
-            userInfos += `<tr>
+        function percentage(name, value, cssClass){
+            if(value === undefined) value = 0;
+            var percent = Math.round(value / (infoBuildingsDatabase.length - (otherBuildings.lst > 0 ? otherBuildings.lst : 0)) * 100);
+            userInfos += `<tr class="${cssClass}">
                           <td class="col">${name}</div></td>
                           <td class="col-1"><center>${value} (${percent}&percnt;)</center></td>
                           </tr>`;
         }
 
-        function infoContentMax(name, valueNow, valueMax){
-            userInfos += `<tr>
+        function infoContentMax(name, valueNow, valueMax, cssClass){
+            if(valueNow === undefined) valueNow = 0;
+            if(valueMax === undefined) valueMax = 0;
+            userInfos += `<tr class="${cssClass}">
                           <td class="col">${name}</td>
                           <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
                                                                       `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
@@ -829,9 +815,11 @@ overflow-y: auto;
                           </tr>`;
         }
 
-        function percentageMax(name, valueNow, valueMax){
-            var percent = Math.round(valueMax / (infoBuildingsDatabase.length - buildings.dispatchCenter) * 100);
-            userInfos += `<tr>
+        function percentageMax(name, valueNow, valueMax, cssClass){
+            if(valueNow === undefined) valueNow = 0;
+            if(valueMax === undefined) valueMax = 0;
+            var percent = Math.round(valueMax / (infoBuildingsDatabase.length - (otherBuildings.lst > 0 ? otherBuildings.lst : 0)) * 100);
+            userInfos += `<tr class="${cssClass}">
                           <td class="col">${name}</td>
                           <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
                                                                       `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
@@ -839,8 +827,11 @@ overflow-y: auto;
                           </tr>`;
         }
 
-        function infoContentOnBuild(name, valueNow, valueMax, valueOnBuild){
-            userInfos += `<tr>
+        function infoContentOnBuild(name, valueNow, valueMax, valueOnBuild, cssClass){
+            if(valueNow === undefined) valueNow = 0;
+            if(valueMax === undefined) valueMax = 0;
+            if(valueOnBuild === undefined) valueOnBuild = 0;
+            userInfos += `<tr class="${cssClass}">
                           <td class="col">${name}</td>
                           <td class="col-1"><center>${valueNow == 0 ? `<span style="color:red">${valueNow.toLocaleString()}</span>` : valueNow < valueMax ?
                                                                       `<span style="color:orange">${valueNow.toLocaleString()}</span>` :
@@ -848,186 +839,216 @@ overflow-y: auto;
                           </tr>`;
         }
 
-        function tableExtension(name, typeArrow, valueNow, valueMax, valueOnBuild){
+        function tableExtension(name, typeArrow, valueNow, valueMax, valueOnBuild, cssClass){
+            if(valueNow === undefined) valueNow = 0;
+            if(valueMax === undefined) valueMax = 0;
+            if(valueOnBuild === undefined) valueOnBuild = 0;
             var showOnTable = `${typeArrow} ${name}`;
             if(valueMax > 0 || valueOnBuild > 0){
-                if(valueOnBuild > 0) infoContentOnBuild(showOnTable, valueNow, valueMax, valueOnBuild);
-                else infoContentMax(showOnTable, valueNow, valueMax);
+                if(valueOnBuild > 0) infoContentOnBuild(showOnTable, valueNow, valueMax, valueOnBuild, cssClass);
+                else infoContentMax(showOnTable, valueNow, valueMax, cssClass);
             }
         }
 
-        function rescueVehicles(html, value){
-            if(user_premium ? value >= 15 : value >= 20){
-                infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, user_premium ? Math.floor(value / 15) : Math.floor(value / 20));
-            }
-            infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value);
-        }
-
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length) : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length);
-
-        if(buildings.helicopter.rescue.count == 0) infoContentMax(`${configTable.marginLeft}Rettungshubschrauber (RTH)</div>`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
-
-        if(buildings.helicopter.police.count == 0) infoContentMax(`${configTable.marginLeft}Polizeihubschrauber</div>`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
-
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length) : infoContentMax("Gebäude", infoBuildingsDatabase.length - buildings.dispatchCenter, aBuildings.length);
-
-        infoContentMax(`${configTable.marginLeft}Leitstellen</div>`, buildings.dispatchCenter, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1);
-
-        if(buildings.stagingArea > 0) infoContentOneValue(`${configTable.marginLeft}Bereitstellungsräume (BSR)</div>`, buildings.stagingArea);
-
-        if(buildings.fire.small.count > 0){
-            percentage(`${configTable.marginLeft}Feuerwachen (klein)</div>`, buildings.fire.small.count);
-            if(buildings.fire.small.ab.build > 0 || buildings.fire.small.ab.onBuild > 0){
-                tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.small.ab.build, buildings.fire.small.build * 2, buildings.fire.small.ab.onBuild);
+        function rescueVehicles(html, value, cssClass){
+            if(value === undefined) value = 0;
+            infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value, cssClass);
+            if(value >= premiumCount){
+                infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, Math.floor(value / premiumCount), cssClass);
             }
         }
 
-        if(buildings.fire.normal.count > 0){
-            percentage(`${configTable.marginLeft}Feuerwachen</div>`, buildings.fire.normal.count);
-            if(Math.floor((buildings.fire.small.count + buildings.fire.normal.count) / 10) > 0){
-                tableExtension(`Großwache`, configTable.arrowFire, buildings.fire.normal.big.build, Math.floor((buildings.fire.normal.count + buildings.fire.small.count) / 10), buildings.fire.normal.big.onBuild);
+        function calculateNextGrtw(html, rescueBuildings, cssClass){
+            var maxGrtw = Math.floor(rescueBuildings / premiumCount);
+            var needed = premiumCount - (rescueBuildings - (maxGrtw * premiumCount));
+            if(needed < 0) needed = 0;
+            userInfos += `<tr class="${cssClass}">
+                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten Großraumrettungswagen (GRTW)</td>
+                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          </tr>`;
+        }
+
+        function calculateNextHeli(html, name, value, cssClass){
+            if(value === undefined) value = 0;
+            var needed = 25 - (aBuildings.length - (value * 25));
+            if(needed < 0) needed = 0;
+            userInfos += `<tr class="${cssClass}">
+                          <td class="col">${html} benötigte Gebäude bis zum nächsten ${name}</td>
+                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          </tr>`;
+        }
+
+        function calculateNextLst(html, value, cssClass){
+            if(value === undefined) value = 0;
+            var needed = 25 - (aBuildings.length - (value * 25));
+            if(needed < 0) needed = 0;
+            userInfos += `<tr class="${cssClass}">
+                          <td class="col">${html} benötigte Gebäude bis zur nächsten Leitstelle</td>
+                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          </tr>`;
+        }
+
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length, 'noTree') : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length, 'noTree');
+
+        if(rescue.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubscrauber (RTH)'), vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
+
+        if(police.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber'), vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
+
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - otherBuildings.lst > 0 ? otherBuildings.lst : 0, aBuildings.length, 'noTree');
+
+        infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'), otherBuildings.lst, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1, 'lst treeView');
+        calculateNextLst(configTable.arrowHospital, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1, 'lst fumNested');
+
+        if(otherBuildings.bsr > 0) infoContentOneValue(configTable.marginLeft.replace('%PLATZHALTER%','Bereitstellungsräume (BSR)'), otherBuildings.bsr, 'noTree');
+
+        if(fire.small > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen (klein)'), fire.small, 'fireSM treeView');
+            if(fire.abSmall > 0 || fire.onBuildAbSmall > 0){
+                tableExtension(`AB-Stellplätze`, configTable.arrowFire, fire.abSmall, fire.small * 2, fire.onBuildAbSmall, 'fireSm fumNested');
             }
-            tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, buildings.fire.normal.rescue.active, buildings.fire.normal.rescue.build, buildings.fire.normal.rescue.onBuild);
-            if(buildings.fire.normal.rescue.active > 0){
-                if(buildings.rescue.normal == 0 && buildings.rescue.small == 0){
-                    rescueVehicles(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div>`, buildings.fire.rescue.active);
+        }
+
+        if(fire.normal > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen'), fire.normal, 'fireNm treeView');
+            if(Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10) > 0){
+                tableExtension(`Großwache`, configTable.arrowFire, fire.big, Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10), fire.onBuildBig, 'fireNm fumNested');
+            }
+            tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, fire.activeRescue, fire.rescue, fire.onBuildRescue, 'fireNm fumNested');
+            if(fire.rescue > 0){
+                if(!rescue.normal && !rescue.small){
+                    rescueVehicles(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div>`, fire.rescue, 'fireNm fumNested');
+                    calculateNextGrtw(`<div class="glyphicon glyphicon-arrow-right" style="margin-left:3em;color:orangered"></div>`, fire.rescue, 'fireNm fumNested');
                 }
             }
-            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowFire, buildings.fire.normal.wr.active, buildings.fire.normal.wr.build, buildings.fire.normal.wr.onBuild);
-            tableExtension(`Flughafen-Erweiterung`, configTable.arrowFire, buildings.fire.normal.airport.active, buildings.fire.normal.airport.build, buildings.fire.normal.airport.onBuild);
-            tableExtension(`Werkfeuerwehr`, configTable.arrowFire, buildings.fire.normal.industry.active, buildings.fire.normal.industry.build, buildings.fire.normal.industry.onBuild);
-            if(buildings.fire.normal.ab.build > 0 || buildings.fire.normal.ab.onBuild > 0){
-                tableExtension(`AB-Stellplätze`, configTable.arrowFire, buildings.fire.normal.ab.build, buildings.fire.normal.count * 9, buildings.fire.normal.ab.onBuild);
+            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowFire, fire.activeWr, fire.wr, fire.onBuildWr, 'fireNm fumNested');
+            tableExtension(`Flughafen-Erweiterung`, configTable.arrowFire, fire.activeAirport, fire.airport, fire.onBuildAirport, 'fireNm fumNested');
+            tableExtension(`Werkfeuerwehr`, configTable.arrowFire, fire.activeWf, fire.wf, fire.onBuildWf, 'fireNm fumNested');
+            if(fire.abNormal > 0 || fire.onBuildAbNormal > 0){
+                tableExtension(`AB-Stellplätze`, configTable.arrowFire, fire.abNormal, fire.normal * 9, fire.onBuildAbNormal, 'fireNm fumNested');
             }
         }
 
-        if(buildings.school.fire.count > 0){
-            percentage(`${configTable.marginLeft}Feuerwehrschulen</div>`, buildings.school.fire.count);
-            tableExtension(`Klassenräume`, configTable.arrowFire, buildings.school.fire.rooms.build + buildings.school.fire.count, buildings.school.fire.count * 4, buildings.school.fire.rooms.onBuild);
+        if(fire.school > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwehrschulen'), fire.school, 'fireSchool treeView');
+            tableExtension(`Klassenräume`, configTable.arrowFire, fire.classroom + fire.school, fire.school * 4, fire.onBuildClassroom, 'fireSchool fumNested');
         }
 
-        if(buildings.rescue.small > 0){
-            percentage(`${configTable.marginLeft}Rettungswachen (klein)</div>`, buildings.rescue.small);
-            if(buildings.rescue.normal == 0){
-                rescueVehicles(configTable.arrowRescue, buildings.rescue.small + buildings.fire.rescue.active);
+        if(rescue.small > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen (klein)'), rescue.small, 'rescueSm treeView');
+            if(!rescue.normal){
+                rescueVehicles(configTable.arrowRescue, rescue.small + (fire.activeRescue > 0 ? fire.activeRescue : 0), 'rescueSm fumNested');
+                calculateNextGrtw(configTable.arrowRescue, rescue.small + (fire.activeRescue > 0 ? fire.activeRescue : 0), 'rescueSm fumNested');
             }
         }
 
-        if(buildings.rescue.normal > 0){
-            percentage(`${configTable.marginLeft}Rettungswachen</div>`, buildings.rescue.normal);
-            rescueVehicles(configTable.arrowRescue, buildings.rescue.normal + buildings.rescue.small + buildings.fire.normal.rescue.active);
+        if(rescue.normal > 0){
+            if(!rescue.small) rescue.small = 0;
+            if(!fire.activeRescue) fire.activeRescue = 0;
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen'), rescue.normal, 'rescueNm treeView');
+            rescueVehicles(configTable.arrowRescue, rescue.normal + rescue.small + fire.activeRescue, 'rescueNm fumNested');
+            calculateNextGrtw(configTable.arrowRescue, rescue.normal + rescue.small + fire.activeRescue, 'rescueNm fumNested');
         }
 
-        if(buildings.seg.count > 0){
-            percentage(`${configTable.marginLeft}Schnelleinsatzgruppen (SEG)</div>`, buildings.seg.count);
-            tableExtension(`Führung`, configTable.arrowRescue, buildings.seg.leader.active, buildings.seg.leader.build, buildings.seg.leader.onBuild);
-            tableExtension(`Sanitätsdienst`, configTable.arrowRescue, buildings.seg.sanD.active, buildings.seg.sanD.build, buildings.seg.sanD.onBuild);
-            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, buildings.seg.wr.active, buildings.seg.wr.build, buildings.seg.wr.onBuild);
-            tableExtension(`Rettungshundestaffel`, configTable.arrowRescue, buildings.seg.dogs.active, buildings.seg.dogs.build, buildings.seg.dogs.onBuild);
+        if(seg.count > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Schnelleinsatzgruppen (SEG)'), seg.count, 'seg treeView');
+            tableExtension(`Führung`, configTable.arrowRescue, seg.activeLeader, seg.leader, seg.onBuildLeader, 'seg fumNested');
+            tableExtension(`Sanitätsdienst`, configTable.arrowRescue, seg.activeSanD, seg.sanD, seg.onBuildSanD, 'seg fumNested');
+            tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, seg.activeWr, seg.wr, seg.onBuildWr, 'seg fumNested');
+            tableExtension(`Rettungshundestaffel`, configTable.arrowRescue, seg.activeRescueDogs, seg.rescueDogs, seg.onBuildRescueDogs, 'seg fumNested');
         }
 
-        if(buildings.wr.count > 0 || buildings.wr.active > 0){
-            percentageMax(`${configTable.marginLeft}Wasserrettungswachen</div>`, buildings.wr.active, buildings.wr.count + buildings.wr.active);
+        if(otherBuildings.wr > 0 || otherBuildings.activeWr > 0){
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Wasserrettungswachen'), otherBuildings.activeWr, otherBuildings.wr + otherBuildings.activeWr, 'noTree');
         }
 
-        if(buildings.rescueDogs.count > 0 || buildings.rescueDogs.active > 0){
-            percentageMax(`${configTable.marginLeft}Rettungshundestaffeln</div>`, buildings.rescueDogs.active, buildings.rescueDogs.count + buildings.rescueDogs.active);
+        if(otherBuildings.rescueDogs > 0 || otherBuildings.activeRescueDogs > 0){
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshundestaffeln'), otherBuildings.activeRescueDogs, otherBuildings.rescueDogs + otherBuildings.activeRescueDogs, 'noTree');
         }
 
-        if(buildings.helicopter.rescue.count > 0){
-            percentageMax(`${configTable.marginLeft}Rettungshubschrauber-Stationen</div>`, buildings.helicopter.rescue.active, buildings.helicopter.rescue.count);
-            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
+        if(rescue.helicopter > 0){
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubschrauber-Stationen'), rescue.activeHelicopter, rescue.helicopter, 'rescueHeli treeView');
+            infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'rescueHeli fumNested');
+            calculateNextHeli(configTable.arrowRescue, "Rettungshubschrauber (RTH)", Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'rescueHeli fumNested');
         }
 
-        if(buildings.school.rescue.count > 0){
-            percentage(`${configTable.marginLeft}Rettungsdienstschulen</div>`, buildings.school.rescue.count);
-            tableExtension(`Klassenräume`, configTable.arrowRescue, buildings.school.rescue.rooms.build + buildings.school.rescue.count, buildings.school.rescue.count * 4, buildings.school.rescue.rooms.onBuild);
+        if(rescue.school > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungsdienstschulen'), rescue.school, 'rescueSchool treeView');
+            tableExtension(`Klassenräume`, configTable.arrowRescue, rescue.classroom + rescue.school, rescue.school * 4, rescue.onBuildClassroom, 'rescueSchool fumNested');
         }
 
-        if(buildings.police.small.count > 0){
-            percentage(`${configTable.marginLeft}Polizeiwachen (klein)</div>`, buildings.police.small.count);
-            tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.small.cell.build, buildings.police.small.count * 2, buildings.police.small.cell.onBuild);
+        if(police.small > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen (klein)'), police.small, 'polSm treeView');
+            tableExtension(`Zellen`, configTable.arrowPolice, police.cellSmall, police.small * 2, police.onBuildCellSmall, 'polSm fumNested');
         }
 
-        if(buildings.police.normal.count > 0){
-            percentage(`${configTable.marginLeft}Polizeiwachen</div>`, buildings.police.normal.count);
-            tableExtension(`Zellen`, configTable.arrowPolice, buildings.police.normal.cell.build, buildings.police.normal.count * 10, buildings.police.normal.cell.onBuild);
+        if(police.normal > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen'), police.normal, 'polNm treeView');
+            tableExtension(`Zellen`, configTable.arrowPolice, police.cellNormal, police.normal * 10, police.onBuildCellNormal, 'polNm fumNested');
+            tableExtension(`Diensthundestaffel`, configTable.arrowPolice, police.activeGuardDogs, police.guardDogs, police.onBuildGuardDogs, 'polNm fumNested');
         }
 
-        if(buildings.bepo.count > 0){
-            percentage(`${configTable.marginLeft}Bereitschaftspolizei</div>`, buildings.bepo.count);
-            tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.second.active, buildings.bepo.division.second.build, buildings.bepo.division.second.onBuild);
-            tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, buildings.bepo.division.third.active, buildings.bepo.division.third.build, buildings.bepo.division.third.onBuild);
-            tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, buildings.bepo.mobilePrison.active, buildings.bepo.mobilePrison.build ,buildings.bepo.mobilePrison.onBuild);
-            tableExtension(`Technischer Zug: Wasserwerfer`, configTable.arrowPolice, buildings.bepo.waterthrower.active, buildings.bepo.waterthrower.build ,buildings.bepo.waterthrower.onBuild);
-            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.bepo.sek.first.active, buildings.bepo.sek.first.build, buildings.bepo.sek.first.onBuild);
-            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.bepo.sek.second.active, buildings.bepo.sek.second.build, buildings.bepo.sek.second.onBuild);
-            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.bepo.mek.first.active, buildings.bepo.mek.first.build, buildings.bepo.mek.first.onBuild);
-            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, buildings.bepo.mek.second.active, buildings.bepo.mek.second.build, buildings.bepo.mek.second.onBuild);
+        if(bepo.count > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Bereitschaftspolizei'), bepo.count, 'bepo treeView');
+            tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, bepo.activeDivision2, bepo.division2, bepo.onBuildDivision2, 'bepo fumNested');
+            tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, bepo.activeDivision3, bepo.division3, bepo.onBuildDivision3, 'bepo fumNested');
+            tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, bepo.activeMobilePrison, bepo.mobilePrison ,bepo.onBuildMobilePrison, 'bepo fumNested');
+            tableExtension(`Technischer Zug: Wasserwerfer`, configTable.arrowPolice, bepo.activeWaterthrower, bepo.waterthrower ,bepo.onBuildWaterthrower, 'bepo fumNested');
+            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, bepo.activeSek1, bepo.sek1, bepo.onBuildSek1, 'bepo fumNested');
+            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, bepo.activeSek2, bepo.sek2, bepo.onBuildSek2, 'bepo fumNested');
+            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, bepo.activeMek1, bepo.mek1, bepo.onBuildMek1, 'bepo fumNested');
+            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, bepo.activeMek2, bepo.mek2, bepo.onBuildMek2, 'bepo fumNested');
+            tableExtension(`Diensthundestaffel`, configTable.arrowPolice, bepo.activeGuardDogs, bepo.guardDogs, bepo.onBuildGuardDogs, 'bepo fumNested');
         }
 
-        if(buildings.polSonder.count > 0){
-            percentage(`${configTable.marginLeft}Polizei-Sondereinheiten</div>`, buildings.polSonder.count);
-            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.sek.first.active, buildings.polSonder.sek.first.build, buildings.polSonder.sek.first.onBuild);
-            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.sek.second.active, buildings.polSonder.sek.second.build, buildings.polSonder.sek.second.onBuild);
-            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, buildings.polSonder.mek.first.active, buildings.polSonder.mek.first.build, buildings.polSonder.mek.first.onBuild);
-            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, buildings.polSonder.mek.second.active, buildings.polSonder.mek.second.build, buildings.polSonder.mek.second.onBuild);
+        if(polSonder.count > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizei-Sondereinheiten'), polSonder.count, 'polSonder treeView');
+            tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, polSonder.activeSek1, polSonder.sek1, polSonder.onBuildSek1, 'polSonder fumNested');
+            tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, polSonder.activeSek2, polSonder.sek2, polSonder.onBuildSek2, 'polSonder fumNested');
+            tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, polSonder.activeMek1, polSonder.mek1, polSonder.onBuildMek1, 'polSonder fumNested');
+            tableExtension(`MEK: 2. Zug`, configTable.arrowPolice, polSonder.activeMek2, polSonder.mek2, polSonder.onBuildMek2, 'polSonder fumNested');
+            tableExtension(`Diensthundestaffel`, configTable.arrowPolice, polSonder.activeGuardDogs, polSonder.guardDogs, polSonder.onBuildGuardDogs, 'polSonder fumNested');
         }
 
-        if(buildings.helicopter.police.count > 0){
-            percentageMax(`${configTable.marginLeft}Polizeihubschrauber-Stationen</div>`, buildings.helicopter.police.active, buildings.helicopter.police.count);
-            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4);
+        if(police.helicopter > 0){
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber-Stationen'), police.activeHelicopter, police.helicopter, 'polHeli treeView');
+            infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
+            calculateNextHeli(configTable.arrowPolice, "Polizeihubschrauber", Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
         }
 
-        if(buildings.school.police.count > 0){
-            percentage(`${configTable.marginLeft}Polizeischulen</div>`, buildings.school.police.count);
-            tableExtension(`Klassenräume`, configTable.arrowPolice, buildings.school.police.rooms.build + buildings.school.police.count, buildings.school.police.count * 4, buildings.school.police.rooms.onBuild);
+        if(police.school > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeischulen'), police.school, 'polSchool treeView');
+            tableExtension(`Klassenräume`, configTable.arrowPolice, police.classroom + police.school, police.school * 4, police.onBuildClassroom, 'polSchool fumNested');
         }
 
-        if(buildings.thw.count > 0){
-            percentage(`${configTable.marginLeft}THW Ortsverbände</div>`, buildings.thw.count);
-            tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.firstTz.bg.active, buildings.thw.firstTz.bg.build, buildings.thw.firstTz.bg.onBuild);
-            tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.firstTz.zug.active, buildings.thw.firstTz.zug.build, buildings.thw.firstTz.zug.onBuild);
-            tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, buildings.thw.fgrR.active, buildings.thw.fgrR.build, buildings.thw.fgrR.onBuild);
-            tableExtension(`Fachgruppe Wassergefahren`, configTable.arrowThw, buildings.thw.fgrW.active, buildings.thw.fgrW.build, buildings.thw.fgrW.onBuild);
-            tableExtension(`2. Technischer Zug: Grundvoraussetzungen`, configTable.arrowThw, buildings.thw.secondTz.grund.active, buildings.thw.secondTz.grund.build, buildings.thw.secondTz.grund.onBuild);
-            tableExtension(`2. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, buildings.thw.secondTz.bg.active, buildings.thw.secondTz.bg.build, buildings.thw.secondTz.bg.onBuild);
-            tableExtension(`2. Technischer Zug: Zugtrupp`, configTable.arrowThw, buildings.thw.secondTz.zug.active, buildings.thw.secondTz.zug.build, buildings.thw.secondTz.zug.onBuild);
-            tableExtension(`Fachgruppe Ortung`, configTable.arrowThw, buildings.thw.fgrO.active, buildings.thw.fgrO.build, buildings.thw.fgrO.onBuild);
+        if(thw.count > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Ortsverbände'), thw.count, 'thw treeView');
+            tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, thw.activeTz1Bg, thw.tz1Bg, thw.onBuildTz1Bg, 'thw fumNested');
+            tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, thw.activeTz1Zug, thw.tz1Zug, thw.onBuildTz1Zug, 'thw fumNested');
+            tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, thw.activeFgrR, thw.fgrR, thw.onBuildFgrR, 'thw fumNested');
+            tableExtension(`Fachgruppe Wassergefahren`, configTable.arrowThw, thw.activeFgrW, thw.fgrW, thw.onBuildFgrW, 'thw fumNested');
+            tableExtension(`2. Technischer Zug: Grundvoraussetzungen`, configTable.arrowThw, thw.activeTz2Grund, thw.tz2Grund, thw.onBuildTz2Grund, 'thw fumNested');
+            tableExtension(`2. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, thw.activeTz2Bg, thw.tz2Bg, thw.onBuildTz2Bg, 'thw fumNested');
+            tableExtension(`2. Technischer Zug: Zugtrupp`, configTable.arrowThw, thw.activeTz2Zug, thw.tz2Zug, thw.onBuildTz2Zug, 'thw fumNested');
+            tableExtension(`Fachgruppe Ortung`, configTable.arrowThw, thw.activeFgrO, thw.fgrO, thw.onBuildFgrO, 'thw fumNested');
         }
 
-        if(buildings.school.thw.count > 0){
-            percentage(`${configTable.marginLeft}THW Bundesschulen</div>`, buildings.school.thw.count);
-            tableExtension(`Klassenräume`, configTable.arrowThw, buildings.school.thw.rooms.build + buildings.school.thw.count, buildings.school.thw.count * 4, buildings.school.thw.rooms.onBuild);
+        if(thw.school > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Bundesschulen'), thw.school, 'thwSchool treeView');
+            tableExtension(`Klassenräume`, configTable.arrowThw, thw.classroom + thw.school, thw.school * 4, thw.onBuildClassroom, 'thwSchool fumNested');
         }
 
-        if(buildings.hospital.count > 0){
-            percentage(`${configTable.marginLeft}Krankenhäuser</div>`, buildings.hospital.count);
-            infoContentMax(`${configTable.arrowHospital} Betten`, buildings.hospital.beds.build + (buildings.hospital.count * 10), buildings.hospital.count * 30);
-            if(buildings.hospital.extension.ina.onBuild > 0 || buildings.hospital.extension.ach.onBuild > 0 || buildings.hospital.extension.gyn.onBuild > 0 ||
-               buildings.hospital.extension.uro.onBuild > 0 || buildings.hospital.extension.uch.onBuild > 0 || buildings.hospital.extension.nrl.onBuild > 0 ||
-               buildings.hospital.extension.nch.onBuild > 0 || buildings.hospital.extension.kar.onBuild > 0 || buildings.hospital.extension.kch.onBuild > 0){
-                infoContentOnBuild(`${configTable.arrowHospital} Allgemeine Innere`, buildings.hospital.extension.ina.build, buildings.hospital.count, buildings.hospital.extension.ina.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Allgemeine Chirurgie`, buildings.hospital.extension.ach.build, buildings.hospital.count, buildings.hospital.extension.ach.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Gynäkologie`, buildings.hospital.extension.gyn.build, buildings.hospital.count, buildings.hospital.extension.gyn.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Urologie`, buildings.hospital.extension.uro.build, buildings.hospital.count, buildings.hospital.extension.uro.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Unfallchirurgie`, buildings.hospital.extension.uch.build, buildings.hospital.count, buildings.hospital.extension.uch.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Neurologie`, buildings.hospital.extension.nrl.build, buildings.hospital.count, buildings.hospital.extension.nrl.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Neurochirurgie`, buildings.hospital.extension.nch.build, buildings.hospital.count, buildings.hospital.extension.nch.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Kardiologie`, buildings.hospital.extension.kar.build, buildings.hospital.count, buildings.hospital.extension.kar.onBuild);
-                infoContentOnBuild(`${configTable.arrowHospital} Kardiochirurgie`, buildings.hospital.extension.kch.build, buildings.hospital.count, buildings.hospital.extension.kch.onBuild);
-            }
-            else{
-                infoContentMax(`${configTable.arrowHospital} Allgemeine Innere`, buildings.hospital.extension.ina.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Allgemeine Chirurgie`, buildings.hospital.extension.ach.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Gynäkologie`, buildings.hospital.extension.gyn.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Urologie`, buildings.hospital.extension.uro.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Unfallchirurgie`, buildings.hospital.extension.uch.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Neurologie`, buildings.hospital.extension.nrl.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Neurochirurgie`, buildings.hospital.extension.nch.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Kardiologie`, buildings.hospital.extension.kar.build, buildings.hospital.count);
-                infoContentMax(`${configTable.arrowHospital} Kardiochirurgie`, buildings.hospital.extension.kch.build, buildings.hospital.count);
-            }
+        if(hospitals.count > 0){
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Krankenhäuser'), hospitals.count, 'hospital treeView');
+            infoContentMax(`${configTable.arrowHospital} Betten`, hospitals.beds + (hospitals.count * 10), hospitals.count * 30, 'hospital fumNested');
+            tableExtension(`Allgemeine Innere`, configTable.arrowHospital, hospitals.ina, hospitals.count, hospitals.onBuildIna, 'hospital fumNested');
+            tableExtension(`Allgemeine Chirurgie`, configTable.arrowHospital, hospitals.ach, hospitals.count, hospitals.onBuildAch, 'hospital fumNested');
+            tableExtension(`Gynäkologie`, configTable.arrowHospital, hospitals.gyn, hospitals.count, hospitals.onBuildGyn, 'hospital fumNested');
+            tableExtension(`Urologie`, configTable.arrowHospital, hospitals.uro, hospitals.count, hospitals.onBuildUro, 'hospital fumNested');
+            tableExtension(`Unfallchirurgie`, configTable.arrowHospital, hospitals.uch, hospitals.count, hospitals.onBuildUch, 'hospital fumNested');
+            tableExtension(`Neurologie`, configTable.arrowHospital, hospitals.nrl, hospitals.count, hospitals.onBuildNrl, 'hospital fumNested');
+            tableExtension(`Neurochirurgie`, configTable.arrowHospital, hospitals.nch, hospitals.count, hospitals.onBuildNch, 'hospital fumNested');
+            tableExtension(`Kardiologie`, configTable.arrowHospital, hospitals.kar, hospitals.count, hospitals.onBuildKar, 'hospital fumNested');
+            tableExtension(`Kardiochirurgie`, configTable.arrowHospital, hospitals.kch, hospitals.count, hospitals.onBuildKch, 'hospital fumNested');
         }
 
         userInfos += `</tbody></table>`;
@@ -1075,6 +1096,47 @@ overflow-y: auto;
         }
     });
 
+    $("body").on("click", "#tableStatusBody tr.treeView", function(){
+        var $this = $(this);
+        if($this.hasClass('hospital')) {
+            $this.siblings('tr.hospital').toggleClass('fumActive');
+        } else if($this.hasClass('fireSm')) {
+            $this.siblings('tr.fireSm').toggleClass('fumActive');
+        } else if($this.hasClass('fireNm')) {
+            $this.siblings('tr.fireNm').toggleClass('fumActive');
+        } else if($this.hasClass('rescueSm')) {
+            $this.siblings('tr.rescueSm').toggleClass('fumActive');
+        } else if($this.hasClass('rescueNm')) {
+            $this.siblings('tr.rescueNm').toggleClass('fumActive');
+        } else if($this.hasClass('rescueHeli')) {
+            $this.siblings('tr.rescueHeli').toggleClass('fumActive');
+        } else if($this.hasClass('seg')) {
+            $this.siblings('tr.seg').toggleClass('fumActive');
+        } else if($this.hasClass('rescueSchool')) {
+            $this.siblings('tr.rescueSchool').toggleClass('fumActive');
+        } else if($this.hasClass('fireSchool')) {
+            $this.siblings('tr.fireSchool').toggleClass('fumActive');
+        } else if($this.hasClass('thw')) {
+            $this.siblings('tr.thw').toggleClass('fumActive');
+        } else if($this.hasClass('thwSchool')) {
+            $this.siblings('tr.thwSchool').toggleClass('fumActive');
+        } else if($this.hasClass('polSm')) {
+            $this.siblings('tr.polSm').toggleClass('fumActive');
+        } else if($this.hasClass('polNm')) {
+            $this.siblings('tr.polNm').toggleClass('fumActive');
+        } else if($this.hasClass('bepo')) {
+            $this.siblings('tr.bepo').toggleClass('fumActive');
+        } else if($this.hasClass('polSonder')) {
+            $this.siblings('tr.polSonder').toggleClass('fumActive');
+        } else if($this.hasClass('polSchool')) {
+            $this.siblings('tr.polSchool').toggleClass('fumActive');
+        } else if($this.hasClass('polHeli')) {
+            $this.siblings('tr.polHeli').toggleClass('fumActive');
+        } else if($this.hasClass('lst')) {
+            $this.siblings('tr.lst').toggleClass('fumActive');
+        }
+    });
+
     $("body").on("click", "#filterDispatchCenter", function(){
         options.dropdown.dispatchCenter.id = parseInt($('#filterDispatchCenter').val());
         options.status.count == 0 ? playerInfos() : createTable(options.status.count);
@@ -1088,6 +1150,40 @@ overflow-y: auto;
 
     $("body").on("click", "#sortBy", function(){
         if(options.status.count !== 0) createTable(options.status.count);
+    });
+
+    $("body").on("click", "#btnSettingsFuM", function(){
+        $('#tableStatusLabel').html('');
+        $('#tableStatusBody')
+            .html(`<h5>Einstellungen</h5>
+                   <div class="form-check form-check-inline">
+                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="buttonOnRadio" value="option1" ${options.general.buttonOnRadio ? 'checked' : ''}>
+                     <label class="form-check-label" for="buttonOnRadio">Trigger-Button im Funkfenster</label>
+                   </div>
+                   <div class="form-check form-check-inline">
+                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="buttonOnNavbar" value="option2" ${options.general.buttonOnNavbar ? 'checked' : ''}>
+                     <label class="form-check-label" for="buttonOnNavbar">Trigger-Button in der Navbar</label>
+                   </div>
+                   <div class="form-check">
+                     <input class="form-check-input" type="checkbox" value="" id="cbxOnBuild" ${options.general.showOnBuild ? 'checked' : ''}>
+                     <label class="form-check-label" for="cbxOnBuild">
+                       Zeige, ob Erweiterungen im Ausbau
+                     </label>
+                   </div>
+                   <br>Nach dem Speichern der Einstellungen wird die Seite neu geladen.<br>
+                   <a class="btn btn-success" id="btnSavePreferencesFuM">Speichern</a>`);
+    });
+
+    $("body").on("click", "#btnSavePreferencesFuM", function(){
+        var save = {};
+
+        save.radio = $('#buttonOnRadio')[0].checked;
+        save.navbar = $('#buttonOnNavbar')[0].checked;
+        save.build = $('#cbxOnBuild')[0].checked;
+
+        localStorage.fum_options = JSON.stringify({"buttonOnRadio":save.radio,"buttonOnNavbar":save.navbar,"showOnBuild":save.build});
+
+        window.location.reload();
     });
 
     $("body").on("click", "#filterFw", function(){
