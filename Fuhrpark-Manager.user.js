@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.5.1
+// @version      2.6.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -11,7 +11,7 @@
 (async function() {
     'use strict';
 
-    if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"buttonOnRadio":true,"buttonOnNavbar":false,"showOnBuild":true});
+    if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"buttonOnRadio":true,"buttonOnNavbar":false,"showOnBuild":true,"showWork":true,"showDelay":true});
 
     $("head").append(`<style>
 .modal {
@@ -157,7 +157,9 @@ cursor: default;
         "general":{
             "buttonOnRadio":JSON.parse(localStorage.fum_options).buttonOnRadio,
             "buttonOnNavbar":JSON.parse(localStorage.fum_options).buttonOnNavbar,
-            "showOnBuild":JSON.parse(localStorage.fum_options).showOnBuild
+            "showOnBuild":JSON.parse(localStorage.fum_options).showOnBuild,
+            "showWork": JSON.parse(localStorage.fum_options).showWork,
+            "showDelay": JSON.parse(localStorage.fum_options).showDelay
         }
     };
 
@@ -189,8 +191,8 @@ cursor: default;
 
     async function refreshApi(){
         if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aBuildings).userId != user_id) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aCredits).userId != user_id) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
 
         aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
         aBuildings = JSON.parse(localStorage.aBuildings).value;
@@ -396,8 +398,10 @@ cursor: default;
             intoTable +=
                 `<tr>
                  <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
-                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}">${e.name}</a><br>
-                  <small>Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr; Ausrückverzögerung: ${e.delay.toLocaleString()} Sekunden</small></td>
+                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}">${e.name}</a>
+                  <small style="display:${options.general.showWork ? "inline-block" : "none"}">Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr</small>
+                  <small style="display:${options.general.showDelay ? "inline-block" : "none"}">Ausrückverzögerung: ${e.delay.toLocaleString()} Sek.</small>
+                 </td>
                  <td class="col">${!e.ownClass ? aVehicleTypes[e.typeId].name : e.ownClass}</td>
                  <td class="col-xs-3">
                   <div class="btn-group">
@@ -1209,7 +1213,19 @@ cursor: default;
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="cbxOnBuild" ${options.general.showOnBuild ? 'checked' : ''}>
                      <label class="form-check-label" for="cbxOnBuild">
-                       Zeige, ob Erweiterungen im Ausbau
+                       Zeige Erweiterungen im Ausbau
+                     </label>
+                   </div>
+                   <div class="form-check">
+                     <input class="form-check-input" type="checkbox" value="" id="cbxWork" ${options.general.showWork ? 'checked' : ''}>
+                     <label class="form-check-label" for="cbxWork">
+                       Zeige Dienstzeiten in der Fahrzeugtabelle
+                     </label>
+                   </div>
+                   <div class="form-check">
+                     <input class="form-check-input" type="checkbox" value="" id="cbxDelay" ${options.general.showDelay ? 'checked' : ''}>
+                     <label class="form-check-label" for="cbxDelay">
+                       Zeige Ausrückverzögerung in der Fahrzeugtabelle
                      </label>
                    </div>
                    <br>Nach dem Speichern der Einstellungen wird die Seite neu geladen.<br>
@@ -1222,8 +1238,10 @@ cursor: default;
         save.radio = $('#buttonOnRadio')[0].checked;
         save.navbar = $('#buttonOnNavbar')[0].checked;
         save.build = $('#cbxOnBuild')[0].checked;
+        save.work = $('#cbxWork')[0].checked;
+        save.delay = $('#cbxDelay')[0].checked;
 
-        localStorage.fum_options = JSON.stringify({"buttonOnRadio":save.radio,"buttonOnNavbar":save.navbar,"showOnBuild":save.build});
+        localStorage.fum_options = JSON.stringify({"buttonOnRadio":save.radio,"buttonOnNavbar":save.navbar,"showOnBuild":save.build,"showWork":save.work,"showDelay":save.delay});
 
         window.location.reload();
     });
