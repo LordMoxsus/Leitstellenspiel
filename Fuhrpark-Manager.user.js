@@ -392,6 +392,7 @@ cursor: default;
 
         for(let i = 0; i < tableDatabase.length; i++){
             var e = tableDatabase[i];
+            if(e.pers === null) e.pers = 0;
             intoTable +=
                 `<tr>
                  <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
