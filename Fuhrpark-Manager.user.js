@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.6.0
+// @version      2.6.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -538,8 +538,8 @@ cursor: default;
                     otherBuildings.bsr > 0 ? otherBuildings.bsr++ : otherBuildings.bsr = 1;
                     break;
                 case 15:
-                    otherBuildings.wr = 0;
-                    otherBuildings.activeWr = 0;
+                    if(!otherBuildings.wr) otherBuildings.wr = 0;
+                    if(!otherBuildings.activeWr) otherBuildings.activeWr = 0;
                     item.enabled ? otherBuildings.activeWr++ : otherBuildings.wr++;
                     break;
                 case 17:
