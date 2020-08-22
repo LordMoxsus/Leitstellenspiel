@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.7.2
+// @version      1.8.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -17,6 +17,7 @@
     if(!localStorage.sabShowCredits) localStorage.sabShowCredits = false;
     if(!localStorage.sabOptionalText) localStorage.sabOptionalText = JSON.stringify({"bol":false,"value":""});
     if(!localStorage.sabShortKey) localStorage.sabShortKey = 89;
+    if(!localStorage.sabPushPatients) localStorage.sabPushPatients = false;
     if(!$('#mission_help').attr('href')) return false;
     if(sessionStorage.sabReturnAlert){
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
@@ -27,11 +28,13 @@
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
     var showCredits = JSON.parse(localStorage.sabShowCredits);
     var optionalText = JSON.parse(localStorage.sabOptionalText);
+    var pushPatients = JSON.parse(localStorage.sabPushPatients);
     var missionId = $('#mission_progress_info >> div').attr('id').replace('mission_bar_holder_','');
     var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace('/missions/','');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
     var shareLink = $('#mission_alliance_share_btn').attr('href');
     var credits = 0;
+    var patients = 0;
     var braSiWa = false;
     var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
 
@@ -71,6 +74,10 @@
                       <label class="form-check-label" for="cbxShowCredits" title="Durchschn. Verdienst in die Rückmeldung schreiben">zeige Verdienst</label>
                     </div>
                     <div class="dropdown-item form-check">
+                      <input type="checkbox" class="form-check-input" id="cbxPushPatients" ${pushPatients ? `checked`: ``}>
+                      <label class="form-check-label" for="cbxPushPatients" title="Anzahl Patienten an EST in die Rückmeldung schreiben">zeige Patienten</label>
+                    </div>
+                    <div class="dropdown-item form-check">
                       <input type="checkbox" class="form-check-input" id="cbxOptionalText" ${optionalText.bol ? `checked`: ``}>
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
                     </div>
@@ -87,8 +94,11 @@
         var checkedVehicles = [];
         var postValue = missionAddress;
         var alertMission = "";
+        var checkMessage = 0;
+        patients = $('.mission_patient').length;
 
         if(showCredits) postValue += braSiWa ? "; " + credits.toLocaleString() + " Credits" : "; ca. " + credits.toLocaleString() + " Credits";
+        if(patients > 0 && pushPatients) postValue += patients == 1 ? "; " + patients + " Patient" : "; " + patients + " Patienten";
         if(optionalText.bol && $('#iptOptionalText').val()){
             postValue += " => " + $('#iptOptionalText').val();
         }
@@ -96,6 +106,7 @@
             optionalText.value = $('#iptOptionalText').val();
             localStorage.sabOptionalText = JSON.stringify({"bol":optionalText.bol,"value":optionalText.value});
         }
+        if(credits >= 5000) checkMessage = 1;
 
         $('.vehicle_checkbox').each(function(){
             if($(this)[0].checked){
@@ -108,7 +119,7 @@
             $.post('/missions/' + missionId + '/alliance',function(data){
                 if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
                 else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
-                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data){
+                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : checkMessage, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data){
                         alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
                         sessionStorage.sabReturnAlert = alertMission;
                         jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
@@ -150,6 +161,11 @@
     $("body").on("click", "#cbxShowCredits", function(){
         showCredits = $('#cbxShowCredits')[0].checked;
         localStorage.sabShowCredits = showCredits;
+    });
+
+    $("body").on("click", "#cbxPushPatients", function(){
+        pushPatients = $('#cbxPushPatients')[0].checked;
+        localStorage.sabPushPatients = pushPatients;
     });
 
     $("body").on("click", "#cbxOptionalText", function(){
