@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.5.0
+// @version      2.5.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -149,7 +149,9 @@ cursor: default;
                 "type":parseInt($('#filterType').val())
             },
             "dispatchCenter":{"id":parseInt($('#filterDispatchCenter').val())},
-            "sort":['Status','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend']
+            "sort":['Status-aufsteigend','Status-absteigend','Name-aufsteigend','Name-absteigend','Wache-aufsteigend','Wache-absteigend','Typ-aufsteigend','Typ-absteigend',
+                    'Ausrückverzögerung-aufsteigend','Ausrückverzögerung-absteigend','Dienstbeginn-aufsteigend','Dienstbeginn-absteigend','Dienstende-ansteigend','Dienstende-absteigend',
+                    'max-Personal-aufsteigend','max-Personal-absteigend','zugew-Personal-aufsteigend','zugew-Personal-absteigend']
         },
         "status":{"count":0},
         "general":{
@@ -281,7 +283,7 @@ cursor: default;
         $.each(aVehicles, function(key, item){
             var pushContent = {"status": item.fms_real, "id": item.id, "name": item.caption, "typeId": item.vehicle_type,
                                "buildingId": item.building_id, "ownClass": item.vehicle_type_caption, "pers":item.assigned_personnel_count, "maxPers":item.max_personnel_override,
-                               "workStart":item.working_hour_start, "workEnd": item.working_hour_end, "delay":item.alarm_delay};
+                               "workStart":item.working_hour_start, "workEnd": item.working_hour_end, "delay":item.alarm_delay, "ignAao":item.ignore_aao};
             if(isNaN(statusIndex)){
                 if(isNaN(options.dropdown.vehicles.type)) tableDatabase.push(pushContent);
                 else if(options.dropdown.vehicles.type == -1 && options.dropdown.vehicles.ownClass == item.vehicle_type_caption) tableDatabase.push(pushContent);
@@ -316,8 +318,11 @@ cursor: default;
         if(!options.filter.seg.status) filterDatabase("12", "21");
 
         switch($('#sortBy').val()){
-            case "Status":
+            case "Status-aufsteigend":
                 tableDatabase.sort((a, b) => a.status > b.status ? 1 : -1);
+                break;
+            case "Status-absteigend":
+                tableDatabase.sort((a, b) => a.status > b.status ? -1 : 1);
                 break;
             case "Name-aufsteigend":
                 tableDatabase.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
@@ -336,6 +341,36 @@ cursor: default;
                 break;
             case "Typ-absteigend":
                 tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypes[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypes[b.typeId].name.toUpperCase()) ? -1 : 1);
+                break;
+            case "Ausrückverzögerung-aufsteigend":
+                tableDatabase.sort((a, b) => a.delay > b.delay ? 1 : -1);
+                break;
+            case "Ausrückverzögerung-absteigend":
+                tableDatabase.sort((a, b) => a.delay > b.delay ? -1 : 1);
+                break;
+            case "Dienstbeginn-aufsteigend":
+                tableDatabase.sort((a, b) => a.workStart > b.workStart ? 1 : -1);
+                break;
+            case "Dienstbeginn-absteigend":
+                tableDatabase.sort((a, b) => a.workStart > b.workStart ? -1 : 1);
+                break;
+            case "Dienstende-aufsteigend":
+                tableDatabase.sort((a, b) => a.workEnd > b.workEnd ? 1 : -1);
+                break;
+            case "Dienstende-absteigend":
+                tableDatabase.sort((a, b) => a.workEnd > b.workEnd ? -1 : 1);
+                break;
+            case "max-Personal-aufsteigend":
+                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypes[a.typeId].personal > b.maxPers ? b.maxPers : aVehicleTypes[b.typeId].personal ? 1 : -1);
+                break;
+            case "max-Personal-absteigend":
+                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypes[a.typeId].personal > b.maxPers ? b.maxPers : aVehicleTypes[b.typeId].personal ? -1 : 1);
+                break;
+            case "zugew-Personal-aufsteigend":
+                tableDatabase.sort((a, b) => a.pers > b.pers ? 1 : -1);
+                break;
+            case "zugew-Personal-absteigend":
+                tableDatabase.sort((a, b) => a.pers > b.pers ? -1 : 1);
                 break;
         }
 
@@ -361,11 +396,14 @@ cursor: default;
                 `<tr>
                  <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
                  <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}">${e.name}</a><br>
-                  <small>Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr; Ausrückverzögerung: ${e.delay.toLocaleString()} Sekunden</td>
+                  <small>Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr; Ausrückverzögerung: ${e.delay.toLocaleString()} Sekunden</small></td>
                  <td class="col">${!e.ownClass ? aVehicleTypes[e.typeId].name : e.ownClass}</td>
-                 <td class="col-xs-3 btn-group btn-group-xs" role="group" aria-label="Small button group">
-                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
-                  <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : aVehicleTypes[e.typeId].personal})</a>
+                 <td class="col-xs-3">
+                  <div class="btn-group">
+                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
+                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : aVehicleTypes[e.typeId].personal})</a>
+                  </div><br>
+                  <a class="label label-${e.ignAao ? "danger" : "success"}" style="cursor:default">AAO</a>
                  </td>
                  <td class="col"><a class="lightbox-open" href="/buildings/${e.buildingId}">${database.buildings.get.name[e.buildingId]}</a></td>
                  </tr>`;
@@ -860,31 +898,34 @@ cursor: default;
 
         function calculateNextGrtw(html, rescueBuildings, cssClass){
             var maxGrtw = Math.floor(rescueBuildings / premiumCount);
-            var needed = premiumCount - (rescueBuildings - (maxGrtw * premiumCount));
-            if(needed < 0) needed = 0;
+            var usedBuildings = rescueBuildings - (maxGrtw * premiumCount);
+            var nextGrtw = premiumCount - usedBuildings;
+            if(nextGrtw < 0) nextGrtw = 0;
             userInfos += `<tr class="${cssClass}">
                           <td class="col">${html} benötigte Rettungswachen bis zum nächsten Großraumrettungswagen (GRTW)</td>
-                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${nextGrtw.toLocaleString()}</center></td>
                           </tr>`;
         }
 
         function calculateNextHeli(html, name, value, cssClass){
             if(value === undefined) value = 0;
-            var needed = 25 - (aBuildings.length - (value * 25));
-            if(needed < 0) needed = 0;
+            var usedBuildings = aBuildings.length - (value * 25);
+            var nextHeli = 25 - usedBuildings;
+            if(nextHeli < 0) nextHeli = 0;
             userInfos += `<tr class="${cssClass}">
                           <td class="col">${html} benötigte Gebäude bis zum nächsten ${name}</td>
-                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${nextHeli.toLocaleString()}</center></td>
                           </tr>`;
         }
 
         function calculateNextLst(html, value, cssClass){
             if(value === undefined) value = 0;
-            var needed = 25 - (aBuildings.length - (value * 25));
-            if(needed < 0) needed = 0;
+            var usedBuildings = value * 25;
+            var nextLst = 25 - (aBuildings.length - usedBuildings);
+            if(nextLst < 0) nextLst = 0;
             userInfos += `<tr class="${cssClass}">
                           <td class="col">${html} benötigte Gebäude bis zur nächsten Leitstelle</td>
-                          <td class="col-1"><center>${needed.toLocaleString()}</center></td>
+                          <td class="col-1"><center>${nextLst.toLocaleString()}</center></td>
                           </tr>`;
         }
 
@@ -896,8 +937,8 @@ cursor: default;
 
         isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - otherBuildings.lst > 0 ? otherBuildings.lst : 0, aBuildings.length, 'noTree');
 
-        infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'), otherBuildings.lst, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1, 'lst treeView');
-        calculateNextLst(configTable.arrowHospital, Math.ceil(aBuildings.length / 25) > 0 ? Math.ceil(aBuildings.length / 25) : 1, 'lst fumNested');
+        infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'), otherBuildings.lst, Math.ceil(aBuildings.length / 25), 'lst treeView');
+        calculateNextLst(configTable.arrowHospital, Math.floor(aBuildings.length / 25), 'lst fumNested');
 
         if(otherBuildings.bsr > 0) infoContentOneValue(configTable.marginLeft.replace('%PLATZHALTER%','Bereitstellungsräume (BSR)'), otherBuildings.bsr, 'noTree');
 
