@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.6.1
+// @version      2.7.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -394,21 +394,25 @@ cursor: default;
 
         for(let i = 0; i < tableDatabase.length; i++){
             var e = tableDatabase[i];
+            var vType = aVehicleTypes[e.typeId];
             if(e.pers === null) e.pers = 0;
             intoTable +=
                 `<tr>
                  <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
-                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}">${e.name}</a>
+                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}" style="display:inline-block">${e.name}</a>
                   <small style="display:${options.general.showWork ? "inline-block" : "none"}">Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr</small>
                   <small style="display:${options.general.showDelay ? "inline-block" : "none"}">Ausrückverzögerung: ${e.delay.toLocaleString()} Sek.</small>
                  </td>
-                 <td class="col">${!e.ownClass ? aVehicleTypes[e.typeId].name : e.ownClass}</td>
+                 <td class="col">${!e.ownClass ? vType.name : e.ownClass}</td>
                  <td class="col-xs-3">
                   <div class="btn-group">
                    <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
-                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : aVehicleTypes[e.typeId].personal})</a>
+                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : vType.personal})</a>
                   </div><br>
-                  <a class="label label-${e.ignAao ? "danger" : "success"}" style="cursor:default">AAO</a>
+                  <a class="label label-${e.ignAao ? "danger" : "success"}" style="cursor:default;color:black">AAO</a>
+                  ${vType.water ? (`<a class="label label-primary" style="cursor:default;color:black">Wasser: ${vType.water.toLocaleString()} Liter</a>`) : ``}
+                  ${vType.wbonus ? (`<a class="label label-primary" style="cursor:default;color:black">Wasserbonus: ${vType.wbonus} %</a>`) : ``}
+                  ${vType.qualification ? (`<a class="label label-warning" style="cursor:default;color:black">${vType.qualification}</a>`) : ``}
                  </td>
                  <td class="col"><a class="lightbox-open" href="/buildings/${e.buildingId}">${database.buildings.get.name[e.buildingId]}</a></td>
                  </tr>`;
