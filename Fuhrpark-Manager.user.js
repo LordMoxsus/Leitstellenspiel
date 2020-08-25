@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.7.0
+// @version      2.7.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -410,8 +410,8 @@ cursor: default;
                    <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : vType.personal})</a>
                   </div><br>
                   <a class="label label-${e.ignAao ? "danger" : "success"}" style="cursor:default;color:black">AAO</a>
-                  ${vType.water ? (`<a class="label label-primary" style="cursor:default;color:black">Wasser: ${vType.water.toLocaleString()} Liter</a>`) : ``}
-                  ${vType.wbonus ? (`<a class="label label-primary" style="cursor:default;color:black">Wasserbonus: ${vType.wbonus} %</a>`) : ``}
+                  ${vType.water ? (`<a class="label label-info" style="cursor:default;color:black">Wasser: ${vType.water.toLocaleString()} Liter</a>`) : ``}
+                  ${vType.wbonus ? (`<a class="label label-info" style="cursor:default;color:black">Wasserbonus: ${vType.wbonus} %</a>`) : ``}
                   ${vType.qualification ? (`<a class="label label-warning" style="cursor:default;color:black">${vType.qualification}</a>`) : ``}
                  </td>
                  <td class="col"><a class="lightbox-open" href="/buildings/${e.buildingId}">${database.buildings.get.name[e.buildingId]}</a></td>
@@ -1203,6 +1203,15 @@ cursor: default;
     });
 
     $("body").on("click", "#btnSettingsFuM", function(){
+        $('#fms1').removeClass().addClass(btn.i);
+        $('#fms2').removeClass().addClass(btn.i);
+        $('#fms3').removeClass().addClass(btn.i);
+        $('#fms4').removeClass().addClass(btn.i);
+        $('#fms5').removeClass().addClass(btn.i);
+        $('#fms6').removeClass().addClass(btn.i);
+        $('#fms7').removeClass().addClass(btn.i);
+        $('#fms9').removeClass().addClass(btn.i);
+        $('#complete').removeClass().addClass(btn.w);
         $('#tableStatusLabel').html('');
         $('#tableStatusBody')
             .html(`<h5>Einstellungen</h5>
