@@ -399,9 +399,9 @@ cursor: default;
             intoTable +=
                 `<tr>
                  <td class="col-1"><span style="cursor:${e.status == 2 || e.status == 6 ? `pointer` : `not-allowed`}" class="building_list_fms building_list_fms_${e.status}" id="tableFms_${e.id}">${e.status}</span>
-                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}" style="display:inline-block">${e.name}</a>
-                  <small style="display:${options.general.showWork ? "inline-block" : "none"}">Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr</small>
-                  <small style="display:${options.general.showDelay ? "inline-block" : "none"}">Ausrückverzögerung: ${e.delay.toLocaleString()} Sek.</small>
+                 <td class="col"><a class="lightbox-open" href="/vehicles/${e.id}" style="display:block">${e.name}</a>
+                  <small style="display:${options.general.showWork ? "block" : "none"}">Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr</small>
+                  <small style="display:${options.general.showDelay ? "block" : "none"}">Ausrückverzögerung: ${e.delay.toLocaleString()} Sek.</small>
                  </td>
                  <td class="col">${!e.ownClass ? vType.name : e.ownClass}</td>
                  <td class="col-xs-3">
