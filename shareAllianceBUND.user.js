@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
 // @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.8.0
+// @version      1.8.1
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -29,8 +29,8 @@
     var showCredits = JSON.parse(localStorage.sabShowCredits);
     var optionalText = JSON.parse(localStorage.sabOptionalText);
     var pushPatients = JSON.parse(localStorage.sabPushPatients);
-    var missionId = $('#mission_progress_info >> div').attr('id').replace('mission_bar_holder_','');
-    var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace('/missions/','');
+    var missionId = $('#mission_progress_info >> div').attr('id').replace(/\D+/g,'');
+    var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace(/\D+/g,'');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
     var shareLink = $('#mission_alliance_share_btn').attr('href');
     var credits = 0;
@@ -44,7 +44,7 @@
         if(aMissions[i].id == missionTypeId){
             if(aMissions[i].additional.guard_mission){
                 braSiWa = true;
-                credits = parseInt($('#col_left:contains("Verdienst")').children('br').siblings('br')[1].nextSibling.data.replace(/\D+/g,''));
+                credits = parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,''));
             }
             else credits = aMissions[i].average_credits;
             break;
@@ -114,7 +114,7 @@
             }
         });
 
-        $.get('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data){
+        $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data){
             if(checkedVehicles.length > 0) alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
             $.post('/missions/' + missionId + '/alliance',function(data){
                 if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
