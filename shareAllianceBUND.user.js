@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @namespace    Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
-// @version      1.8.1
-// @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat
+// @namespace
+// @version      1.8.2
+// @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
 // @grant        none
@@ -18,11 +18,11 @@
     if(!localStorage.sabOptionalText) localStorage.sabOptionalText = JSON.stringify({"bol":false,"value":""});
     if(!localStorage.sabShortKey) localStorage.sabShortKey = 89;
     if(!localStorage.sabPushPatients) localStorage.sabPushPatients = false;
-    if(!$('#mission_help').attr('href')) return false;
     if(sessionStorage.sabReturnAlert){
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
         sessionStorage.removeItem('sabReturnAlert');
     }
+    if(!$('#mission_help').attr('href')) return false;
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
