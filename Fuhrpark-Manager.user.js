@@ -1,6 +1,10 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
+<<<<<<< HEAD
 // @version      2.7.2
+=======
+// @version      2.7.2 dev
+>>>>>>> 1fff7f68bfc26683fde25f3697e004817ec9ea49
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
