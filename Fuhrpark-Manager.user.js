@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.7.1
+// @version      2.7.2 dev
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -944,7 +944,7 @@ cursor: default;
 
         if(police.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber'), vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
 
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - otherBuildings.lst > 0 ? otherBuildings.lst : 0, aBuildings.length, 'noTree');
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - (otherBuildings.lst > 0 ? otherBuildings.lst : 0), aBuildings.length, 'noTree');
 
         infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'), otherBuildings.lst, Math.ceil(aBuildings.length / 25), 'lst treeView');
         calculateNextLst(configTable.arrowHospital, Math.floor(aBuildings.length / 25), 'lst fumNested');
