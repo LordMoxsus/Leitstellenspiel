@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         chatbutton
-// @version      1.2.2
+// @version      1.2.3
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -30,18 +30,18 @@
     if(alliance_id !== 19) return false;
 
     $('#alliance_chat_header_info').after(
-        `<div class="btn-group">
-           <a class="btn btn-default btn-xs" id="btnAddressInfo" title="${msgAddress}">Ortsang.</a>
-           <a class="btn btn-danger btn-xs" id="btnAddressLa" title="${msgAddress} ${msgLast}">LA</a>
-           <a class="btn btn-default btn-xs" id="btnPushNotOwn" title="${msgPushNotOwn}">Fremd-E</a>
-           <a class="btn btn-danger btn-xs" id="btnPushLa" title="${msgPushNotOwn} ${msgLast}"">LA</a>
-           <a class="btn btn-default btn-xs" id="btnSmall" title="${msgSmall}">Klein-E</a>
-           <a class="btn btn-danger btn-xs" id="btnSmallLa" title="${msgSmall} ${msgLast}"">LA</a>
-           <a class="btn btn-default btn-xs" id="btnPermaPush" title="${msgPermaPush}">Perma-E</a>
-           <a class="btn btn-danger btn-xs" id="btnPermaLa" title="${msgPermaPush} ${msgLast}">LA</a>
-           <a class="btn btn-default btn-xs" id="btnSpam" title="${msgSpam}">Spam</a>
-           <a class="btn btn-danger btn-xs" id="btnSpamLa" title="${msgSpam} ${msgLast}"">LA</a>
-           <a class="btn btn-success btn-xs" id="preferences" data-toggle="collapse" data-target="#cbtnPreferences" title="Einstellungen"><div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div></a>
+        `<div class="btn-group" style="display:flex">
+           <a class="btn btn-default btn-xs" id="btnAddressInfo" title="${msgAddress}" style="flex:2">Ortsang.</a>
+           <a class="btn btn-danger btn-xs" id="btnAddressLa" title="${msgAddress} ${msgLast}" style="flex:1">LA</a>
+           <a class="btn btn-default btn-xs" id="btnPushNotOwn" title="${msgPushNotOwn}" style="flex:2">Fremd-E</a>
+           <a class="btn btn-danger btn-xs" id="btnPushLa" title="${msgPushNotOwn} ${msgLast}" style="flex:1">LA</a>
+           <a class="btn btn-default btn-xs" id="btnSmall" title="${msgSmall}" style="flex:2">Klein-E</a>
+           <a class="btn btn-danger btn-xs" id="btnSmallLa" title="${msgSmall} ${msgLast}" style="flex:1">LA</a>
+           <a class="btn btn-default btn-xs" id="btnPermaPush" title="${msgPermaPush}" style="flex:2">Perma-E</a>
+           <a class="btn btn-danger btn-xs" id="btnPermaLa" title="${msgPermaPush} ${msgLast}" style="flex:1">LA</a>
+           <a class="btn btn-default btn-xs" id="btnSpam" title="${msgSpam}" style="flex:2">Spam</a>
+           <a class="btn btn-danger btn-xs" id="btnSpamLa" title="${msgSpam} ${msgLast}" style="flex:1">LA</a>
+           <a class="btn btn-success btn-xs" id="preferences" data-toggle="collapse" data-target="#cbtnPreferences" title="Einstellungen"><div class="glyphicon glyphicon-cog" style="color:LightSteelBlue;flex:1"></div></a>
          </div>
          <div class="collapse" id="cbtnPreferences">
            <div class="card card-body">
