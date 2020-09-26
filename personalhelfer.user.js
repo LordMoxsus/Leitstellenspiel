@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Personalhelfer
-// @version      1.4.0
+// @version      1.4.1
 // @description  Werbephasen und Personalsoll in der Gebaeudeuebersicht auswaehlen
 // @author       DrTraxx
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/buildings\/.*\
@@ -11,8 +11,6 @@
 (async function() {
     'use strict';
 
-    if(!$('#vehicle_table') || !$('#vehicle_table')[0]) return false;
-
     var buildingId = window.location.pathname.replace(/\D+/g,'');
     var hireStart = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde gestartet.</div>`;
     var hireEnd = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungsphase wurde beendet.</div>`;
@@ -20,11 +18,13 @@
     var cssHide = {"display":"none"};
     var cssShow = {"display":"inline"};
     var building = {};
+    var noPersonalBuildings = [1,3,4,7,8,10,14];
 
     $.getJSON("/api/buildings/" + buildingId, function(data) {
         building = data;
         if(building.hiring_automatic === true || building.hiring_phase > 0) hire = true;
     }).done(function() {
+        if(noPersonalBuildings.includes(building.building_type)) return false;
         $(".breadcrumb")
             .append(`<div class="btn-group input-group pull-right" style="float:right">
                      <a id="hire_do_1" class="btn btn-default btn-xs" style="display:${!hire ? `inline` : `none`}">1 Tag werben</a>
@@ -82,7 +82,7 @@
     });
 
     $("body").on("click", "#hire_do_0",function(){
-        $.get(`/buildings/${buildingId}/hire_do/0`).done(() => {
+        $.get(`/buildings/${buildingId}/hire_do/0`).done(function() {
             $('h1').parent().before(hireEnd);
             $('#hire_do_1').css(cssShow);
             $('#hire_do_2').css(cssShow);
