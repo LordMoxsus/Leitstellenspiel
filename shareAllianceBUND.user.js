@@ -1,7 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @namespace
-// @version      1.8.2
+// @version      1.9.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -22,38 +21,25 @@
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
         sessionStorage.removeItem('sabReturnAlert');
     }
-    if(!$('#mission_help').attr('href')) return false;
+    if(!$('#mission_help').attr('href') || !$('#mission_alliance_share_btn').attr('href')) return false;
 
     var aMissions = JSON.parse(localStorage.aMissions).value;
     var jumpNext = JSON.parse(localStorage.sabJumpNext);
     var showCredits = JSON.parse(localStorage.sabShowCredits);
     var optionalText = JSON.parse(localStorage.sabOptionalText);
     var pushPatients = JSON.parse(localStorage.sabPushPatients);
-    var missionId = $('#mission_progress_info >> div').attr('id').replace(/\D+/g,'');
+    var missionId = window.location.pathname.replace(/\D+/g,'');
     var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace(/\D+/g,'');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
-    var shareLink = $('#mission_alliance_share_btn').attr('href');
-    var credits = 0;
-    var patients = 0;
-    var braSiWa = false;
+    var mission = aMissions.filter((obj) => obj.id == missionTypeId)[0];
+    var credits = mission.additional.guard_mission ? parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,'')) : mission.average_credits;
+    var patients = $('.mission_patient').length;
     var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
 
-    if(!shareLink) return false;
+    if(credits < 2500 && !mission.additional.guard_mission) return false;
 
-    for(let i = 0; i < aMissions.length; i++){
-        if(aMissions[i].id == missionTypeId){
-            if(aMissions[i].additional.guard_mission){
-                braSiWa = true;
-                credits = parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,''));
-            }
-            else credits = aMissions[i].average_credits;
-            break;
-        }
-    }
-
-    if(credits <= 2500 && !braSiWa) return false;
-
-    $('#mission_finish_now_btn').parent()
+    $('#mission_finish_now_btn')
+        .parent()
         .after(`<div class="btn-group dropup">
                   <a class="btn btn-success btn-sm" id="shareBund" title="Alarmieren, im Verband freigeben und eine Rückmeldung mit der Adresse in den Chat senden." style="height:32px">
                     <img class="icon icons8-Phone-Filled" src="/images/icons8-phone_filled.svg" width="16" height="16">
@@ -89,15 +75,14 @@
                   <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${optionalText.value ? optionalText.value : ``}" id="iptOptionalText" style="height:32px;width:20em;display:${optionalText.bol ? `inherit` : `none`}">
                 </div>`);
 
-    function alarmAndShare(){
+    async function alarmAndShare(){
 
         var checkedVehicles = [];
         var postValue = missionAddress;
         var alertMission = "";
-        var checkMessage = 0;
-        patients = $('.mission_patient').length;
+        var checkMessage = credits >= 5000 ? 1 : 0;
 
-        if(showCredits) postValue += braSiWa ? "; " + credits.toLocaleString() + " Credits" : "; ca. " + credits.toLocaleString() + " Credits";
+        if(showCredits) postValue += mission.additional.guard_mission ? "; " + credits.toLocaleString() + " Credits" : "; ca. " + credits.toLocaleString() + " Credits";
         if(patients > 0 && pushPatients) postValue += patients == 1 ? "; " + patients + " Patient" : "; " + patients + " Patienten";
         if(optionalText.bol && $('#iptOptionalText').val()){
             postValue += " => " + $('#iptOptionalText').val();
@@ -106,7 +91,6 @@
             optionalText.value = $('#iptOptionalText').val();
             localStorage.sabOptionalText = JSON.stringify({"bol":optionalText.bol,"value":optionalText.value});
         }
-        if(credits >= 5000) checkMessage = 1;
 
         $('.vehicle_checkbox').each(function(){
             if($(this)[0].checked){
@@ -114,17 +98,24 @@
             }
         });
 
-        $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data){
-            if(checkedVehicles.length > 0) alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
-            $.post('/missions/' + missionId + '/alliance',function(data){
-                if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
-                else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
-                $.post("/mission_replies", {"mission_reply": {"alliance_chat" : checkMessage, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data){
-                        alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
-                        sessionStorage.sabReturnAlert = alertMission;
-                        jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
-                });
+        if(checkedVehicles.length > 0) {
+            await $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data) {
+                $("#shareBund").text("Alarmieren ...");
+                alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
             });
+        }
+
+        await $.post('/missions/' + missionId + '/alliance', function(data) {
+            $("#shareBund").text("Teilen ...");
+            if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
+            else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
+        });
+
+        await $.post("/mission_replies", {"mission_reply": {"alliance_chat" : checkMessage, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data) {
+            $("#shareBund").text("Posten ...");
+            alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
+            sessionStorage.sabReturnAlert = alertMission;
+            jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
         });
     }
 
