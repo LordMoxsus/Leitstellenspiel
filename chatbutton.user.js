@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         chatbutton
-// @version      1.2.3
+// @version      1.2.4
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -59,60 +59,70 @@
 
     $("body").on("click", "#btnAddressInfo", function(){
         var value = $('#alliance_chat_message').val() + '' + msgAddress;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnAddressLa", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgAddress + ' ' + msgLast;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnPushNotOwn", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgPushNotOwn;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnPushLa", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgPushNotOwn + ' ' + msgLast;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnSmall", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgSmall;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnSmallLa", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgSmall + ' ' + msgLast;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnPermaPush", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgPermaPush;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnPermaLa", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgPermaPush + ' ' + msgLast;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnSpam", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgSpam;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
 
     $("body").on("click", "#btnSpamLa", function(){
         var value = $('#alliance_chat_message').val() + ' ' + msgSpam + ' ' + msgLast;
+        if(!value.includes("@") && !value.includes("/w")) return false;
         $.post("/alliance_chats", {"alliance_chat": {"message": value}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         $('#alliance_chat_message').val('');
     });
