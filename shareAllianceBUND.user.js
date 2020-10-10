@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.10.0
+// @version      1.10.1
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -81,7 +81,7 @@
     async function alarmAndShare(){
 
         var checkedVehicles = [];
-        var postValue = config.showDate ? missionDate + ": " + missionAddress : missionAddress;
+        var postValue = config.showDate ? "eingegangen: " + missionDate + "; " + missionAddress : missionAddress;
         var alertMission = "";
         var checkMessage = credits >= 5000 ? 1 : 0;
 
