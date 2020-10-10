@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.10.1
+// @version      1.10.2
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -66,7 +66,7 @@
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
                     </div>
                     <div class="dropdown-item input-group">
-                      <input type="text" class="form-control form-control-sm" value="${config.optionalText.value}" placeholder="zus. Rückmeldung" id="iptConfigOptionalText" title="zusätzliche Rückmeldung" style="width:20em;height:22px">
+                      <input type="text" class="form-control form-control-sm" value="${config.optionalText.value}" placeholder="zusätzliche Rückmeldung" id="iptConfigOptionalText" title="zusätzliche Rückmeldung" style="width:20em;height:22px">
                     </div>
                     <div class="dropdown-item input-group btn-group">
                       <input type="text" class="form-control form-control-sm" value="${config.shortKey}" id="iptShortKey" title="Strg (Mac: control) + Shift + key" style="width:4em;height:22px">
@@ -74,6 +74,7 @@
                     </div>
                     <div class="dropdown-item btn-group">
                       <a class="btn btn-success btn-xs" id="sabSavePreferences">Speichern</a>
+                    </div>
                   </div>
                   <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${config.optionalText.value ? config.optionalText.value : ``}" id="iptOptionalText" style="height:32px;width:20em;display:${config.optionalText.bol ? `inherit` : `none`}">
                 </div>`);
@@ -157,6 +158,7 @@
             $('#iptOptionalText').css({"display":"none"});
         } else {
             $('#iptOptionalText').css({"display":"inherit"});
+            $("#iptOptionalText").val(config.optionalText.value ? config.optionalText.value : $("#iptConfigOptionalText").val());
         }
     });
 
