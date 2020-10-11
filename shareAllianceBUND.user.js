@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.10.2
+// @version      1.11.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -12,7 +12,7 @@
     'use strict';
 
     if(!localStorage.aMissions || JSON.parse(localStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('/einsaetze.json').done(data => localStorage.setItem('aMissions', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-    if(!localStorage.sab_preferences) localStorage.sab_preferences = JSON.stringify({"jumpNext":false,"showCredits":false,"optionalText":{"bol":false,"value":""},"shortKey":89,"pushPatients":false,"showDate":false});
+    if(!localStorage.sab_preferences) localStorage.sab_preferences = JSON.stringify({"jumpNext":false,"showCredits":false,"optionalText":{"bol":false,"value":""},"shortKey":89,"pushPatients":false,"showDate":false,"allianceChat":false});
     if(sessionStorage.sabReturnAlert){
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
         sessionStorage.removeItem('sabReturnAlert');
@@ -62,6 +62,10 @@
                       <label class="form-check-label" for="cbxOptionalText" title="Einsatzdatum in die Rückmeldung schreiben">zeige Einsatzdatum</label>
                     </div>
                     <div class="dropdown-item form-check">
+                      <input type="checkbox" class="form-check-input" id="cbxDate" ${config.allianceChat ? `checked`: ``}>
+                      <label class="form-check-label" for="cbxAllianceChat" title="Rückmeldung in den Chat senden">im Verbandchat pushen</label>
+                    </div>
+                    <div class="dropdown-item form-check">
                       <input type="checkbox" class="form-check-input" id="cbxOptionalText" ${config.optionalText.bol ? `checked`: ``}>
                       <label class="form-check-label" for="cbxOptionalText" title="zusätzliche Rückmeldung abgeben. (z.B. dringend benötigte Fahrzeuge)">zus. Rückmeldung</label>
                     </div>
@@ -97,6 +101,8 @@
                 checkedVehicles.push($(this).attr('value'));
             }
         });
+
+        if(!config.allianceChat) checkMessage = 0;
 
         if(checkedVehicles.length > 0) {
             await $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data) {
@@ -146,6 +152,10 @@
 
     $("body").on("click", "#cbxPushPatients", function(){
         config.pushPatients = $('#cbxPushPatients')[0].checked;
+    });
+
+    $("body").on("click", "#cbxAllianceChat", function(){
+        config.allianceChat = $('#cbxAllianceChat')[0].checked;
     });
 
     $("body").on("click", "#cbxDate", function(){
