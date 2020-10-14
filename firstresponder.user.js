@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.0.0
+// @version      1.0.1
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -12,12 +12,13 @@
 (async function() {
     'use strict';
 
-    if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+        await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+    }
 
     var aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
     var vehicleTypes = localStorage.fr_vehicleTypes ? JSON.parse(localStorage.fr_vehicleTypes) : [];
     var aaoId = localStorage.fr_aaoId ? +localStorage.fr_aaoId : 0;
-    console.log(aaoId);
 
     function mapVehicles(arrClasses, trigger) {
         var returnValue = [];
