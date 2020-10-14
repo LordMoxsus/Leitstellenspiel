@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.8.0
+// @version      2.9.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -436,6 +436,7 @@ cursor: default;
         var hospitals = {};
         var otherBuildings = {};
         var premiumCount = user_premium ? 15 : 20;
+        var valVehicles = 0;
         var configTable = {
             "arrowFire":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:firebrick"></div>`,
             "arrowRescue":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:orangered"></div>`,
@@ -446,6 +447,7 @@ cursor: default;
         };
 
         $.each(aVehicles, function(key, item){
+            var value = aVehicleTypesNew.filter((obj) => obj.id === item.vehicle_type)[0].cost;
             switch(item.vehicle_type){
                 case 31: vehicles.rth++;
                     break;
@@ -457,7 +459,9 @@ cursor: default;
                     break;
             }
             vehicles.onDispatchCenter.push({"name":item.caption,"lst":database.buildings.get.onDispatchCenter[item.building_id]});
+            valVehicles += value;
         });
+        console.log(valVehicles);
 
         if(!isNaN(options.dropdown.dispatchCenter.id)){
             for(let i = infoBuildingsDatabase.length - 1; i >= 0; i--){
@@ -934,7 +938,8 @@ cursor: default;
                           </tr>`;
         }
 
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length, 'noTree') : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length, 'noTree');
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length, 'vehicles treeView') : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length, 'vehicles treeView');
+        infoContentOneValue(configTable.marginLeft.replace("%PLATZHALTER%", "Wert des gesamten Fuhrparks in Credits"), valVehicles, "vehicles fumNested");
 
         if(rescue.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubscrauber (RTH)'), vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
 
@@ -1180,6 +1185,8 @@ cursor: default;
             $this.siblings('tr.polHeli').toggleClass('fumActive');
         } else if($this.hasClass('lst')) {
             $this.siblings('tr.lst').toggleClass('fumActive');
+        } else if($this.hasClass('vehicles')) {
+            $this.siblings('tr.vehicles').toggleClass('fumActive');
         }
     });
 
