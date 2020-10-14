@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.7.2
+// @version      2.8.0
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -127,7 +127,7 @@ cursor: default;
                     </div>
                 </div>`);
 
-    var aVehicleTypes = {};
+    var aVehicleTypesNew = {};
     var aVehicles = {};
     var aBuildings = {};
     var aCredits = {};
@@ -154,13 +154,7 @@ cursor: default;
                     'max-Personal-aufsteigend','max-Personal-absteigend','zugew-Personal-aufsteigend','zugew-Personal-absteigend']
         },
         "status":{"count":0},
-        "general":{
-            "buttonOnRadio":JSON.parse(localStorage.fum_options).buttonOnRadio,
-            "buttonOnNavbar":JSON.parse(localStorage.fum_options).buttonOnNavbar,
-            "showOnBuild":JSON.parse(localStorage.fum_options).showOnBuild,
-            "showWork": JSON.parse(localStorage.fum_options).showWork,
-            "showDelay": JSON.parse(localStorage.fum_options).showDelay
-        }
+        "general":JSON.parse(localStorage.fum_options)
     };
 
     var database = {
@@ -190,11 +184,17 @@ cursor: default;
     }
 
     async function refreshApi(){
-        if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) await $.getJSON('https://lss-manager.de/api/cars.php?lang=de_DE').done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aBuildings).userId != user_id) await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aCredits).userId != user_id) await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        }
+        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aBuildings).userId != user_id) {
+            await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        }
+        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aCredits).userId != user_id) {
+            await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        }
 
-        aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
+        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
         aBuildings = JSON.parse(localStorage.aBuildings).value;
         aCredits = JSON.parse(localStorage.aCredits).value;
     }
@@ -227,10 +227,6 @@ cursor: default;
             "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
             "database":{"class":[],"types":[],"dispatchCenter":[]}
         };
-        var mapObj = {"ï¿½": "Ö", "Ã¶": "ö", "Ã¼": "ü", "Ã\u0096": "Ö"};
-        $.each(aVehicleTypes, (k,v) => {
-            v.name = v.name.replace(new RegExp(Object.keys(mapObj).join("|"),"gi"), matched => mapObj[matched])
-        });
         $.each(aBuildings, function(key, item){
             database.buildings.get.typeId[item.id] = item.building_type;
             database.buildings.get.name[item.id] = item.caption;
@@ -239,11 +235,13 @@ cursor: default;
                 dropdown.database.dispatchCenter.push({"id": item.id, "name": item.caption});
             }
         });
-        $.each(aVehicleTypes, function(key, item){
-            dropdown.database.types.push({"typeId": key, "name": item.name});
+        $.each(aVehicleTypesNew, function(key, item){
+            dropdown.database.types.push({"typeId": item.id, "name": item.name});
         });
         $.each(aVehicles, function(key, item){
-            if(item.vehicle_type_caption) dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
+            if(item.vehicle_type_caption && !dropdown.database.class.includes(item.vehicle_type_caption)) {
+                dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
+            }
         });
         if(dropdown.database.dispatchCenter.length > 0){
             if(dropdown.database.dispatchCenter.length >= 2){
@@ -260,10 +258,7 @@ cursor: default;
         if(dropdown.database.class.length > 0){
             if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
             for(let i = 0; i < dropdown.database.class.length; i++){
-                if(i > 0 && dropdown.database.class[i].ownClass !== dropdown.database.class[i - 1].ownClass){
-                    dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
-                }
-                else if(i == 0) dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
+                dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
             }
         }
         $('#filterDispatchCenter').html(dropdown.dispatchCenter);
@@ -339,10 +334,10 @@ cursor: default;
                 tableDatabase.sort((a, b) => database.buildings.get.name[a.buildingId].toUpperCase() > database.buildings.get.name[b.buildingId].toUpperCase() ? -1 : 1);
                 break;
             case "Typ-aufsteigend":
-                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypes[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypes[b.typeId].name.toUpperCase()) ? 1 : -1);
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypesNew[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypesNew[b.typeId].name.toUpperCase()) ? 1 : -1);
                 break;
             case "Typ-absteigend":
-                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypes[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypes[b.typeId].name.toUpperCase()) ? -1 : 1);
+                tableDatabase.sort((a, b) => (a.ownClass ? a.ownClass.toUpperCase() : aVehicleTypesNew[a.typeId].name.toUpperCase()) > (b.ownClass ? b.ownClass.toUpperCase() : aVehicleTypesNew[b.typeId].name.toUpperCase()) ? -1 : 1);
                 break;
             case "Ausrückverzögerung-aufsteigend":
                 tableDatabase.sort((a, b) => a.delay > b.delay ? 1 : -1);
@@ -363,10 +358,10 @@ cursor: default;
                 tableDatabase.sort((a, b) => a.workEnd > b.workEnd ? -1 : 1);
                 break;
             case "max-Personal-aufsteigend":
-                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypes[a.typeId].personal > b.maxPers ? b.maxPers : aVehicleTypes[b.typeId].personal ? 1 : -1);
+                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypesNew[a.typeId].personal.max > b.maxPers ? b.maxPers : aVehicleTypesNew[b.typeId].personal.max ? 1 : -1);
                 break;
             case "max-Personal-absteigend":
-                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypes[a.typeId].personal > b.maxPers ? b.maxPers : aVehicleTypes[b.typeId].personal ? -1 : 1);
+                tableDatabase.sort((a, b) => a.maxPers ? a.maxPers : aVehicleTypesNew[a.typeId].personal.max > b.maxPers ? b.maxPers : aVehicleTypesNew[b.typeId].personal.max ? -1 : 1);
                 break;
             case "zugew-Personal-aufsteigend":
                 tableDatabase.sort((a, b) => a.pers > b.pers ? 1 : -1);
@@ -394,7 +389,7 @@ cursor: default;
 
         for(let i = 0; i < tableDatabase.length; i++){
             var e = tableDatabase[i];
-            var vType = aVehicleTypes[e.typeId];
+            var vType = aVehicleTypesNew[e.typeId];
             if(e.pers === null) e.pers = 0;
             intoTable +=
                 `<tr>
@@ -403,16 +398,17 @@ cursor: default;
                   <small style="display:${options.general.showWork ? "block" : "none"}">Dienstzeiten: ${e.workStart}:00 bis ${e.workEnd}:00 Uhr</small>
                   <small style="display:${options.general.showDelay ? "block" : "none"}">Ausrückverzögerung: ${e.delay.toLocaleString()} Sek.</small>
                  </td>
-                 <td class="col">${!e.ownClass ? vType.name : e.ownClass}</td>
+                 <td class="col">${!e.ownClass ? (vType.name + (vType.name !== vType.short_name ? "<br>(" + vType.short_name + ")" : "")) : e.ownClass}</td>
                  <td class="col-xs-3">
                   <div class="btn-group">
                    <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/edit"><div class="glyphicon glyphicon-pencil"></div></a>
-                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : vType.personal})</a>
+                   <a class="lightbox-open btn btn-default btn-xs" style="text-decoration:none" href="/vehicles/${e.id}/zuweisung">Personalzuweisung (${e.pers}/${e.maxPers ? e.maxPers : vType.personal.max})</a>
                   </div><br>
                   <a class="label label-${e.ignAao ? "danger" : "success"}" style="cursor:default;color:black">AAO</a>
-                  ${vType.water ? (`<a class="label label-info" style="cursor:default;color:black">Wasser: ${vType.water.toLocaleString()} Liter</a>`) : ``}
-                  ${vType.wbonus ? (`<a class="label label-info" style="cursor:default;color:black">Wasserbonus: ${vType.wbonus} %</a>`) : ``}
-                  ${vType.qualification ? (`<a class="label label-warning" style="cursor:default;color:black">${vType.qualification}</a>`) : ``}
+                  ${vType.additional.water ? (`<a class="label label-info" style="cursor:default;color:black">Wasser: ${vType.additional.water.toLocaleString()} Liter</a>`) : ``}
+                  ${vType.additional.water_bonus ? (`<a class="label label-info" style="cursor:default;color:black">Wasserbonus: ${vType.additional.water_bonus} %</a>`) : ``}
+                  ${vType.additional.qualification ? (`<a class="label label-warning" style="cursor:default;color:black">${vType.additional.qualification}</a>`) : ``}
+                  ${vType.additional.trailer ? (`<a class="label label-warning" style="cursor:default;color:black">benötigt Zugfahrzeug</a>`) : ``}
                  </td>
                  <td class="col"><a class="lightbox-open" href="/buildings/${e.buildingId}">${database.buildings.get.name[e.buildingId]}</a></td>
                  </tr>`;
