@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.9.0
+// @version      2.9.1
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -443,7 +443,8 @@ cursor: default;
             "arrowPolice":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:green"></div>`,
             "arrowThw":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:midnightblue"></div>`,
             "arrowHospital":`<div class="glyphicon glyphicon-arrow-right" style="margin-left:2em;color:deepskyblue"></div>`,
-            "marginLeft":`<div style="margin-left:1em">%PLATZHALTER%</div>`
+            "marginLeft":`<div style="margin-left:1em">%PLATZHALTER%</div>`,
+            "expand":`<span class="glyphicon glyphicon-plus-sign pull-right treeView %CLASS%"></span>`
         };
 
         $.each(aVehicles, function(key, item){
@@ -461,7 +462,6 @@ cursor: default;
             vehicles.onDispatchCenter.push({"name":item.caption,"lst":database.buildings.get.onDispatchCenter[item.building_id]});
             valVehicles += value;
         });
-        console.log(valVehicles);
 
         if(!isNaN(options.dropdown.dispatchCenter.id)){
             for(let i = infoBuildingsDatabase.length - 1; i >= 0; i--){
@@ -938,29 +938,33 @@ cursor: default;
                           </tr>`;
         }
 
-        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge", aVehicles.length, 'vehicles treeView') : infoContentMax("Fahrzeuge", vehicles.onDispatchCenter.length, aVehicles.length, 'vehicles treeView');
+        isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Fahrzeuge"+configTable.expand.replace("%CLASS%", "vehicles"), aVehicles.length, "noTree") : infoContentMax("Fahrzeuge"+configTable.expand.replace("%CLASS%", "vehicles"), vehicles.onDispatchCenter.length, aVehicles.length, "noTree");
         infoContentOneValue(configTable.marginLeft.replace("%PLATZHALTER%", "Wert des gesamten Fuhrparks in Credits"), valVehicles, "vehicles fumNested");
-
-        if(rescue.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubscrauber (RTH)'), vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
-
-        if(police.helicopter == 0) infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber'), vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'noTree');
+        if(rescue.helicopter == 0) {
+            infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubscrauber (RTH)'), vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'vehicles fumNested');
+        }
+        if(police.helicopter == 0) {
+            infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber'), vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'vehicles fumNested');
+        }
 
         isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - (otherBuildings.lst > 0 ? otherBuildings.lst : 0), aBuildings.length, 'noTree');
 
-        infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'), otherBuildings.lst, Math.ceil(aBuildings.length / 25), 'lst treeView');
+        infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'+configTable.expand.replace("%CLASS%", "lst")), otherBuildings.lst, Math.ceil(aBuildings.length / 25), 'noTree');
         calculateNextLst(configTable.arrowHospital, Math.floor(aBuildings.length / 25), 'lst fumNested');
 
-        if(otherBuildings.bsr > 0) infoContentOneValue(configTable.marginLeft.replace('%PLATZHALTER%','Bereitstellungsräume (BSR)'), otherBuildings.bsr, 'noTree');
+        if(otherBuildings.bsr > 0) {
+            infoContentOneValue(configTable.marginLeft.replace('%PLATZHALTER%','Bereitstellungsräume (BSR)'), otherBuildings.bsr, 'noTree');
+        }
 
         if(fire.small > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen (klein)'), fire.small, 'fireSM treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen (klein)'+configTable.expand.replace("%CLASS%", "fireSm")), fire.small, 'noTree');
             if(fire.abSmall > 0 || fire.onBuildAbSmall > 0){
                 tableExtension(`AB-Stellplätze`, configTable.arrowFire, fire.abSmall, fire.small * 2, fire.onBuildAbSmall, 'fireSm fumNested');
             }
         }
 
         if(fire.normal > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen'), fire.normal, 'fireNm treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen'+configTable.expand.replace("%CLASS%", "fireNm")), fire.normal, 'noTree');
             if(Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10) > 0){
                 tableExtension(`Großwache`, configTable.arrowFire, fire.big, Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10), fire.onBuildBig, 'fireNm fumNested');
             }
@@ -980,12 +984,12 @@ cursor: default;
         }
 
         if(fire.school > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwehrschulen'), fire.school, 'fireSchool treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwehrschulen'+configTable.expand.replace("%CLASS%", "fireSchool")), fire.school, 'noTree');
             tableExtension(`Klassenräume`, configTable.arrowFire, fire.classroom + fire.school, fire.school * 4, fire.onBuildClassroom, 'fireSchool fumNested');
         }
 
         if(rescue.small > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen (klein)'), rescue.small, 'rescueSm treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen (klein)'+configTable.expand.replace("%CLASS%", "rescueSm")), rescue.small, 'noTree');
             if(!rescue.normal){
                 rescueVehicles(configTable.arrowRescue, rescue.small + (fire.activeRescue > 0 ? fire.activeRescue : 0), 'rescueSm fumNested');
                 calculateNextGrtw(configTable.arrowRescue, rescue.small + (fire.activeRescue > 0 ? fire.activeRescue : 0), 'rescueSm fumNested');
@@ -995,13 +999,13 @@ cursor: default;
         if(rescue.normal > 0){
             if(!rescue.small) rescue.small = 0;
             if(!fire.activeRescue) fire.activeRescue = 0;
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen'), rescue.normal, 'rescueNm treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungswachen'+configTable.expand.replace("%CLASS%", "rescueNm")), rescue.normal, 'noTree');
             rescueVehicles(configTable.arrowRescue, rescue.normal + rescue.small + fire.activeRescue, 'rescueNm fumNested');
             calculateNextGrtw(configTable.arrowRescue, rescue.normal + rescue.small + fire.activeRescue, 'rescueNm fumNested');
         }
 
         if(seg.count > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Schnelleinsatzgruppen (SEG)'), seg.count, 'seg treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Schnelleinsatzgruppen (SEG)'+configTable.expand.replace("%CLASS%", "seg")), seg.count, 'noTree');
             tableExtension(`Führung`, configTable.arrowRescue, seg.activeLeader, seg.leader, seg.onBuildLeader, 'seg fumNested');
             tableExtension(`Sanitätsdienst`, configTable.arrowRescue, seg.activeSanD, seg.sanD, seg.onBuildSanD, 'seg fumNested');
             tableExtension(`Wasserrettungs-Erweiterung`, configTable.arrowRescue, seg.activeWr, seg.wr, seg.onBuildWr, 'seg fumNested');
@@ -1017,29 +1021,29 @@ cursor: default;
         }
 
         if(rescue.helicopter > 0){
-            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubschrauber-Stationen'), rescue.activeHelicopter, rescue.helicopter, 'rescueHeli treeView');
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Rettungshubschrauber-Stationen'+configTable.expand.replace("%CLASS%", "rescueHeli")), rescue.activeHelicopter, rescue.helicopter, 'noTree');
             infoContentMax(`${configTable.arrowRescue} Rettungshubschrauber (RTH)`, vehicles.rth, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'rescueHeli fumNested');
             calculateNextHeli(configTable.arrowRescue, "Rettungshubschrauber (RTH)", Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'rescueHeli fumNested');
         }
 
         if(rescue.school > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungsdienstschulen'), rescue.school, 'rescueSchool treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Rettungsdienstschulen'+configTable.expand.replace("%CLASS%", "rescueSchool")), rescue.school, 'noTree');
             tableExtension(`Klassenräume`, configTable.arrowRescue, rescue.classroom + rescue.school, rescue.school * 4, rescue.onBuildClassroom, 'rescueSchool fumNested');
         }
 
         if(police.small > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen (klein)'), police.small, 'polSm treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen (klein)'+configTable.expand.replace("%CLASS%", "polSm")), police.small, 'noTree');
             tableExtension(`Zellen`, configTable.arrowPolice, police.cellSmall, police.small * 2, police.onBuildCellSmall, 'polSm fumNested');
         }
 
         if(police.normal > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen'), police.normal, 'polNm treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen'+configTable.expand.replace("%CLASS%", "polSm")), police.normal, 'noTree');
             tableExtension(`Zellen`, configTable.arrowPolice, police.cellNormal, police.normal * 10, police.onBuildCellNormal, 'polNm fumNested');
             tableExtension(`Diensthundestaffel`, configTable.arrowPolice, police.activeGuardDogs, police.guardDogs, police.onBuildGuardDogs, 'polNm fumNested');
         }
 
         if(bepo.count > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Bereitschaftspolizei'), bepo.count, 'bepo treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Bereitschaftspolizei'+configTable.expand.replace("%CLASS%", "bepo")), bepo.count, 'noTree');
             tableExtension(`2. Zug der 1. Hundertschaft`, configTable.arrowPolice, bepo.activeDivision2, bepo.division2, bepo.onBuildDivision2, 'bepo fumNested');
             tableExtension(`3. Zug der 1. Hundertschaft`, configTable.arrowPolice, bepo.activeDivision3, bepo.division3, bepo.onBuildDivision3, 'bepo fumNested');
             tableExtension(`Sonderfahrzeug: Gefangenenkraftwagen`, configTable.arrowPolice, bepo.activeMobilePrison, bepo.mobilePrison ,bepo.onBuildMobilePrison, 'bepo fumNested');
@@ -1052,7 +1056,7 @@ cursor: default;
         }
 
         if(polSonder.count > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizei-Sondereinheiten'), polSonder.count, 'polSonder treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizei-Sondereinheiten'+configTable.expand.replace("%CLASS%", "polSonder")), polSonder.count, 'noTree');
             tableExtension(`SEK: 1. Zug`, configTable.arrowPolice, polSonder.activeSek1, polSonder.sek1, polSonder.onBuildSek1, 'polSonder fumNested');
             tableExtension(`SEK: 2. Zug`, configTable.arrowPolice, polSonder.activeSek2, polSonder.sek2, polSonder.onBuildSek2, 'polSonder fumNested');
             tableExtension(`MEK: 1. Zug`, configTable.arrowPolice, polSonder.activeMek1, polSonder.mek1, polSonder.onBuildMek1, 'polSonder fumNested');
@@ -1061,18 +1065,18 @@ cursor: default;
         }
 
         if(police.helicopter > 0){
-            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber-Stationen'), police.activeHelicopter, police.helicopter, 'polHeli treeView');
+            percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber-Stationen'+configTable.expand.replace("%CLASS%", "polHeli")), police.activeHelicopter, police.helicopter, 'noTree');
             infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
             calculateNextHeli(configTable.arrowPolice, "Polizeihubschrauber", Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
         }
 
         if(police.school > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeischulen'), police.school, 'polSchool treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeischulen'+configTable.expand.replace("%CLASS%", "polSchool")), police.school, 'noTree');
             tableExtension(`Klassenräume`, configTable.arrowPolice, police.classroom + police.school, police.school * 4, police.onBuildClassroom, 'polSchool fumNested');
         }
 
         if(thw.count > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Ortsverbände'), thw.count, 'thw treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Ortsverbände'+configTable.expand.replace("%CLASS%", "thw")), thw.count, 'noTree');
             tableExtension(`1. Technischer Zug: Bergungsgruppe 2`, configTable.arrowThw, thw.activeTz1Bg, thw.tz1Bg, thw.onBuildTz1Bg, 'thw fumNested');
             tableExtension(`1. Technischer Zug: Zugtrupp`, configTable.arrowThw, thw.activeTz1Zug, thw.tz1Zug, thw.onBuildTz1Zug, 'thw fumNested');
             tableExtension(`Fachgruppe Räumen`, configTable.arrowThw, thw.activeFgrR, thw.fgrR, thw.onBuildFgrR, 'thw fumNested');
@@ -1084,12 +1088,12 @@ cursor: default;
         }
 
         if(thw.school > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Bundesschulen'), thw.school, 'thwSchool treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','THW Bundesschulen'+configTable.expand.replace("%CLASS%", "thwSchool")), thw.school, 'noTree');
             tableExtension(`Klassenräume`, configTable.arrowThw, thw.classroom + thw.school, thw.school * 4, thw.onBuildClassroom, 'thwSchool fumNested');
         }
 
         if(hospitals.count > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Krankenhäuser'), hospitals.count, 'hospital treeView');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Krankenhäuser'+configTable.expand.replace("%CLASS%", "hospital")), hospitals.count, 'noTree');
             infoContentMax(`${configTable.arrowHospital} Betten`, hospitals.beds + (hospitals.count * 10), hospitals.count * 30, 'hospital fumNested');
             tableExtension(`Allgemeine Innere`, configTable.arrowHospital, hospitals.ina, hospitals.count, hospitals.onBuildIna, 'hospital fumNested');
             tableExtension(`Allgemeine Chirurgie`, configTable.arrowHospital, hospitals.ach, hospitals.count, hospitals.onBuildAch, 'hospital fumNested');
@@ -1147,46 +1151,19 @@ cursor: default;
         }
     });
 
-    $("body").on("click", "#tableStatusBody tr.treeView", function(){
+    $("body").on("click", "span.treeView", function(){
         var $this = $(this);
-        if($this.hasClass('hospital')) {
-            $this.siblings('tr.hospital').toggleClass('fumActive');
-        } else if($this.hasClass('fireSm')) {
-            $this.siblings('tr.fireSm').toggleClass('fumActive');
-        } else if($this.hasClass('fireNm')) {
-            $this.siblings('tr.fireNm').toggleClass('fumActive');
-        } else if($this.hasClass('rescueSm')) {
-            $this.siblings('tr.rescueSm').toggleClass('fumActive');
-        } else if($this.hasClass('rescueNm')) {
-            $this.siblings('tr.rescueNm').toggleClass('fumActive');
-        } else if($this.hasClass('rescueHeli')) {
-            $this.siblings('tr.rescueHeli').toggleClass('fumActive');
-        } else if($this.hasClass('seg')) {
-            $this.siblings('tr.seg').toggleClass('fumActive');
-        } else if($this.hasClass('rescueSchool')) {
-            $this.siblings('tr.rescueSchool').toggleClass('fumActive');
-        } else if($this.hasClass('fireSchool')) {
-            $this.siblings('tr.fireSchool').toggleClass('fumActive');
-        } else if($this.hasClass('thw')) {
-            $this.siblings('tr.thw').toggleClass('fumActive');
-        } else if($this.hasClass('thwSchool')) {
-            $this.siblings('tr.thwSchool').toggleClass('fumActive');
-        } else if($this.hasClass('polSm')) {
-            $this.siblings('tr.polSm').toggleClass('fumActive');
-        } else if($this.hasClass('polNm')) {
-            $this.siblings('tr.polNm').toggleClass('fumActive');
-        } else if($this.hasClass('bepo')) {
-            $this.siblings('tr.bepo').toggleClass('fumActive');
-        } else if($this.hasClass('polSonder')) {
-            $this.siblings('tr.polSonder').toggleClass('fumActive');
-        } else if($this.hasClass('polSchool')) {
-            $this.siblings('tr.polSchool').toggleClass('fumActive');
-        } else if($this.hasClass('polHeli')) {
-            $this.siblings('tr.polHeli').toggleClass('fumActive');
-        } else if($this.hasClass('lst')) {
-            $this.siblings('tr.lst').toggleClass('fumActive');
-        } else if($this.hasClass('vehicles')) {
-            $this.siblings('tr.vehicles').toggleClass('fumActive');
+        var key;
+        if($this.hasClass("glyphicon-plus-sign")) {
+            $this.removeClass("glyphicon-plus-sign").addClass("glyphicon-minus-sign");
+            for(key of $this[0].classList) {
+                if($("tr."+key).length) $("tr."+key).addClass("fumActive");
+            }
+        } else if($this.hasClass("glyphicon-minus-sign")) {
+            $this.removeClass("glyphicon-minus-sign").addClass("glyphicon-plus-sign");
+            for(key of $this[0].classList) {
+                if($("tr."+key).length) $("tr."+key).removeClass("fumActive");
+            }
         }
     });
 
