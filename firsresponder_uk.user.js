@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo) - Version UK
-// @version      1.0.1
+// @version      1.0.2
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.missionchief.co.uk/missions/*
@@ -34,8 +34,8 @@
         return returnValue;
     }
 
-    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit") && !localStorage.fr_aaoId) {
-        $("h1").append(`<a class="btn btn-info" id="frSaveAaoId" style="margin-left:2em">save AAO-ID</a>`);
+    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit") && !localStorage.fr_aaoIdUk) {
+        $("h1").append(`<a class="btn btn-info" id="frSaveAaoIdUk" style="margin-left:2em">save AAO-ID</a>`);
     }
 
     if(window.location.pathname.includes("missions") && localStorage.fr_aaoId) {
@@ -82,7 +82,7 @@
     $("body").on("click", "#frSaveAaoIdUk", function() {
         localStorage.fr_aaoIdUk = +window.location.pathname.replace(/\D+/g,"");
         $("#frSaveAaoId").css({"display":"none"});
-        alert("AAO-ID gespeichert.");
+        alert("AAO-ID saved successfully.");
     });
 
     $("body").on("click", "#frSavePreferencesUk", function() {
