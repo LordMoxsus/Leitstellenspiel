@@ -38,7 +38,7 @@
         $("h1").append(`<a class="btn btn-info" id="frSaveAaoIdUk" style="margin-left:2em">save AAO-ID</a>`);
     }
 
-    if(window.location.pathname.includes("missions") && localStorage.fr_aaoId) {
+    if(window.location.pathname.includes("missions") && localStorage.fr_aaoIdUk) {
         var arrVehicles = [];
 
         for(var i in aVehicleTypesUk) {
