@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo) - Version UK
-// @version      1.0.0
+// @version      1.0.1
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.missionchief.co.uk/missions/*
@@ -80,7 +80,7 @@
     }
 
     $("body").on("click", "#frSaveAaoIdUk", function() {
-        localStorage.fr_aaoId = +window.location.pathname.replace(/\D+/g,"");
+        localStorage.fr_aaoIdUk = +window.location.pathname.replace(/\D+/g,"");
         $("#frSaveAaoId").css({"display":"none"});
         alert("AAO-ID gespeichert.");
     });
