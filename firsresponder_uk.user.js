@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo) - Version UK
-// @version      1.0.2
+// @version      1.0.3
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.missionchief.co.uk/missions/*
@@ -86,7 +86,7 @@
     });
 
     $("body").on("click", "#frSavePreferencesUk", function() {
-        vehicleTypes = mapVehicles($("#frSelectVehicles").val(), "type");
+        vehicleTypes = mapVehicles($("#frSelectVehiclesUk").val(), "type");
         localStorage.fr_vehicleTypesUk = JSON.stringify(vehicleTypes);
 
         $("#frModalBodyUk").html("<h3><center>Settings saved successfully.</center></h5>");
