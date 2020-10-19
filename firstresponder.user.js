@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.0.2
+// @version      1.0.3
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -34,7 +34,7 @@
         return returnValue;
     }
 
-    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit") && !localStorage.fr_aaoId) {
+    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit")) {
         $("h1").append(`<a class="btn btn-info" id="frSaveAaoId" style="margin-left:2em">AAO-ID speichern</a>`);
     }
 

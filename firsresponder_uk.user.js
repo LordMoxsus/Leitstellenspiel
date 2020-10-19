@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo) - Version UK
-// @version      1.0.3
+// @version      1.0.4
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.missionchief.co.uk/missions/*
@@ -17,10 +17,10 @@
     }
 
     var aVehicleTypesUk = JSON.parse(localStorage.aVehicleTypesUk).value;
-    var vehicleTypes = localStorage.fr_vehicleTypesUk ? JSON.parse(localStorage.fr_vehicleTypesUk) : [];
+    var vehicleTypesUk = localStorage.fr_vehicleTypesUkUk ? JSON.parse(localStorage.fr_vehicleTypesUkUk) : [];
     var aaoId = localStorage.fr_aaoIdUk ? +localStorage.fr_aaoIdUk : 0;
 
-    function mapVehicles(arrClasses, trigger) {
+    function mapVehiclesUk(arrClasses, trigger) {
         var returnValue = [];
         if(trigger == "type") {
             returnValue = $.map(arrClasses, function(item) {
@@ -34,7 +34,7 @@
         return returnValue;
     }
 
-    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit") && !localStorage.fr_aaoIdUk) {
+    if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit")) {
         $("h1").append(`<a class="btn btn-info" id="frSaveAaoIdUk" style="margin-left:2em">save AAO-ID</a>`);
     }
 
@@ -55,7 +55,7 @@
                       <div class="modal-dialog" role="document">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="frModalLabelUk">settings</h5>
+                            <h5 class="modal-title" id="frModalLabelUk">Einstellungen</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                               <span aria-hidden="true">&times;</span>
                             </button>
@@ -76,7 +76,7 @@
             $("#frSelectVehiclesUk").append(`<option>${arrVehicles[i]}</option>`);
         }
 
-        $("#frSelectVehiclesUk").val(mapVehicles(vehicleTypes, "name"));
+        $("#frSelectVehiclesUk").val(mapVehiclesUk(vehicleTypesUk, "name"));
     }
 
     $("body").on("click", "#frSaveAaoIdUk", function() {
@@ -86,8 +86,8 @@
     });
 
     $("body").on("click", "#frSavePreferencesUk", function() {
-        vehicleTypes = mapVehicles($("#frSelectVehiclesUk").val(), "type");
-        localStorage.fr_vehicleTypesUk = JSON.stringify(vehicleTypes);
+        vehicleTypesUk = mapVehiclesUk($("#frSelectVehiclesUk").val(), "type");
+        localStorage.fr_vehicleTypesUkUk = JSON.stringify(vehicleTypesUk);
 
         $("#frModalBodyUk").html("<h3><center>Settings saved successfully.</center></h5>");
         $("#frSavePreferencesUk").css({"display":"none"});
@@ -95,10 +95,10 @@
 
     $("#aao_"+aaoId).click(function() {
         $(".vehicle_checkbox").each(function() {
-            var vType = $(this).attr("vehicle_type_id") ? +$(this).attr("vehicle_type_id") : 0;
+            var vType = $(this).attr("vehicle_type_id");
             var vId = +$(this).attr("value");
 
-            if(vehicleTypes.includes(vType)) {
+            if(vehicleTypesUk.includes(vType)) {
                 if(!$("#vehicle_checkbox_"+vId)[0].checked) {
                     if(!$("#vehicle_checkbox_"+vId)[0].disabled) {
                         $("#vehicle_checkbox_"+vId).click();
