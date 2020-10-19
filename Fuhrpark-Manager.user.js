@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.9.1
+// @version      2.9.2
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -495,6 +495,7 @@ cursor: default;
                 case 4:
                     hospitals.count > 0 ? hospitals.count++ : hospitals.count = 1;
                     hospitals.beds > 0 ? hospitals.beds += item.level : hospitals.beds = item.level;
+                    hospitals.patients ? hospitals.patients += item.patient_count : hospitals.patients = item.patient_count;
                     break;
                 case 5:
                     if(!rescue.helicopter) rescue.helicopter = 0;
@@ -508,8 +509,14 @@ cursor: default;
                     }
                     break;
                 case 6:
-                    if(item.small_building) police.small > 0 ? police.small++ : police.small = 1;
-                    else police.normal > 0 ? police.normal++ : police.normal = 1;
+                    if(item.small_building) {
+                        police.small > 0 ? police.small++ : police.small = 1;
+                        police.smallPrisoners ? police.smallPrisoners += item.prisoner_count : police.smallPrisoners = item.prisoner_count;
+                    }
+                    else {
+                        police.normal > 0 ? police.normal++ : police.normal = 1;
+                        police.normalPrisoners ? police.normalPrisoners += item.prisoner_count : police.normalPrisoners = item.prisoner_count;
+                    }
                     break;
                 case 7:
                     otherBuildings.lst > 0 ? otherBuildings.lst++ : otherBuildings.lst = 1;
@@ -1034,11 +1041,13 @@ cursor: default;
         if(police.small > 0){
             percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen (klein)'+configTable.expand.replace("%CLASS%", "polSm")), police.small, 'noTree');
             tableExtension(`Zellen`, configTable.arrowPolice, police.cellSmall, police.small * 2, police.onBuildCellSmall, 'polSm fumNested');
+            infoContentOneValue(configTable.arrowPolice + " davon belegt", police.smallPrisoners, "polSm fumNested");
         }
 
         if(police.normal > 0){
-            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen'+configTable.expand.replace("%CLASS%", "polSm")), police.normal, 'noTree');
+            percentage(configTable.marginLeft.replace('%PLATZHALTER%','Polizeiwachen'+configTable.expand.replace("%CLASS%", "polNm")), police.normal, 'noTree');
             tableExtension(`Zellen`, configTable.arrowPolice, police.cellNormal, police.normal * 10, police.onBuildCellNormal, 'polNm fumNested');
+            infoContentOneValue(configTable.arrowPolice + " davon belegt", police.normalPrisoners, "polNm fumNested");
             tableExtension(`Diensthundestaffel`, configTable.arrowPolice, police.activeGuardDogs, police.guardDogs, police.onBuildGuardDogs, 'polNm fumNested');
         }
 
@@ -1095,6 +1104,7 @@ cursor: default;
         if(hospitals.count > 0){
             percentage(configTable.marginLeft.replace('%PLATZHALTER%','Krankenhäuser'+configTable.expand.replace("%CLASS%", "hospital")), hospitals.count, 'noTree');
             infoContentMax(`${configTable.arrowHospital} Betten`, hospitals.beds + (hospitals.count * 10), hospitals.count * 30, 'hospital fumNested');
+            infoContentOneValue(configTable.arrowHospital + " davon belegt", hospitals.patients, "hospital fumNested");
             tableExtension(`Allgemeine Innere`, configTable.arrowHospital, hospitals.ina, hospitals.count, hospitals.onBuildIna, 'hospital fumNested');
             tableExtension(`Allgemeine Chirurgie`, configTable.arrowHospital, hospitals.ach, hospitals.count, hospitals.onBuildAch, 'hospital fumNested');
             tableExtension(`Gynäkologie`, configTable.arrowHospital, hospitals.gyn, hospitals.count, hospitals.onBuildGyn, 'hospital fumNested');
