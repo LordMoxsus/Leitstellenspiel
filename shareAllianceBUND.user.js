@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.11.0
+// @version      1.11.1
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -62,7 +62,7 @@
                       <label class="form-check-label" for="cbxOptionalText" title="Einsatzdatum in die Rückmeldung schreiben">zeige Einsatzdatum</label>
                     </div>
                     <div class="dropdown-item form-check">
-                      <input type="checkbox" class="form-check-input" id="cbxDate" ${config.allianceChat ? `checked`: ``}>
+                      <input type="checkbox" class="form-check-input" id="cbxAllianceChat" ${config.allianceChat ? `checked`: ``}>
                       <label class="form-check-label" for="cbxAllianceChat" title="Rückmeldung in den Chat senden">im Verbandchat pushen</label>
                     </div>
                     <div class="dropdown-item form-check">
