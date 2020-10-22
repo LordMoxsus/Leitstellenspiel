@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.11.1
+// @version      1.11.2
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -105,20 +105,20 @@
         if(!config.allianceChat) checkMessage = 0;
 
         if(checkedVehicles.length > 0) {
+            $("#shareBund").text("Alarmieren ...");
             await $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data) {
-                $("#shareBund").text("Alarmieren ...");
                 alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
             });
         }
 
+        $("#shareBund").text("Teilen ...");
         await $.post('/missions/' + missionId + '/alliance', function(data) {
-            $("#shareBund").text("Teilen ...");
             if(checkedVehicles.length > 0) alertMission += '<br>' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'');
             else alertMission = $('div[class*="alert fade in"]', data)[0].outerHTML.replace('</div>','');
         });
 
+        $("#shareBund").text("Posten ...");
         await $.post("/mission_replies", {"mission_reply": {"alliance_chat" : checkMessage, "content" : postValue, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data) {
-            $("#shareBund").text("Posten ...");
             alertMission += ' ' + $('div[class*="alert fade in"]', data).text().replace(/^\W/g,'') + '</div>';
             sessionStorage.sabReturnAlert = alertMission;
             config.jumpNext && missionIdNextMission ? window.location.replace('/missions/' + missionIdNextMission) : window.location.reload();
