@@ -1,67 +1,73 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.1.0
+// @version      1.2.0
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
 // @match        *://www.leitstellenspiel.de/aaos/*/edit
 // @match        *://www.missionchief.co.uk/missions/*
 // @match        *://www.missionchief.co.uk/aaos/*/edit
+// @match        *://www.missionchief.com/missions/*
+// @match        *://www.missionchief.com/aaos/*/edit
 // @grant        none
 // ==/UserScript==
-/* global $ */
+/* global $,I18n */
 
 (async function() {
     'use strict';
 
-    var aVehicleTypesNew = [];
-    var vehicleTypes = [];
-    var aaoId = 0;
+    if(!localStorage.firstResponder) localStorage.firstResponder = JSON.stringify({"vehicleTypes":{},"aaoId":{}});
 
-    if(I18n.locale == "de_DE") {
+    var aVehicleTypes = [];
+    var frSettings = JSON.parse(localStorage.firstResponder);
+    var lang = I18n.locale;
+
+    if(lang == "de_DE") {
         if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
             await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
         }
-        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
-    }
-    if(I18n.locale == "en_GB") {
-        if(!localStorage.aVehicleTypesUk || JSON.parse(localStorage.aVehicleTypesUk).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
-            await $.getJSON("https://lss-manager.de/api/cars.php?lang=en_GB").done(data => localStorage.setItem('aVehicleTypesUk', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        aVehicleTypes = JSON.parse(localStorage.aVehicleTypesNew).value;
+    } else {
+        if(!localStorage.aVehicleTypes || !JSON.parse(localStorage.aVehicleTypes).language || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aVehicleTypes).language != lang) {
+            await $.getJSON("https://lss-manager.de/api/cars.php?lang="+lang).done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data, language: lang})) );
         }
-        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesUk).value;
+        aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
     }
+
+    if(!frSettings.vehicleTypes[lang]) frSettings.vehicleTypes[lang] = [];
 
     function mapVehicles(arrClasses, trigger) {
         var returnValue = [];
         if(trigger == "type") {
             returnValue = $.map(arrClasses, function(item) {
-                return aVehicleTypesNew.filter((obj) => obj.name == item)[0].id;
+                return aVehicleTypes.filter((obj) => obj.name == item)[0].id;
             });
         } else if(trigger == "name") {
             returnValue = $.map(arrClasses, function(item) {
-                return aVehicleTypesNew.filter((obj) => obj.id == item)[0].name;
+                return aVehicleTypes.filter((obj) => obj.id == item)[0].name;
             });
         }
         return returnValue;
     }
 
     if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit")) {
-        if(I18n.locale == "de_DE") $("h1").append(`<a class="btn btn-info" id="frSaveAaoId" style="margin-left:2em">AAO-ID speichern</a>`);
-        if(I18n.locale == "en_GB") $("h1").append(`<a class="btn btn-info" id="frSaveAaoId" style="margin-left:2em">save AAO-ID</a>`);
+        $(".boolean.optional.checkbox")
+            .before(`<label class="form-check-label" for="frSaveAaoId">
+                    <input class="form-check-input" type="checkbox" id="frSaveAaoId" ${window.location.pathname.includes(frSettings.aaoId[lang]) ? "checked" : ""}>
+                    ${lang == "de_DE" ? "Diese ID für den First Responder nutzen." : "Use this id for FirstResponder."}
+                    </label>`);
     }
 
     if(window.location.pathname.includes("missions")) {
         var arrVehicles = [];
 
-        for(var i in aVehicleTypesNew) {
-            arrVehicles.push(aVehicleTypesNew[i].name);
+        for(var i in aVehicleTypes) {
+            arrVehicles.push(aVehicleTypes[i].name);
         }
         arrVehicles.sort((a, b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1);
 
-        if(I18n.locale == "de_DE" && localStorage.fr_aaoId) {
-            if(localStorage.fr_vehicleTypes) vehicleTypes = JSON.parse(localStorage.fr_vehicleTypes);
-            aaoId = +localStorage.fr_aaoId;
-            $("#available_aao_" + aaoId)
+        if(lang == "de_DE" && frSettings.aaoId[lang]) {
+            $("#available_aao_" + frSettings.aaoId[lang])
                 .parent()
                 .after(`<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#frModal" style="height:24px">
                         <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
@@ -86,11 +92,8 @@
                         </div>
                         </div>
                         </div>`);
-        }
-        if(I18n.locale == "en_GB" && localStorage.fr_aaoIdUk) {
-            if(localStorage.fr_vehicleTypesUk) vehicleTypes = JSON.parse(localStorage.fr_vehicleTypesUk);
-            aaoId = +localStorage.fr_aaoIdUk;
-            $("#available_aao_" + aaoId)
+        } else if(lang != "de_DE" && frSettings.aaoId[lang]) {
+            $("#available_aao_" + frSettings.aaoId[lang])
                 .parent()
                 .after(`<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#frModal" style="height:24px">
                         <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
@@ -121,41 +124,36 @@
             $("#frSelectVehicles").append(`<option>${arrVehicles[i]}</option>`);
         }
 
-        $("#frSelectVehicles").val(mapVehicles(vehicleTypes, "name"));
+        $("#frSelectVehicles").val(mapVehicles(frSettings.vehicleTypes[lang], "name"));
     }
 
     $("body").on("click", "#frSaveAaoId", function() {
-        if(I18n.locale == "de_DE") {
-            localStorage.fr_aaoId = +window.location.pathname.replace(/\D+/g,"");
-            $("#frSaveAaoId").css({"display":"none"});
-            alert("AAO-ID gespeichert.");
+        if($("#frSaveAaoId")[0].checked) {
+            frSettings.aaoId[lang] = window.location.pathname.replace(/\D+/g,"");
+        } else {
+            delete frSettings.aaoId[lang];
         }
-        if(I18n.locale == "en_GB") {
-            localStorage.fr_aaoIdUk = +window.location.pathname.replace(/\D+/g,"");
-            $("#frSaveAaoId").css({"display":"none"});
-            alert("AAO-ID successfully saved.");
-        }
+        localStorage.firstResponder = JSON.stringify(frSettings);
     });
 
     $("body").on("click", "#frSavePreferences", function() {
-        vehicleTypes = mapVehicles($("#frSelectVehicles").val(), "type");
-        if(I18n.locale == "de_DE") {
-            localStorage.fr_vehicleTypes = JSON.stringify(vehicleTypes);
+        frSettings.vehicleTypes[lang] = mapVehicles($("#frSelectVehicles").val(), "type");
+        localStorage.firstResponder = JSON.stringify(frSettings);
+        $("#frSavePreferences").css({"display":"none"});
+
+        if(lang == "de_DE") {
             $("#frModalBody").html("<h3><center>Die Einstellungen wurden gespeichert.</center></h5>");
-        }
-        if(I18n.locale == "en_GB") {
-            localStorage.fr_vehicleTypesUk = JSON.stringify(vehicleTypes);
+        } else {
             $("#frModalBody").html("<h3><center>Settings successfully saved.</center></h5>");
         }
-        $("#frSavePreferences").css({"display":"none"});
     });
 
-    $("#aao_"+aaoId).click(function() {
+    $("#aao_" + frSettings.aaoId[lang]).click(function() {
         $(".vehicle_checkbox").each(function() {
-            var vType = $(this).attr("vehicle_type_id") ? +$(this).attr("vehicle_type_id") : 0;
-            var vId = +$(this).attr("value");
+            var vType = +$(this).attr("vehicle_type_id");
+            var vId = $(this).attr("value");
 
-            if(vehicleTypes.includes(vType)) {
+            if(frSettings.vehicleTypes[lang].includes(vType)) {
                 if(!$("#vehicle_checkbox_"+vId)[0].checked) {
                     if(!$("#vehicle_checkbox_"+vId)[0].disabled) {
                         $("#vehicle_checkbox_"+vId).click();
