@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.2.0
+// @version      1.2.1
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -28,8 +28,8 @@
         }
         aVehicleTypes = JSON.parse(localStorage.aVehicleTypesNew).value;
     } else {
-        if(!localStorage.aVehicleTypes || !JSON.parse(localStorage.aVehicleTypes).language || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aVehicleTypes).language != lang) {
-            await $.getJSON("https://lss-manager.de/api/cars.php?lang="+lang).done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data, language: lang})) );
+        if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("https://lss-manager.de/api/cars.php?lang="+lang).done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
         }
         aVehicleTypes = JSON.parse(localStorage.aVehicleTypes).value;
     }
