@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.0.1
+// @version      1.1.0
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -40,6 +40,8 @@
                 break;
             case "hosp": returnValue = lang ? "aktuell belegte Betten" : "now at hospital";
                 break;
+            case "count": returnValue = lang ? "Anzahl" : "count";
+                break;
         }
 
         return returnValue;
@@ -66,16 +68,20 @@ overflow-y: auto;
 display: table-row;
 }`);
 
-    $("body") //&times;
+    $("body")
         .prepend(
         `<div class="modal fade bd-example-modal-lg" id="aboModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
            <div class="modal-dialog modal-lg" role="document">
              <div class="modal-content">
                <div class="modal-header">
                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                   <span aria-hidden="true">&#128169;</span>
+                   <span aria-hidden="true">&#x274C;</span>
                  </button>
                  <h3 class="modal-title"><center>${translate("modalTitle")}: ${aAllianceBuildings.length.toLocaleString()}</center></h3>
+                 <div class="btn-group hidden" id="aboBtnGrp">
+                   <a class="btn btn-primary btn-xs" id="aboBuildingList">Gebäudeliste</a>
+                   <a class="btn btn-primary btn-xs" id="aboStatistics">Gebäudestatistiken</a>
+                 </div>
                </div>
                  <div class="modal-body" id="aboModalBody">
                  </div>
@@ -154,19 +160,142 @@ display: table-row;
         $("#aboModalBody").html(tableHTML);
     }
 
+    function getShownContent(name, value, type) {
+        return `<tr>
+                <td class="col">${name}<span class="glyphicon glyphicon-plus-sign" tree_for="${type}" style="cursor:pointer;margin-left:2em"></span></td>
+                <td class="col-1">${value.toLocaleString()}</td>
+                </tr>`;
+    }
+
+    function getHiddenContent(name, value, type) {
+        return `<tr class="${type} hidden">
+                <td class="col">${name}</td>
+                <td class="col-1">${value.toLocaleString()}</td>
+                </tr>`;
+    }
+
+    function statisticBuildings() {
+        var buildings = {};
+        var buildExt = {};
+        var onBuildExt = {};
+        var tableHTML = `<table class="table">
+                           <thead>
+                             <tr>
+                               <th class="col">${translate("name")}</th>
+                               <th class="col-1">${translate("count")}</th>
+                             </tr>
+                           </thead>
+                           <tbody>`;
+        var key;
+
+        $.each(aAllianceBuildings, function(key, item) {
+            switch(item.building_type) {
+                case 1: buildings.fireSchool ? buildings.fireSchool++ : buildings.fireSchool = 1;
+                    break;
+                case 3: buildings.rescueSchool ? buildings.rescueSchool++ : buildings.rescueSchool = 1;
+                    break;
+                case 4:
+                    buildings.hospi ? buildings.hospi++ : buildings.hospi = 1;
+                    buildings.hospiBeds > 0 ? buildings.hospiBeds += item.level : buildings.hospiBeds = item.level;
+                    break;
+                case 8: buildings.polSchool ? buildings.polSchool++ : buildings.polSchool = 1;
+                    break;
+                case 10: buildings.thwSchool ? buildings.thwSchool++ : buildings.thwSchool = 1;
+                    break;
+                case 14: buildings.bsr ? buildings.bsr++ : buildings.bsr = 1;
+                    break;
+                case 16: buildings.cells ? buildings.cells++ : buildings.cells = 1;
+                    break;
+            }
+            if(item.extensions.length > 0) {
+                for(var i in item.extensions) {
+                    var e = item.extensions[i];
+                    var eKey = e.caption + "_" + item.building_type;
+                    if(e.available && e.enabled) buildExt[eKey] ? buildExt[eKey]++ : buildExt[eKey] = 1;
+                    if(!e.available && e.enabled) onBuildExt[eKey] ? onBuildExt[eKey]++ : onBuildExt[eKey] = 1;
+                }
+            }
+        });
+
+        if(buildings.bsr > 0) tableHTML += getHiddenContent("Bereitstellungsräume", buildings.bsr, "").replace("hidden", "");
+        if(buildings.hospi > 0) {
+            tableHTML += getShownContent("Krankenhäuser", buildings.hospi, "hospital");
+            tableHTML += getHiddenContent("Betten", buildings.hospiBeds + (buildings.hospi * 10), "hospital");
+            for(key in buildExt) {
+                if(key.includes("4")) {
+                    tableHTML += getHiddenContent(key.replace("_4",""), buildExt[key], "hospital");
+                }
+            }
+            for(key in onBuildExt) {
+                if(key.includes("4")) {
+                    tableHTML += getHiddenContent(key.replace("_4","")+" im Ausbau", onBuildExt[key], "hospital");
+                }
+            }
+        }
+        if(buildings.cells > 0) {
+            tableHTML += getShownContent("Gefängnisse", buildings.cells, "cells");
+            tableHTML += getHiddenContent("Zellen", buildings.cells + buildExt.Zelle_16, "cells");
+            if(onBuildExt.Zelle_16 > 0) tableHTML += getHiddenContent("Zellen im Bau", onBuildExt.Zelle_16, "cells");
+        }
+        if(buildings.fireSchool > 0) {
+            tableHTML += getShownContent("Feuerwehrschulen", buildings.fireSchool, "fwSchool");
+            tableHTML += getHiddenContent("Klassenräume", buildExt["Weiterer Klassenraum_1"] + buildings.fireSchool, "fwSchool");
+            if(onBuildExt["Weiterer Klassenraum_1"]) tableHTML += getHiddenContent("Klassenräume im Bau", onBuildExt["Weiterer Klassenraum_1"], "fwSchool");
+        }
+        if(buildings.rescueSchool > 0) {
+            tableHTML += getShownContent("Rettungsdienstschulen", buildings.rescueSchool, "rdSchool");
+            tableHTML += getHiddenContent("Klassenräume", buildExt["Weiterer Klassenraum_3"] + buildings.rescueSchool, "rdSchool");
+            if(onBuildExt["Weiterer Klassenraum_3"]) tableHTML += getHiddenContent("Klassenräume im Bau", onBuildExt["Weiterer Klassenraum_3"], "rdSchool");
+        }
+        if(buildings.polSchool > 0) {
+            tableHTML += getShownContent("Polizeischulen", buildings.polSchool, "polSchool");
+            tableHTML += getHiddenContent("Klassenräume", buildExt["Weiterer Klassenraum_8"] + buildings.polSchool, "polSchool");
+            if(onBuildExt["Weiterer Klassenraum_8"]) tableHTML += getHiddenContent("Klassenräume im Bau", onBuildExt["Weiterer Klassenraum_8"], "polSchool");
+        }
+        if(buildings.thwSchool > 0) {
+            tableHTML += getShownContent("THW-Bundesschulen", buildings.thwSchool, "thwSchool");
+            tableHTML += getHiddenContent("Klassenräume", buildExt["Weiterer Klassenraum_10"] + buildings.thwSchool, "thwSchool");
+            if(onBuildExt["Weiterer Klassenraum_10"]) tableHTML += getHiddenContent("Klassenräume im Bau", onBuildExt["Weiterer Klassenraum_10"], "thwSchool");
+        }
+
+        tableHTML += "</tbody></table>";
+
+        $("#aboModalBody").html(tableHTML);
+    }
+
     $("body").on("click", "#aboOpenModal", function() {
-        tableBuildings();
+        if(I18n.locale === "de_DE") {
+            if($("#aboBtnGrp").hasClass("hidden")) $("#aboBtnGrp").removeClass("hidden");
+        } else {
+            tableBuildings();
+        }
     });
 
     $("body").on("click", ".glyphicon", function() {
         var $this = $(this);
         if($this.hasClass("glyphicon-plus-sign")) {
             $this.removeClass("glyphicon-plus-sign").addClass("glyphicon-minus-sign");
-            $(".table_"+$this.attr("building_id")).removeClass("hidden").addClass("aboShow");
+            if($this.attr("building_id")) {
+                $(".table_"+$this.attr("building_id")).removeClass("hidden").addClass("aboShow");
+            } else if($this.attr("tree_for")) {
+                $("."+$this.attr("tree_for")).removeClass("hidden").addClass("aboShow");
+            }
         } else if($this.hasClass("glyphicon-minus-sign")) {
             $this.removeClass("glyphicon-minus-sign").addClass("glyphicon-plus-sign");
-            $(".table_"+$this.attr("building_id")).removeClass("aboShow").addClass("hidden");
+            if($this.attr("building_id")) {
+                $(".table_"+$this.attr("building_id")).removeClass("aboShow").addClass("hidden");
+            } else if($this.attr("tree_for")) {
+                $("."+$this.attr("tree_for")).removeClass("aboShow").addClass("hidden");
+            }
         }
+    });
+
+    $("body").on("click", "#aboBuildingList", function() {
+        tableBuildings();
+    });
+
+    $("body").on("click", "#aboStatistics", function() {
+        statisticBuildings();
     });
 
 
