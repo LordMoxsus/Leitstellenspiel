@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.0.0
+// @version      1.0.1
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -11,9 +11,11 @@
 (async function() {
     'use strict';
 
-    if(!localStorage.aAllianceBuildings || JSON.parse(localStorage.aAllianceBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aAllianceBuildings).userId != user_id) {
-        await $.getJSON('/api/alliance_buildings').done(data => localStorage.setItem('aAllianceBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+    if(!sessionStorage.aAllianceBuildings || JSON.parse(sessionStorage.aAllianceBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aAllianceBuildings).userId != user_id) {
+        await $.getJSON('/api/alliance_buildings').done(data => sessionStorage.setItem('aAllianceBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
     }
+
+    var aAllianceBuildings = JSON.parse(sessionStorage.aAllianceBuildings).value;
 
     function translate(subject) {
         var lang = I18n.locale === "de_DE";
@@ -73,7 +75,7 @@ display: table-row;
                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                    <span aria-hidden="true">&#128169;</span>
                  </button>
-                 <h3 class="modal-title"><center>${translate("modalTitle")}</center></h3>
+                 <h3 class="modal-title"><center>${translate("modalTitle")}: ${aAllianceBuildings.length.toLocaleString()}</center></h3>
                </div>
                  <div class="modal-body" id="aboModalBody">
                  </div>
@@ -85,8 +87,6 @@ display: table-row;
          </div>`);
 
     $("#building_panel_heading .btn-group").append(`<a class="btn btn-default btn-xs" data-toggle="modal" data-target="#aboModal" id="aboOpenModal">${translate("modalTitle")}</a>`);
-
-    var aAllianceBuildings = JSON.parse(localStorage.aAllianceBuildings).value;
 
     function tableBuildings() {
         if(aAllianceBuildings.length >= 2) aAllianceBuildings.sort((a, b) => a.caption.toUpperCase() > b.caption.toUpperCase() ? 1 : -1);
