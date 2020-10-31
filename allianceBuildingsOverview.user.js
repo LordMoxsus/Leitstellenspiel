@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.1.0
+// @version      1.1.1
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -207,6 +207,7 @@ display: table-row;
                 case 16: buildings.cells ? buildings.cells++ : buildings.cells = 1;
                     break;
             }
+            if(item.extensions.length >= 2) item.extensions.sort((a, b) => a.type_id > b.type_id ? 1 : -1);
             if(item.extensions.length > 0) {
                 for(var i in item.extensions) {
                     var e = item.extensions[i];
@@ -297,6 +298,5 @@ display: table-row;
     $("body").on("click", "#aboStatistics", function() {
         statisticBuildings();
     });
-
 
 })();
