@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.9.2
+// @version      2.9.3
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
@@ -973,7 +973,7 @@ cursor: default;
         if(fire.normal > 0){
             percentage(configTable.marginLeft.replace('%PLATZHALTER%','Feuerwachen'+configTable.expand.replace("%CLASS%", "fireNm")), fire.normal, 'noTree');
             if(Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10) > 0){
-                tableExtension(`Großwache`, configTable.arrowFire, fire.big, Math.floor((fire.small > 0 ? fire.small : 0 + fire.normal) / 10), fire.onBuildBig, 'fireNm fumNested');
+                tableExtension(`Großwache`, configTable.arrowFire, fire.big, Math.floor((fire.small > 0 ? fire.small + fire.normal : fire.normal) / 10), fire.onBuildBig, 'fireNm fumNested');
             }
             tableExtension(`Rettungsdienst-Erweiterung`, configTable.arrowFire, fire.activeRescue, fire.rescue, fire.onBuildRescue, 'fireNm fumNested');
             if(fire.rescue > 0){
