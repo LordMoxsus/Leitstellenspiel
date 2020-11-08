@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.1.2
+// @version      1.1.3
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -16,6 +16,7 @@
     }
 
     var aAllianceBuildings = JSON.parse(sessionStorage.aAllianceBuildings).value;
+    console.debug("aAllianceBuildings", aAllianceBuildings);
 
     function translate(subject) {
         var lang = I18n.locale === "de_DE";
@@ -122,6 +123,7 @@ display: table-row;
             tableHTML += "</td></tr>";
 
             if(e.prisoner_count === undefined && e.patient_count === undefined) {
+                console.debug(e.caption, e.extensions);
                 for(k in e.extensions) {
                     ext = e.extensions[k];
                     if(ext.available && ext.enabled) activeEx++;
@@ -137,6 +139,7 @@ display: table-row;
             }
 
             if(e.prisoner_count >= 0 || e.patient_count >= 0) {
+                console.debug(e.caption, e.extensions);
                 for(k in e.extensions) {
                     ext = e.extensions[k];
                     tableHTML += `<tr class="table_${e.id} hidden">
@@ -217,6 +220,9 @@ display: table-row;
                 }
             }
         });
+        console.debug("buildings", buildings);
+        console.debug("buildExt", buildExt);
+        console.debug("onBuildExt", onBuildExt);
 
         if(buildings.bsr > 0) tableHTML += getHiddenContent("Bereitstellungsräume", buildings.bsr, "").replace("hidden", "");
         if(buildings.hospi > 0) {
