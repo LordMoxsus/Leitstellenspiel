@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.1.1
+// @version      1.1.2
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -116,7 +116,7 @@ display: table-row;
             tableHTML += `<td class="col-1">`;
 
             if(e.extensions.length > 0 || e.level > 0) {
-                tableHTML += `<span class="glyphicon glyphicon-plus-sign" building_id="${e.id}" style="cursor:pointer"></span>`;
+                tableHTML += `<span class="glyphicon glyphicon-plus-sign aboTreeToggle" building_id="${e.id}" style="cursor:pointer"></span>`;
             }
 
             tableHTML += "</td></tr>";
@@ -162,7 +162,7 @@ display: table-row;
 
     function getShownContent(name, value, type) {
         return `<tr>
-                <td class="col">${name}<span class="glyphicon glyphicon-plus-sign" tree_for="${type}" style="cursor:pointer;margin-left:2em"></span></td>
+                <td class="col">${name}<span class="glyphicon glyphicon-plus-sign aboTreeToggle" tree_for="${type}" style="cursor:pointer;margin-left:2em"></span></td>
                 <td class="col-1">${value.toLocaleString()}</td>
                 </tr>`;
     }
@@ -272,7 +272,7 @@ display: table-row;
         }
     });
 
-    $("body").on("click", ".glyphicon", function() {
+    $("body").on("click", ".aboTreeToggle", function() {
         var $this = $(this);
         if($this.hasClass("glyphicon-plus-sign")) {
             $this.removeClass("glyphicon-plus-sign").addClass("glyphicon-minus-sign");
