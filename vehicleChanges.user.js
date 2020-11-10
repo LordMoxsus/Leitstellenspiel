@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         vehicleChanges
-// @version      1.0.0
+// @version      1.0.1
 // @description  ändert die Einstellungen von AB, SEG ELW und GRTW
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -97,7 +97,7 @@ overflow-y: auto;
 
         $("#veChModalBody")
             .append(`<div class="progress" style="margin-top:2em">
-                       <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${vehiclesToSet.length}" id="veChPrgs">0 / ${vehiclesToSet.length.toLocaleString()}</div>
+                       <div class="progress-bar bg-success" role="progressbar" style="width: 0%;color: black" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${vehiclesToSet.length}" id="veChPrgs">0 / ${vehiclesToSet.length.toLocaleString()}</div>
                      </div>`);
         console.debug("progress", type, vehiclesToSet);
         console.debug("postContent", postContent);
@@ -116,7 +116,7 @@ overflow-y: auto;
 
     $("body").on("click", "#veChBtnContainer", function() {
         $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle AB</h4>
+            .html(`<h4>Einstellungen für alle AB (${container.length.toLocaleString()})</h4>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="contCbxRdmWlf">
                      <label class="form-check-label" for="contCbxRdmWlf">
@@ -139,7 +139,7 @@ overflow-y: auto;
 
     $("body").on("click", "#veChBtnLeader", function() {
         $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle ELW (SEG)</h4>
+            .html(`<h4>Einstellungen für alle ELW (SEG) (${segLeader.length.toLocaleString()})</h4>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="ldrAutomatic">
                      <label class="form-check-label" for="ldrAutomatic">
@@ -198,7 +198,7 @@ overflow-y: auto;
 
     $("body").on("click", "#veChBtnGrtw", function() {
         $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle AB</h4>
+            .html(`<h4>Einstellungen für alle GRTW  (${grtw.length.toLocaleString()})</h4>
                    <select class="custom-select" id="grtwMode">
                      <option selected value="0">Maximal 7 leichtverletzte Patienten</option>
                      <option value="1">Maximal 3 (auch schwerverletzte) Patienten, Notarzt als Besatzung nötig</option>
