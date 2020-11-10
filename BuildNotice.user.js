@@ -1,20 +1,17 @@
 // ==UserScript==
 // @name         BuildNotice
-// @version      1.0.1
+// @version      1.1.0
 // @description  ermöglicht Notizen zu jedem Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
 /* global $ */
 
 (function() {
     'use strict';
 
-    $("head").append(`<style>
-.bnHide {
-display: none;
-}
+    GM_addStyle(`<style>
 .bnShow {
 display: block;
 }
@@ -33,13 +30,15 @@ color: lime;
         }
     }
 
+    $("#building_panel_heading .btn-group").append(`<a class="btn btn-default btn-xs" id="buNoToggleInfoBuildings"><span class="glyphicon glyphicon-eye-open"</span></a>`);
+
     if(window.location.pathname.includes("buildings")) {
         var buildingId = window.location.pathname.replace(/\D+/g,'');
         var divAlert = `<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>%PLACEHOLDER%</div>`;
 
         $("h1:first")
             .append(`<span class="glyphicon glyphicon-comment" style="margin-left:1em;cursor:pointer"></span>`)
-            .after(`<div class="form-group bnHide buildNotice">
+            .after(`<div class="form-group hidden buildNotice">
                       <label for="iptBuildNotice">
                         Notizen
                         <a class="btn btn-success btn-xs" id="btnSaveBuildNotice">Speichern</a>
@@ -54,10 +53,10 @@ color: lime;
         }
 
         $("body").on("click", ".glyphicon-comment", function() {
-            if($(".buildNotice").hasClass("bnHide")) {
-                $(".buildNotice").removeClass("bnHide").addClass("bnShow");
+            if($(".buildNotice").hasClass("hidden")) {
+                $(".buildNotice").removeClass("hidden").addClass("bnShow");
             } else if($(".buildNotice").hasClass("bnShow")) {
-                $(".buildNotice").removeClass("bnShow").addClass("bnHide");
+                $(".buildNotice").removeClass("bnShow").addClass("hidden");
             }
         });
 
@@ -76,5 +75,17 @@ color: lime;
             $("h1:first").parent().before(divAlert.replace("%PLACEHOLDER%", "Notiz gelöscht."));
         });
     }
+
+    $("body").on("click", "#buNoToggleInfoBuildings", function() {
+        var $this = $(this);
+
+        if($this.children("span").hasClass("glyphicon-eye-open")) {
+            $("#building_list .btn-default").parent().parent().addClass("hidden");
+            $this.children("span").removeClass("glyphicon-eye-open").addClass("glyphicon-eye-close");
+        } else if($this.children("span").hasClass("glyphicon-eye-close")) {
+            $("#building_list .btn-default").parent().parent().removeClass("hidden");
+            $this.children("span").removeClass("glyphicon-eye-close").addClass("glyphicon-eye-open");
+        }
+    });
 
 })();
