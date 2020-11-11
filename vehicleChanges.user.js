@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         vehicleChanges
-// @version      1.0.1
+// @version      1.0.2
 // @description  ändert die Einstellungen von AB, SEG ELW und GRTW
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -11,27 +11,31 @@
 (async function() {
     'use strict';
 
-
-    if(!sessionStorage.aVehicles || JSON.parse(sessionStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aVehicles).userId != user_id) {
-        await $.getJSON('/api/vehicles').done(data => sessionStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-    }
-
-    var aVehicles = JSON.parse(sessionStorage.aVehicles).value;
+    var aVehicles = [];
     var containerIds = [47,48,49,54,62,71,77,78];
     var segLeader = [];
     var container = [];
     var grtw = [];
 
-    for(var i in aVehicles) {
-        var e = aVehicles[i];
-        if(e.vehicle_type === 59) segLeader.push(e);
-        if(containerIds.includes(e.vehicle_type)) container.push(e);
-        if(e.vehicle_type === 73) grtw.push(e);
+    async function loadApi() {
+
+        if(!sessionStorage.aVehicles || JSON.parse(sessionStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aVehicles).userId != user_id) {
+            await $.getJSON('/api/vehicles').done(data => sessionStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        }
+
+        aVehicles = JSON.parse(sessionStorage.aVehicles).value;
+
+        for(var i in aVehicles) {
+            var e = aVehicles[i];
+            if(e.vehicle_type === 59) segLeader.push(e);
+            if(containerIds.includes(e.vehicle_type)) container.push(e);
+            if(e.vehicle_type === 73) grtw.push(e);
+        }
+        console.debug("aVehicles", aVehicles);
+        console.debug("segLeader", segLeader);
+        console.debug("container", container);
+        console.debug("grtw", grtw);
     }
-    console.debug("aVehicles", aVehicles);
-    console.debug("segLeader", segLeader);
-    console.debug("container", container);
-    console.debug("grtw", grtw);
 
     GM_addStyle(`.modal {
 display: none;
@@ -61,7 +65,7 @@ overflow-y: auto;
                    <span aria-hidden="true">&#x274C;</span>
                  </button>
                  <h3 class="modal-title"><center>Fahrzeugeinstellungen</center></h3>
-                 <div class="btn-group">
+                 <div class="btn-group hidden" id="veChBtnGrp">
                    <a class="btn btn-primary btn-xs" id="veChBtnContainer">Abrollbehälter</a>
                    <a class="btn btn-primary btn-xs" id="veChBtnLeader">ELW (SEG)</a>
                    <a class="btn btn-primary btn-xs" id="veChBtnGrtw">GRTW</a>
@@ -77,7 +81,7 @@ overflow-y: auto;
          </div>`);
 
     $('#radio_panel_heading')
-            .after(`<a data-toggle="modal" data-target="#veChModal" class="btn btn-default btn-xs">Fahrzeugeinstellungen</a>`);
+            .after(`<a data-toggle="modal" data-target="#veChModal" class="btn btn-default btn-xs" id="veChOpenModal">Fahrzeugeinstellungen</a>`);
 
     async function progress(type) {
         var vehiclesToSet = [];
@@ -113,6 +117,15 @@ overflow-y: auto;
             await $.post("/vehicles/" + e.id, {"vehicle": postContent, "authenticity_token": $("meta[name=csrf-token]").attr("content"), "_method": "put"});
         }
     }
+
+    $("body").on("click", "#veChOpenModal", async function() {
+        if(!$("#veChBtnGrp").hasClass("hidden")) $("#veChBtnGrp").addClass("hidden");
+        segLeader.length = 0;
+        container.length = 0;
+        grtw.length = 0;
+        await loadApi();
+        $("#veChBtnGrp").removeClass("hidden");
+    });
 
     $("body").on("click", "#veChBtnContainer", function() {
         $("#veChModalBody")

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         shareBuildings
-// @version      1.0.0
+// @version      1.0.1
 // @description  gibt automatisch Krankenhäuser und Zellen im Verband frei
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -11,18 +11,27 @@
 (async function() {
     'use strict';
 
-    if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
-        await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-    }
-
-    var aBuildings = JSON.parse(sessionStorage.aBuildings).value;
+    var aBuildings = [];
     var beds = [];
     var cells = [];
 
-    for(var i in aBuildings) {
-        var e = aBuildings[i];
-        if(e.building_type === 4) beds.push(e);
-        if(e.building_type === 6 || e.building_type === 19) cells.push(e);
+    async function loadApi() {
+
+        if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
+            await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        }
+
+        aBuildings = JSON.parse(sessionStorage.aBuildings).value;
+
+        for(var i in aBuildings) {
+            var e = aBuildings[i];
+            if(e.building_type === 4) beds.push(e);
+            if(e.building_type === 6 || e.building_type === 19) cells.push(e);
+        }
+
+        console.debug("aBuildings", aBuildings);
+        console.debug("beds", beds);
+        console.debug("cells", cells);
     }
 
     $("body")
@@ -36,7 +45,7 @@
                           <h3 class="modal-title"><center>Gebäude freigeben</center></h3>
                         </div>
                           <div class="modal-body" id="shBuModalBody">
-                            <div class="form-check">
+                            <div class="form-check hidden">
                               <input class="form-check-input" type="checkbox" value="" id="shBuCheckShare">
                               <label class="form-check-label" for="shBuCheckShare">
                                 Gebäude freigeben
@@ -61,13 +70,13 @@
                             <div class="hidden" id="shBuDivHospitals">
                               <h4>Krankenhäuser:</h4>
                               <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${beds.length}" id="shBuPrgsBeds"></div>
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="shBuPrgsBeds"></div>
                               </div>
                             </div>
                             <div class="hidden" id="shBuDivCells">
                               <h4>Polizeiwachen:</h4>
                               <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${cells.length}" id="shBuPrgsCells"></div>
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="shBuPrgsCells"></div>
                               </div>
                             </div>
                           </div>
@@ -105,6 +114,16 @@
             }
         }
     }
+
+    $("body").on("click", "#shBuOpenModal", async function() {
+        if(!$("#shBuCheckShare").parent().hasClass("hidden")) $("#shBuCheckShare").parent().addClass("hidden");
+        beds.length = 0;
+        cells.length = 0;
+        await loadApi();
+        $("#shBuPrgsBeds").attr("aria-valuemax", beds.length);
+        $("#shBuPrgsCells").attr("aria-valuemax", cells.length);
+        $("#shBuCheckShare").parent().removeClass("hidden");
+    });
 
     $("body").on("click", "#shBuShareHospitals", function() {
         $("#shBuDivHospitals").removeClass("hidden");
