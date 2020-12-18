@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         vehicleChanges
-// @version      1.0.2
-// @description  ändert die Einstellungen von AB, SEG ELW und GRTW
+// @version      1.1.0
+// @description  ändert die Einstellungen von AB, SEG ELW, GRTW und Außenlastbehälter
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
 // @grant        GM_addStyle
@@ -16,6 +16,7 @@
     var segLeader = [];
     var container = [];
     var grtw = [];
+    var waterBin = [];
 
     async function loadApi() {
 
@@ -30,11 +31,13 @@
             if(e.vehicle_type === 59) segLeader.push(e);
             if(containerIds.includes(e.vehicle_type)) container.push(e);
             if(e.vehicle_type === 73) grtw.push(e);
+            if(e.vehicle_type === 96) waterBin.push(e);
         }
         console.debug("aVehicles", aVehicles);
         console.debug("segLeader", segLeader);
         console.debug("container", container);
         console.debug("grtw", grtw);
+        console.debug("waterBin", waterBin);
     }
 
     GM_addStyle(`.modal {
@@ -69,6 +72,7 @@ overflow-y: auto;
                    <a class="btn btn-primary btn-xs" id="veChBtnContainer">Abrollbehälter</a>
                    <a class="btn btn-primary btn-xs" id="veChBtnLeader">ELW (SEG)</a>
                    <a class="btn btn-primary btn-xs" id="veChBtnGrtw">GRTW</a>
+                   <a class="btn btn-primary btn-xs" id="veChBtnWaterBin">Außenlastbehälter</a>
                  </div>
                </div>
                  <div class="modal-body" id="veChModalBody">
@@ -97,6 +101,9 @@ overflow-y: auto;
         } else if(type == "grtw") {
             vehiclesToSet = grtw;
             postContent = {"vehicle_mode": $("#grtwMode").val()};
+        } else if(type == "waterBin") {
+            vehiclesToSet = waterBin;
+            postContent = {"tractive_random": $("#contCbxRdmWaterBin")[0].checked ? 1 : 0, "tractive_building_random": $("#contCbxEachWaterBin")[0].checked ? 1 : 0};
         }
 
         $("#veChModalBody")
@@ -123,6 +130,7 @@ overflow-y: auto;
         segLeader.length = 0;
         container.length = 0;
         grtw.length = 0;
+        waterBin.length = 0;
         await loadApi();
         $("#veChBtnGrp").removeClass("hidden");
     });
@@ -220,12 +228,40 @@ overflow-y: auto;
                    <a class="btn btn-success" id="veChSaveAll" bullet_point="grtw" style="margin-top:2em">Einstellungen übernehmen</a>`);
     });
 
+    $("body").on("click", "#veChBtnWaterBin", function() {
+        $("#veChModalBody")
+            .html(`<h4>Einstellungen für alle Außenlastbehälter (${waterBin.length.toLocaleString()})</h4>
+                   <div class="form-check">
+                     <input class="form-check-input" type="checkbox" value="" id="contCbxRdmWaterBin">
+                     <label class="form-check-label" for="contCbxRdmWaterBin">
+                       Zufälliger Hubschrauber
+                     </label>
+                   </div>
+                   <div class="form-check hidden">
+                     <input class="form-check-input" type="checkbox" value="" id="contCbxEachWaterBin">
+                     <label class="form-check-label" for="contCbxEachWaterBin">
+                       Hubschrauber von fremden Wachen zulassen
+                     </label>
+                   </div>
+                   <br>
+                   <a class="btn btn-success" id="veChSaveAll" bullet_point="waterBin" style="margin-top:2em">Einstellungen übernehmen</a>`);
+    });
+
     $("body").on("click", "#contCbxRdmWlf", function() {
         if($("#contCbxRdmWlf")[0].checked) {
             $("#contCbxEachWlf").parent().removeClass("hidden");
         } else {
             $("#contCbxEachWlf").parent().addClass("hidden");
             $("#contCbxEachWlf")[0].checked = false;
+        }
+    });
+
+    $("body").on("click", "#contCbxRdmWaterBin", function() {
+        if($("#contCbxRdmWaterBin")[0].checked) {
+            $("#contCbxEachWaterBin").parent().removeClass("hidden");
+        } else {
+            $("#contCbxEachWaterBin").parent().addClass("hidden");
+            $("#contCbxEachWaterBin")[0].checked = false;
         }
     });
 
