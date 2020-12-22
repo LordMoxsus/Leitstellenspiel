@@ -1,17 +1,18 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.9.3
+// @version      2.10.0
 // @author       DrTraxx
+// @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
 // @grant        none
 // ==/UserScript==
-/* global $ */
+/* global $, user_id, user_premium */
 
 (async function() {
     'use strict';
 
-    if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"buttonOnRadio":true,"buttonOnNavbar":false,"showOnBuild":true,"showWork":true,"showDelay":true});
+    if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"showOnBuild":true,"showWork":true,"showDelay":true});
 
     $("head").append(`<style>
 .modal {
@@ -163,15 +164,10 @@ cursor: default;
         }
     };
 
-    if(options.general.buttonOnRadio) {
-        $('#radio_panel_heading')
-            .after(`<a id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" class="btn btn-default btn-xs">Fuhrpark-Manager</a>`);
-    }
-    if(options.general.buttonOnNavbar) {
-        $('#menu_profile')
-            .parent()
-            .before(`<li><a style="cursor:pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><div class="glyphicon glyphicon-list-alt"></div></a></li>`);
-    }
+    //Logo designed by keks192221
+    $("#navbar_profile_link")
+        .parent()
+        .after(`<li role="presentation"><a style="cursor:pointer" id="vehicleManagement" data-toggle="modal" data-target="#tableStatus" ><img class="icon icons8-Share" src="https://cdn.discordapp.com/attachments/776141695741329498/791010038521004062/RTW_Icon_Furpark.png" width="24" height="24"> Fuhrpark-Manager</a></li>`);
 
     for(var i = 0; i < options.dropdown.sort.length; i++){
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
@@ -184,19 +180,19 @@ cursor: default;
     }
 
     async function refreshApi(){
-        if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
-            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!sessionStorage.aVehicleTypesNew || JSON.parse(sessionStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => sessionStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
         }
-        if(!localStorage.aBuildings || JSON.parse(localStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aBuildings).userId != user_id) {
-            await $.getJSON('/api/buildings').done(data => localStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
+            await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
         }
-        if(!localStorage.aCredits || JSON.parse(localStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aCredits).userId != user_id) {
-            await $.getJSON('/api/credits ').done(data => localStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+        if(!sessionStorage.aCredits || JSON.parse(sessionStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aCredits).userId != user_id) {
+            await $.getJSON('/api/credits ').done(data => sessionStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
         }
 
-        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
-        aBuildings = JSON.parse(localStorage.aBuildings).value;
-        aCredits = JSON.parse(localStorage.aCredits).value;
+        aVehicleTypesNew = JSON.parse(sessionStorage.aVehicleTypesNew).value;
+        aBuildings = JSON.parse(sessionStorage.aBuildings).value;
+        aCredits = JSON.parse(sessionStorage.aCredits).value;
     }
 
     await refreshApi();
@@ -721,6 +717,11 @@ cursor: default;
                                 else if(item.building_type == 17) polSonder.onBuildGuardDogs > 0 ? polSonder.onBuildGuardDogs++ : polSonder.onBuildGuardDogs = 1;
                             }
                             break;
+                        case "Außenlastbehälter-Erweiterung":
+                            if(switchOptions.build) police.waterbin > 0 ? police.waterbin++ : police.waterbin = 1;
+                            if(switchOptions.active) police.activeWaterbin > 0 ? police.activeWaterbin++ : police.activeWaterbin = 1;
+                            if(switchOptions.onBuild) police.onBuildWaterbin > 0 ? police.onBuildWaterbin++ : police.onBuildWaterbin = 1;
+                            break;
                         case "1. Technischer Zug: Bergungsgruppe 2":
                             if(switchOptions.build) thw.tz1Bg > 0 ? thw.tz1Bg++ : thw.tz1Bg = 1;
                             if(switchOptions.active) thw.activeTz1Bg > 0 ? thw.activeTz1Bg++ : thw.activeTz1Bg = 1;
@@ -1076,6 +1077,7 @@ cursor: default;
         if(police.helicopter > 0){
             percentageMax(configTable.marginLeft.replace('%PLATZHALTER%','Polizeihubschrauber-Stationen'+configTable.expand.replace("%CLASS%", "polHeli")), police.activeHelicopter, police.helicopter, 'noTree');
             infoContentMax(`${configTable.arrowPolice} Polizeihubschrauber`, vehicles.polHeli, Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
+            tableExtension(`Außenlastbehälter (allgemein)`, configTable.arrowPolice, police.activeWaterbin, police.waterbin, police.onBuildWaterbin, 'polHeli fumNested');
             calculateNextHeli(configTable.arrowPolice, "Polizeihubschrauber", Math.floor(aBuildings.length / 25) > 4 ? Math.floor(aBuildings.length / 25) : 4, 'polHeli fumNested');
         }
 
@@ -1205,14 +1207,6 @@ cursor: default;
         $('#tableStatusLabel').html('');
         $('#tableStatusBody')
             .html(`<h5>Einstellungen</h5>
-                   <div class="form-check form-check-inline">
-                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="buttonOnRadio" value="option1" ${options.general.buttonOnRadio ? 'checked' : ''}>
-                     <label class="form-check-label" for="buttonOnRadio">Trigger-Button im Funkfenster</label>
-                   </div>
-                   <div class="form-check form-check-inline">
-                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="buttonOnNavbar" value="option2" ${options.general.buttonOnNavbar ? 'checked' : ''}>
-                     <label class="form-check-label" for="buttonOnNavbar">Trigger-Button in der Navbar</label>
-                   </div>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="cbxOnBuild" ${options.general.showOnBuild ? 'checked' : ''}>
                      <label class="form-check-label" for="cbxOnBuild">
@@ -1238,13 +1232,11 @@ cursor: default;
     $("body").on("click", "#btnSavePreferencesFuM", function(){
         var save = {};
 
-        save.radio = $('#buttonOnRadio')[0].checked;
-        save.navbar = $('#buttonOnNavbar')[0].checked;
         save.build = $('#cbxOnBuild')[0].checked;
         save.work = $('#cbxWork')[0].checked;
         save.delay = $('#cbxDelay')[0].checked;
 
-        localStorage.fum_options = JSON.stringify({"buttonOnRadio":save.radio,"buttonOnNavbar":save.navbar,"showOnBuild":save.build,"showWork":save.work,"showDelay":save.delay});
+        localStorage.fum_options = JSON.stringify({"showOnBuild":save.build,"showWork":save.work,"showDelay":save.delay});
 
         window.location.reload();
     });
