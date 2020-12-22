@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         shareBuildings
-// @version      1.0.1
+// @version      1.1.0
 // @description  gibt automatisch Krankenhäuser und Zellen im Verband frei
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -87,7 +87,9 @@
                     </div>
                   </div>`);
 
-    $("#building_panel_heading .btn-group").append(`<a class="btn btn-default btn-xs" data-toggle="modal" data-target="#shBuModal" id="shBuOpenModal">Gebäude freigeben</a>`);
+    $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/profile/map_type']")
+        .parent()
+        .after(`<li role="presentation"><a data-toggle="modal" data-target="#shBuModal" id="shBuOpenModal" style="cursor:pointer">Gebäude freigeben</a></li>`);
 
     async function shareBuildings(array, modalElement) {
         var count = 0;
