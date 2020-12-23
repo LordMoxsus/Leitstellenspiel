@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         shareBuildings
-// @version      1.1.0
+// @version      1.1.1
 // @description  gibt automatisch Krankenhäuser und Zellen im Verband frei
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -105,13 +105,15 @@
             if($("#shBuCheckShare")[0].checked) {
                 if(!e.is_alliance_shared) {
                     await $.get("/buildings/" + e.id + "/alliance");
-                    e.is_alliance_shared = true;
+                    //e.is_alliance_shared = true;
+                    aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = true;
                 }
                 await $.get("/buildings/" + e.id + "/alliance_costs/" + $("#shBuSelPercentage").val());
             } else {
                 if(e.is_alliance_shared) {
                     await $.get("/buildings/" + e.id + "/alliance");
-                    e.is_alliance_shared = false;
+                    //e.is_alliance_shared = false;
+                    aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = false;
                 }
             }
         }
