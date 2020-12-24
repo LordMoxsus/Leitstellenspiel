@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.10.0
+// @version      2.10.1
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      *://www.leitstellenspiel.de/
@@ -1130,11 +1130,32 @@ cursor: default;
         "w":"btn btn-warning btn-xs"
     };
 
+    function greetings() {
+        var d = new Date();
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        var returnValue = "";
+
+        if(month == 12) {
+            if(day == 24 || day == 25 || day == 26) {
+                returnValue = "<center><h2>Frohe Weihnachten</h2></center>";
+            }
+            if(day == 31) {
+                returnValue = "<center><h2>Guten Rutsch</h2></center>";
+            }
+        }
+        if(month == 1 && day == 1) {
+            returnValue = "<center><h2>Frohes neues Jahr</h2></center>";
+        }
+
+        return returnValue;
+    }
+
     $("body").on("click", "#vehicleManagement", function(){
         $('#filterDispatchCenter').html(`<option selected>wird geladen ...</option>`);
         $('#filterType').html(`<option selected>wird geladen ...</option>`);
         $('#tableStatusLabel').html('');
-        $('#tableStatusBody').html('');
+        $('#tableStatusBody').html(greetings());
         options.status.count = 0;
         database.buildings.get.typeId.length = 0;
         database.buildings.get.name.length = 0;
