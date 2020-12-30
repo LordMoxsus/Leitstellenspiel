@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         allianceBuildingsOverview
-// @version      1.1.3
+// @version      1.1.4
 // @description  zeigt eine Übersicht aller vom Verband gebauten Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -11,11 +11,11 @@
 (async function() {
     'use strict';
 
-    if(!sessionStorage.aAllianceBuildings || JSON.parse(sessionStorage.aAllianceBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aAllianceBuildings).userId != user_id) {
-        await $.getJSON('/api/alliance_buildings').done(data => sessionStorage.setItem('aAllianceBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
+    if(!localStorage.aAllianceBuildings || JSON.parse(localStorage.aAllianceBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(localStorage.aAllianceBuildings).userId != user_id) {
+        await $.getJSON('/api/alliance_buildings').done(data => localStorage.setItem('aAllianceBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
     }
 
-    var aAllianceBuildings = JSON.parse(sessionStorage.aAllianceBuildings).value;
+    var aAllianceBuildings = JSON.parse(localStorage.aAllianceBuildings).value;
     console.debug("aAllianceBuildings", aAllianceBuildings);
 
     function translate(subject) {

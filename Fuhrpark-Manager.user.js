@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.10.1
+// @version      2.10.2
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      *://www.leitstellenspiel.de/
@@ -180,8 +180,8 @@ cursor: default;
     }
 
     async function refreshApi(){
-        if(!sessionStorage.aVehicleTypesNew || JSON.parse(sessionStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
-            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => sessionStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
         }
         if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
             await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
@@ -190,7 +190,7 @@ cursor: default;
             await $.getJSON('/api/credits ').done(data => sessionStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
         }
 
-        aVehicleTypesNew = JSON.parse(sessionStorage.aVehicleTypesNew).value;
+        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
         aBuildings = JSON.parse(sessionStorage.aBuildings).value;
         aCredits = JSON.parse(sessionStorage.aCredits).value;
     }
