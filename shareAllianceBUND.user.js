@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.11.3
+// @version      1.11.4
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -107,7 +107,7 @@
         if(checkedVehicles.length > 0) {
             $("#shareBund").text("Alarmieren ...");
             await $.post('/missions/' + missionId + '/alarm', {'vehicle_ids' : checkedVehicles}, function(data) {
-                if($('.alert-success ').length) {
+                if($('.alert-success ', data).length) {
                     alertMission = $('.alert-success ', data)[0].outerHTML.replace('</div>','');
                 } else {
                     alertMission+= "<div class='alert fade in alert-sucess '>" + checkedVehicles.length.toLocaleString() + " Fahrzeuge wurden erfolgreich alarmiert.";
