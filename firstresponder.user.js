@@ -1,14 +1,17 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.3.0
+// @version      1.4.0
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
 // @match        *://www.leitstellenspiel.de/aaos/*/edit
+// @match        *://www.leitstellenspiel.de/buildings/*/edit
 // @match        *://www.missionchief.co.uk/missions/*
 // @match        *://www.missionchief.co.uk/aaos/*/edit
+// @match        *://www.missionchief.co.uk/buildings/*/edit
 // @match        *://www.missionchief.com/missions/*
 // @match        *://www.missionchief.com/aaos/*/edit
+// @match        *://www.missionchief.com/buildings/*/edit
 // @require      https://drtraxx.github.io/js/apis.1.0.1.js
 // @grant        none
 // ==/UserScript==
@@ -18,14 +21,13 @@
     'use strict';
 
     if(!localStorage.firstResponder) localStorage.firstResponder = JSON.stringify({"vehicleTypes":{},"aaoId":{}});
-    if(!localStorage.fr_dispatchSetup) localStorage.fr_dispatchSetup = JSON.stringify({"dispatchId":[], "useIt": false});
+    if(!localStorage.fr_dispatchSetup) localStorage.fr_dispatchSetup = JSON.stringify({"dispatchId":[], "useIt": false, "additionalBuildings": []});
 
     var aVehicleTypes = [];
     var frSettings = JSON.parse(localStorage.firstResponder);
     var dispatchSetup = JSON.parse(localStorage.fr_dispatchSetup);
     var lang = I18n.locale;
     var aBuildings = await getBuildings();
-    var aVehicles = await getVehicles();
 
     if(lang == "de_DE") {
         aVehicleTypes = await getVehicleTypes();
@@ -37,6 +39,7 @@
     }
 
     if(!frSettings.vehicleTypes[lang]) frSettings.vehicleTypes[lang] = [];
+    if(!dispatchSetup.additionalBuildings) dispatchSetup.additionalBuildings = [];
 
     function mapVehicles(arrClasses, trigger) {
         var returnValue = [];
@@ -76,7 +79,7 @@
 
     if(window.location.pathname.includes("missions")) {
         var arrVehicles = [];
-        var dispatchCenter = [];
+        var dispatchCenter = mapDispatchCenter(dispatchSetup.additionalBuildings, "name");
         var i;
 
         for(i in aVehicleTypes) {
@@ -138,6 +141,14 @@
         $("#frSelectDispatch").val(mapDispatchCenter(dispatchSetup.dispatchId, "name"));
     }
 
+    if(window.location.pathname.includes("buildings") && window.location.pathname.includes("edit")) {
+        $(".building_leitstelle_building_id")
+            .after(`<div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="frCbxBuildingId" ${$.inArray(+window.location.pathname.replace(/\D+/g,""), dispatchSetup.additionalBuildings) > -1 ? "checked" : ""}>
+                      <label class="form-check-label" for="frCbxBuildingId">${lang == "de_DE" ? "Wachen-ID im First Responder berücksichtigen" : "use this building id for First Responder"}</label>
+                    </div>`);
+    }
+
     $("body").on("click", "#frSaveAaoId", function() {
         if($("#frSaveAaoId")[0].checked) {
             frSettings.aaoId[lang] = window.location.pathname.replace(/\D+/g,"");
@@ -145,6 +156,19 @@
             delete frSettings.aaoId[lang];
         }
         localStorage.firstResponder = JSON.stringify(frSettings);
+    });
+
+    $("body").on("click", "#frCbxBuildingId", function() {
+        var buildingId = +window.location.pathname.replace(/\D+/g,"")
+        if($("#frCbxBuildingId")[0].checked) {
+            dispatchSetup.additionalBuildings.push(buildingId);
+        } else {
+            dispatchSetup.additionalBuildings.splice($.inArray(buildingId, dispatchSetup.additionalBuildings), 1);
+            if(dispatchSetup.dispatchId.includes(buildingId)) {
+                dispatchSetup.dispatchId.splice($.inArray(buildingId, dispatchSetup.dispatchId), 1);
+            }
+        }
+        localStorage.fr_dispatchSetup = JSON.stringify(dispatchSetup);
     });
 
     $("body").on("click", "#frSavePreferences", function() {
@@ -167,9 +191,10 @@
             var vType = +$(this).attr("vehicle_type_id");
             var vId = $(this).attr("value");
             var lstId = +$(this).attr("building_id").split("_")[1];
+            var buId = +$(this).attr("building_id").split("_")[0];
 
             if(frSettings.vehicleTypes[lang].includes(vType) && !$("#vehicle_checkbox_"+vId)[0].checked && !$("#vehicle_checkbox_"+vId)[0].disabled &&
-               (dispatchSetup.usit === false || dispatchSetup.dispatchId.includes(lstId))) {
+               (dispatchSetup.usit === false || dispatchSetup.dispatchId.includes(lstId) || dispatchSetup.additionalBuildings.includes(buId))) {
                 $("#vehicle_checkbox_"+vId).click();
                 return false;
             }
