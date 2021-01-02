@@ -120,7 +120,7 @@
             if(checkedVehicles.length > 0) {
                     alertMission += "<br>Einsatz wurde erfolgreich freigegeben.";
             } else {
-                alertMission = "<div class='alert fade in alert-sucess '>Einsatz wurde erfolgreich freigegeben.";
+                alertMission = "<div class='alert fade in alert-success '>Einsatz wurde erfolgreich freigegeben.";
             }
         });
 
