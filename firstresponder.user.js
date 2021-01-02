@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.2.1
+// @version      1.3.0
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -9,6 +9,7 @@
 // @match        *://www.missionchief.co.uk/aaos/*/edit
 // @match        *://www.missionchief.com/missions/*
 // @match        *://www.missionchief.com/aaos/*/edit
+// @require      https://drtraxx.github.io/js/apis.1.0.1.js
 // @grant        none
 // ==/UserScript==
 /* global $,I18n */
@@ -17,16 +18,17 @@
     'use strict';
 
     if(!localStorage.firstResponder) localStorage.firstResponder = JSON.stringify({"vehicleTypes":{},"aaoId":{}});
+    if(!localStorage.fr_dispatchSetup) localStorage.fr_dispatchSetup = JSON.stringify({"dispatchId":[], "useIt": false});
 
     var aVehicleTypes = [];
     var frSettings = JSON.parse(localStorage.firstResponder);
+    var dispatchSetup = JSON.parse(localStorage.fr_dispatchSetup);
     var lang = I18n.locale;
+    var aBuildings = await getBuildings();
+    var aVehicles = await getVehicles();
 
     if(lang == "de_DE") {
-        if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
-            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        }
-        aVehicleTypes = JSON.parse(localStorage.aVehicleTypesNew).value;
+        aVehicleTypes = await getVehicleTypes();
     } else {
         if(!localStorage.aVehicleTypes || JSON.parse(localStorage.aVehicleTypes).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
             await $.getJSON("https://lss-manager.de/api/cars.php?lang="+lang).done(data => localStorage.setItem('aVehicleTypes', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
@@ -50,6 +52,20 @@
         return returnValue;
     }
 
+    function mapDispatchCenter(arrDispatchCenter, trigger) {
+        var returnValue = [];
+        if(trigger == "name") {
+            returnValue = $.map(arrDispatchCenter, function(item) {
+                return aBuildings.filter((obj) => obj.id == item)[0].caption;
+            });
+        } else if(trigger == "id") {
+            returnValue = $.map(arrDispatchCenter, function(item) {
+                return aBuildings.filter((obj) => obj.caption == item)[0].id;
+            });
+        }
+        return returnValue;
+    }
+
     if(window.location.pathname.includes("aaos") && window.location.pathname.includes("edit")) {
         $(".boolean.optional.checkbox")
             .before(`<label class="form-check-label" for="frSaveAaoId">
@@ -60,13 +76,24 @@
 
     if(window.location.pathname.includes("missions")) {
         var arrVehicles = [];
+        var dispatchCenter = [];
+        var i;
 
-        for(var i in aVehicleTypes) {
+        for(i in aVehicleTypes) {
             arrVehicles.push(aVehicleTypes[i].name);
         }
         arrVehicles.sort((a, b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1);
 
-        if(lang == "de_DE" && frSettings.aaoId[lang]) {
+        for(i in aBuildings) {
+            var e = aBuildings[i];
+
+            if(e.leitstelle_building_id && !dispatchCenter.includes(aBuildings.filter((obj) => obj.id == e.leitstelle_building_id)[0].caption)) {
+                dispatchCenter.push(aBuildings.filter((obj) => obj.id == e.leitstelle_building_id)[0].caption);
+            }
+        }
+        dispatchCenter.sort((a, b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1);
+
+        if(frSettings.aaoId[lang]) {
             $("#available_aao_" + frSettings.aaoId[lang])
                 .parent()
                 .after(`<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#frModal" style="height:24px">
@@ -76,44 +103,24 @@
                         <div class="modal-dialog" role="document">
                         <div class="modal-content">
                         <div class="modal-header">
-                        <h5 class="modal-title" id="frModalLabel">Einstellungen</h5>
+                        <h3 class="modal-title" id="frModalLabel">${lang == "de_DE" ? "Einstellungen" : "Settings"}</h3>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                         </button>
                         </div>
                         <div class="modal-body" id="frModalBody">
-                        <label for="frSelectVehicles">Fahrzeugtypen (Mehrfachauswahl mit Strg + Klick)</label>
+                        <label for="frSelectVehicles">${lang == "de_DE" ? "Fahrzeugtypen (Mehrfachauswahl mit Strg + Klick)" : "vehicle-types (multiple-choice with Strg + click)"}</label>
                         <select multiple class="form-control" id="frSelectVehicles" style="height:20em;width:40em"></select>
+                        <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="frCbxUseLst" ${dispatchSetup.useIt ? "checked" : ""}>
+                        <label class="form-check-label" for="frCbxUseLst" style="margin-top:2em">${lang == "de_DE" ? "nur Fahrzeuge bestimmter Leitstellen wählen" : "only use specific dispatchcenter"}</label>
+                        </div>
+                        <label for="frSelectDispatch">${lang == "de_DE" ? "Leitstellen (Mehrfachauswahl mit Strg + Klick)" : "dispatchcenter (multiple-choice with Strg + click)"}</label>
+                        <select multiple class="form-control" id="frSelectDispatch" style="height:10em;width:40em"></select>
                         </div>
                         <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Schließen</button>
-                        <button type="button" class="btn btn-success" id="frSavePreferences">Speichern</button>
-                        </div>
-                        </div>
-                        </div>
-                        </div>`);
-        } else if(lang != "de_DE" && frSettings.aaoId[lang]) {
-            $("#available_aao_" + frSettings.aaoId[lang])
-                .parent()
-                .after(`<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#frModal" style="height:24px">
-                        <div class="glyphicon glyphicon-cog" style="color:LightSteelBlue"></div>
-                        </button>
-                        <div class="modal fade" id="frModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title" id="frModalLabel">Settings</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                        </div>
-                        <div class="modal-body" id="frModalBody">
-                        <label for="frSelectVehicles">vehicle-types (multiple-choice with Strg + click)</label>
-                        <select multiple class="form-control" id="frSelectVehicles" style="height:20em;width:20em"></select>
-                        </div>
-                        <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">close</button>
-                        <button type="button" class="btn btn-success" id="frSavePreferences">save</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">${lang == "de_DE" ? "Schließen" : "close"}</button>
+                        <button type="button" class="btn btn-success" id="frSavePreferences">${lang == "de_DE" ? "Speichern" : "save"}</button>
                         </div>
                         </div>
                         </div>
@@ -123,8 +130,12 @@
         for(i in arrVehicles) {
             $("#frSelectVehicles").append(`<option>${arrVehicles[i]}</option>`);
         }
+        for(i in dispatchCenter) {
+            $("#frSelectDispatch").append(`<option>${dispatchCenter[i]}</option>`);
+        }
 
         $("#frSelectVehicles").val(mapVehicles(frSettings.vehicleTypes[lang], "name"));
+        $("#frSelectDispatch").val(mapDispatchCenter(dispatchSetup.dispatchId, "name"));
     }
 
     $("body").on("click", "#frSaveAaoId", function() {
@@ -138,8 +149,11 @@
 
     $("body").on("click", "#frSavePreferences", function() {
         frSettings.vehicleTypes[lang] = mapVehicles($("#frSelectVehicles").val(), "type");
+        dispatchSetup.dispatchId = mapDispatchCenter($("#frSelectDispatch").val(), "id");
+        dispatchSetup.useIt = $("#frCbxUseLst")[0].checked;
+        localStorage.fr_dispatchSetup = JSON.stringify(dispatchSetup);
         localStorage.firstResponder = JSON.stringify(frSettings);
-        $("#frSavePreferences").css({"display":"none"});
+        $("#frSavePreferences").addClass("hidden");
 
         if(lang == "de_DE") {
             $("#frModalBody").html("<h3><center>Die Einstellungen wurden gespeichert.</center></h5>");
@@ -152,14 +166,12 @@
         $(".vehicle_checkbox").each(function() {
             var vType = +$(this).attr("vehicle_type_id");
             var vId = $(this).attr("value");
+            var lstId = +$(this).attr("building_id").split("_")[1];
 
-            if(frSettings.vehicleTypes[lang].includes(vType)) {
-                if(!$("#vehicle_checkbox_"+vId)[0].checked) {
-                    if(!$("#vehicle_checkbox_"+vId)[0].disabled) {
-                        $("#vehicle_checkbox_"+vId).click();
-                        return false;
-                    }
-                }
+            if(frSettings.vehicleTypes[lang].includes(vType) && !$("#vehicle_checkbox_"+vId)[0].checked && !$("#vehicle_checkbox_"+vId)[0].disabled &&
+               (dispatchSetup.usit === false || dispatchSetup.dispatchId.includes(lstId))) {
+                $("#vehicle_checkbox_"+vId).click();
+                return false;
             }
         });
     });
