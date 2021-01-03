@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.4.0
+// @version      1.4.1
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -171,9 +171,17 @@
         localStorage.fr_dispatchSetup = JSON.stringify(dispatchSetup);
     });
 
+    $("body").on("click", "#frCbxUseLst", function() {
+        if($("#frCbxUseLst")[0].checked) {
+            $("#frSelectDispatch").val(mapDispatchCenter(dispatchSetup.dispatchId, "name"));
+        } else {
+            $("#frSelectDispatch").val([]);
+        }
+    });
+
     $("body").on("click", "#frSavePreferences", function() {
         frSettings.vehicleTypes[lang] = mapVehicles($("#frSelectVehicles").val(), "type");
-        dispatchSetup.dispatchId = mapDispatchCenter($("#frSelectDispatch").val(), "id");
+        dispatchSetup.dispatchId = $("#frSelectDispatch").val() ? mapDispatchCenter($("#frSelectDispatch").val(), "id") : [];
         dispatchSetup.useIt = $("#frCbxUseLst")[0].checked;
         localStorage.fr_dispatchSetup = JSON.stringify(dispatchSetup);
         localStorage.firstResponder = JSON.stringify(frSettings);
