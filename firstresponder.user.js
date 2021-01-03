@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FirstResponder (Original by JuMaHo)
-// @version      1.4.1
+// @version      1.4.2
 // @description  wählt das nächstgelegene FirstResponder-Fahrzeug aus
 // @author       DrTraxx
 // @match        *://www.leitstellenspiel.de/missions/*
@@ -202,7 +202,7 @@
             var buId = +$(this).attr("building_id").split("_")[0];
 
             if(frSettings.vehicleTypes[lang].includes(vType) && !$("#vehicle_checkbox_"+vId)[0].checked && !$("#vehicle_checkbox_"+vId)[0].disabled &&
-               (dispatchSetup.usit === false || dispatchSetup.dispatchId.includes(lstId) || dispatchSetup.additionalBuildings.includes(buId))) {
+               (dispatchSetup.useIt === false || dispatchSetup.dispatchId.includes(lstId) || dispatchSetup.additionalBuildings.includes(buId))) {
                 $("#vehicle_checkbox_"+vId).click();
                 return false;
             }
