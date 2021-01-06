@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.12.2
+// @version      1.12.3
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -38,25 +38,6 @@
                       <option value="noRules" selected>Reglementierung wählen</option>
                       <option value="noELW">keine Einsatzleitung</option>
                     </select>`);
-    }
-
-    if(!$('#mission_help').attr('href')) {
-        if($("#col_left .alert-info").length == 0) {
-            pushPgsl();
-        } else {
-            pushSystemMission();
-        }
-    }
-
-    if(!$('#mission_alliance_share_btn').attr('href')) {
-        var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
-        var mission = aMissions.filter((obj) => obj.id == missionTypeId)[0];
-        var credits = mission.additional.guard_mission ? parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,'')) : mission.average_credits;
-        if(mission.additional.only_alliance_mission === true && $("#col_left .alert-info").length == 0) {
-            pushPgsl();
-        } else {
-            pushSystemMission();
-        }
     }
 
     function pushSystemMission() {
@@ -112,6 +93,24 @@
                      </div>
                      <input class="form-control form-control-sm" type="text" placeholder="zusätzliche Rückmeldung" value="${config.optionalText.value ? config.optionalText.value : ``}" id="iptOptionalText" style="height:32px;width:20em;display:${config.optionalText.bol ? `inherit` : `none`}">
                    </div>`);
+    }
+
+    if(!$('#mission_help').attr('href')) {
+        if($("#col_left .alert-info").length == 0) {
+            pushPgsl();
+        }
+    }
+
+    if($('#mission_alliance_share_btn').attr('href')) {
+        var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
+        var mission = aMissions.filter((obj) => obj.id == missionTypeId)[0];
+        var credits = mission.additional.guard_mission ? parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,'')) : mission.average_credits;
+
+        if(mission.additional.only_alliance_mission === true && $("#col_left .alert-info").length == 0) {
+            pushPgsl();
+        } else {
+            pushSystemMission();
+        }
     }
 
     async function alarmAndShare(){
