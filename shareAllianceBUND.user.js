@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.11.4
+// @version      1.12.0
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -17,18 +17,44 @@
         $('#mission_general_info').parent().after(sessionStorage.sabReturnAlert);
         sessionStorage.removeItem('sabReturnAlert');
     }
-    if(!$('#mission_help').attr('href') || !$('#mission_alliance_share_btn').attr('href')) return false;
 
     var aMissions = await getMissions();
-    var config = JSON.parse(localStorage.sab_preferences);
     var missionId = window.location.pathname.replace(/\D+/g,'');
+    var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
+
+    function pushPgsl() {
+        $('#mission_finish_now_btn')
+            .parent()
+            .after(`<a class="btn btn-success" id="sabPushPgsl" title="PGSL-Rückmeldung pushen">PGSL Rückmeldung</a>
+                    <select id="sabSelRules" class="custom-select" style="width:15em">
+                      <option value="noRules" selected>Reglementierung wählen</option>
+                      <option value="noELW">keine Einsatzleitung</option>
+                    </select>`);
+    }
+
+    if(!$('#mission_help').attr('href')) {
+        if($("#col_left .alert-info").length == 0) {
+            pushPgsl();
+        } else {
+            return false;
+        }
+    }
+
+    var config = JSON.parse(localStorage.sab_preferences);
     var missionIdNextMission = $('#mission_next_mission_btn').attr('href').replace(/\D+/g,'');
     var missionTypeId = $('#mission_help').attr('href').split("/").pop().replace(/\?.*/, '');
     var mission = aMissions.filter((obj) => obj.id == missionTypeId)[0];
     var credits = mission.additional.guard_mission ? parseInt($("#col_left").text().match(/(?:Verdienst:)\s([\d.]+)/g)[0].replace(/\D+/g,'')) : mission.average_credits;
     var patients = $('.mission_patient').length;
-    var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
     var missionDate = $("#missionH1").attr("data-original-title").replace("Einsatz eingegangen: ","");
+
+    if(!$('#mission_alliance_share_btn').attr('href')) {
+        if(mission.additional.only_alliance_mission === true && $("#col_left .alert-info").length == 0) {
+            pushPgsl();
+        } else {
+            return false;
+        }
+    }
 
     if(credits < 2500 && !mission.additional.guard_mission) return false;
 
@@ -190,6 +216,24 @@
         $('#mission_general_info')
             .parent()
             .after(`<div class="alert fade in alert-success "><button class="close" data-dismiss="alert" type="button">×</button>Die Einstellungen wurden gespeichert.</div>`);
+    });
+
+    $("body").on("click", "#sabPushPgsl", async function() {
+        var pushContent = "PGSL - " + missionAddress;
+
+        switch($("#sabSelRules").val()) {
+            case "noRules":
+                break;
+            case "noELW":
+                pushContent += " - keine ELW1, ELW2 oder AB-Einsatzleitung! Nichtbeachtung führt zur Meldung an die Administration."
+                break;
+        }
+
+        await $.post("/mission_replies", {"mission_reply": {"alliance_chat" : 1, "content" : pushContent, "mission_id" : missionId}, "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data) {
+            sessionStorage.sabReturnAlert = "<div class='alert fade in alert-success '>Deine Rückmeldung wurde gespeichert.</div>";
+        });
+
+        window.location.reload();
     });
 
 })();
