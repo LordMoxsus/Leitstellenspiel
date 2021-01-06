@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ShareAllianceBUND
-// @version      1.12.0
+// @version      1.12.1
 // @description  teilt Einsätze im Verband und postet eine Rückmeldung im Chat - Dieses Script ist exklusiv für den Verband Bundesweiter KatSchutz (Bund)
 // @author       DrTraxx
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -23,6 +23,10 @@
     var missionAddress = $('#mission_general_info').children('small').text().split('|')[0].trim();
 
     function pushPgsl() {
+        if($("#mission_replies").text()) {
+            return false
+        }
+
         $('#mission_finish_now_btn')
             .parent()
             .after(`<a class="btn btn-success" id="sabPushPgsl" title="PGSL-Rückmeldung pushen">PGSL Rückmeldung</a>
