@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         vehicleChanges
-// @version      1.2.0
+// @version      1.2.1
 // @description  ändert die Einstellungen von AB, SEG ELW, GRTW und Außenlastbehälter
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -84,9 +84,9 @@ overflow-y: auto;
            </div>
          </div>`);
 
-    $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/profile/map_type']")
+    $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/missionSpeed']")
         .parent()
-        .after(`<li role="presentation"><a data-toggle="modal" data-target="#veChModal" style="cursor:pointer" id="veChOpenModal">Fahrzeugeinstellungen</a></li>`);
+        .after(`<li role="presentation"><a data-toggle="modal" data-target="#veChModal" style="cursor:pointer" id="veChOpenModal"><span class="glyphicon glyphicon-cog"></span> Fahrzeugeinstellungen</a></li>`);
 
     async function progress(type) {
         var vehiclesToSet = [];
@@ -121,7 +121,7 @@ overflow-y: auto;
             $("#veChPrgs")
                 .attr("aria-valuenow", count)
                 .css({"width" : percent+"%"})
-                .text(count + " / " + vehiclesToSet.length.toLocaleString());
+                .text(count.toLocaleString() + " / " + vehiclesToSet.length.toLocaleString());
             await $.post("/vehicles/" + e.id, {"vehicle": postContent, "authenticity_token": $("meta[name=csrf-token]").attr("content"), "_method": "put"});
         }
     }
