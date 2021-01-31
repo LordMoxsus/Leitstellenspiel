@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Personalhelfer
-// @version      1.4.2
+// @version      1.4.3
 // @description  Werbephasen und Personalsoll in der Gebaeudeuebersicht auswaehlen
 // @author       DrTraxx
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/buildings\/.*\
+// @require      https://drtraxx.github.io/js/apis.1.0.1.js
 // @grant        none
 // ==/UserScript==
-/* global $ */
+/* global $, user_premium, singleBuilding */
 
 (async function() {
     'use strict';
@@ -17,7 +18,7 @@
     var hire = false;
     var cssHide = {"display":"none"};
     var cssShow = {"display":"inline"};
-    var building = await $.getJSON("/api/buildings/" + buildingId, (data) => data);
+    var building = await singleBuilding(buildingId);
     var noPersonalBuildings = [1,3,4,7,8,10,14];
 
     if(building.hiring_automatic === true || building.hiring_phase > 0) hire = true;
@@ -33,69 +34,63 @@
                    <a id="savePersonal" class="btn btn-success btn-xs">Speichern</a>
                  </div>`);
 
-    $("body").on("click", "#hire_do_1",function(){
-        $.get(`/buildings/${buildingId}/hire_do/1`).done(function() {
-            $('h1').parent().before(hireStart);
-            $('#hire_do_1').css(cssHide);
-            $('#hire_do_2').css(cssHide);
-            $('#hire_do_3').css(cssHide);
-            $('#hire_do_automatic').css(cssHide);
-            $('#hire_do_0').css(cssShow);
-        });
+    $("body").on("click", "#hire_do_1", async function(){
+        await $.get(`/buildings/${buildingId}/hire_do/1`);
+        $('h1').parent().before(hireStart);
+        $('#hire_do_1').css(cssHide);
+        $('#hire_do_2').css(cssHide);
+        $('#hire_do_3').css(cssHide);
+        $('#hire_do_automatic').css(cssHide);
+        $('#hire_do_0').css(cssShow);
     });
 
-    $("body").on("click", "#hire_do_2",function(){
-        $.get(`/buildings/${buildingId}/hire_do/2`).done(function() {
-            $('h1').parent().before(hireStart);
-            $('#hire_do_1').css(cssHide);
-            $('#hire_do_2').css(cssHide);
-            $('#hire_do_3').css(cssHide);
-            $('#hire_do_automatic').css(cssHide);
-            $('#hire_do_0').css(cssShow);
-        });
+    $("body").on("click", "#hire_do_2", async function(){
+        await $.get(`/buildings/${buildingId}/hire_do/2`);
+        $('h1').parent().before(hireStart);
+        $('#hire_do_1').css(cssHide);
+        $('#hire_do_2').css(cssHide);
+        $('#hire_do_3').css(cssHide);
+        $('#hire_do_automatic').css(cssHide);
+        $('#hire_do_0').css(cssShow);
     });
 
-    $("body").on("click", "#hire_do_3",function(){
-        $.get(`/buildings/${buildingId}/hire_do/3`).done(function() {
-            $('h1').parent().before(hireStart);
-            $('#hire_do_1').css(cssHide);
-            $('#hire_do_2').css(cssHide);
-            $('#hire_do_3').css(cssHide);
-            $('#hire_do_automatic').css(cssHide);
-            $('#hire_do_0').css(cssShow);
-        });
+    $("body").on("click", "#hire_do_3", async function(){
+        await $.get(`/buildings/${buildingId}/hire_do/3`);
+        $('h1').parent().before(hireStart);
+        $('#hire_do_1').css(cssHide);
+        $('#hire_do_2').css(cssHide);
+        $('#hire_do_3').css(cssHide);
+        $('#hire_do_automatic').css(cssHide);
+        $('#hire_do_0').css(cssShow);
     });
 
-    $("body").on("click", "#hire_do_automatic",function(){
-        $.get(`/buildings/${buildingId}/hire_do/automatic`).done(() => {
-            $('h1').parent().before(hireStart);
-            $('#hire_do_1').css(cssHide);
-            $('#hire_do_2').css(cssHide);
-            $('#hire_do_3').css(cssHide);
-            $('#hire_do_automatic').css(cssHide);
-            $('#hire_do_0').css(cssShow);
-        });
+    $("body").on("click", "#hire_do_automatic", async function(){
+        await $.get(`/buildings/${buildingId}/hire_do/automatic`);
+        $('h1').parent().before(hireStart);
+        $('#hire_do_1').css(cssHide);
+        $('#hire_do_2').css(cssHide);
+        $('#hire_do_3').css(cssHide);
+        $('#hire_do_automatic').css(cssHide);
+        $('#hire_do_0').css(cssShow);
     });
 
-    $("body").on("click", "#hire_do_0",function(){
-        $.get(`/buildings/${buildingId}/hire_do/0`).done(function() {
-            $('h1').parent().before(hireEnd);
-            $('#hire_do_1').css(cssShow);
-            $('#hire_do_2').css(cssShow);
-            $('#hire_do_3').css(cssShow);
-            $('#hire_do_automatic').css(cssShow);
-            $('#hire_do_0').css(cssHide);
-        });
+    $("body").on("click", "#hire_do_0", async function(){
+        $.get(`/buildings/${buildingId}/hire_do/0`);
+        $('h1').parent().before(hireEnd);
+        $('#hire_do_1').css(cssShow);
+        $('#hire_do_2').css(cssShow);
+        $('#hire_do_3').css(cssShow);
+        $('#hire_do_automatic').css(cssShow);
+        $('#hire_do_0').css(cssHide);
     });
 
-    $("body").on("click", "#savePersonal", function(){
+    $("body").on("click", "#savePersonal", async function(){
         var value = $('#setPersonal').val();
         if(!value || value < 0 || value > 300) alert("Bitte Ganzzahl zwischen 0 und 300 angeben.");
         else{
-            $.post('/buildings/' + buildingId + '?personal_count_target_only=1', {"building" : {"personal_count_target" : value}, "_method" : "put", "authenticity_token" : $("meta[name=csrf-token]").attr("content")}, function(data) {
-                if(data == value) window.location.reload();
-            });
+            await $.post('/buildings/' + buildingId + '?personal_count_target_only=1', {"building" : {"personal_count_target" : value}, "_method" : "put", "authenticity_token" : $("meta[name=csrf-token]").attr("content")});
         }
+        window.location.reload();
     });
 
 })();
