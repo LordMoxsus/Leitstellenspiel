@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      0.0.4 - closed BETA
+// @version      0.0.5 - closed BETA
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -50,7 +50,10 @@ overflow-y: auto;
                           <div class="modal-body" id="reMaModalBody">
                           </div>
                           <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-dismiss="modal">Schließen</button>
+                            <div class="btn-group pull-right">
+                              <a class="btn btn-success" id="reMaSave" save_type="">Speichern</a>
+                              <button type="button" class="btn btn-danger" data-dismiss="modal">Schließen</button>
+                            </div>
                             <div class="pull-left">v ${GM_info.script.version}</div>
                           </div>
                     </div>
@@ -180,7 +183,8 @@ overflow-y: auto;
                                </td>
                              </tr>`;
         }
-        modalContent += "</tbody></table><hr><a class='btn btn-success' id='reMaSave' save_type='"+type+"'>Speichern</a>";
+        modalContent += "</tbody></table>";
+        $("#reMaSave").attr("save_type", type);
         $("#reMaModalBody").html(modalContent);
     }
 
@@ -208,7 +212,8 @@ overflow-y: auto;
                                </td>
                              </tr>`;
         }
-        modalContent += "</tbody></table><hr><a class='btn btn-success' id='reMaSave' save_type='"+type+"'>Speichern</a>";
+        modalContent += "</tbody></table>";
+        $("#reMaSave").attr("save_type", type);
         $("#reMaModalBody").html(modalContent);
     }
 
@@ -374,6 +379,9 @@ overflow-y: auto;
                         vehicleTable.text($("#reMaRename_"+vehicleId).val());
                         $("#reMaRename_"+vehicleId).remove();
                         $("#reMaSaveNameVehicle_"+vehicleId).remove();
+                    } else {
+                        $("#reMaRename_"+vehicleId).remove();
+                        $("#reMaSaveNameVehicle_"+vehicleId).remove();
                     }
                 }
             });
@@ -447,6 +455,7 @@ overflow-y: auto;
 
     $("body").on("click", "#renameManagement", function() {
         $("#reMaModalBody").html("");
+        $("#reMaSave").attr("save_type", "");
     });
 
 })();
