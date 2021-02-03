@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      0.0.3 - closed BETA
+// @version      0.0.4 - closed BETA
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -305,8 +305,8 @@ overflow-y: auto;
             var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
             var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
             var vehicle = await singleVehicle(vehicleId);
-            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, vehicle.vehicle_type, counterTypes[vehicle.vehicle_type], buildingName);
             counterTypes[vehicle.vehicle_type] ? counterTypes[vehicle.vehicle_type]++ : counterTypes[vehicle.vehicle_type] = 1;
+            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, vehicle.vehicle_type, counterTypes[vehicle.vehicle_type], buildingName);
 
             if(vehicle && $("#reMaRenameTextarea").val() && !$("#reMaRename_"+vehicleId).length) {
                 renamed = true;
