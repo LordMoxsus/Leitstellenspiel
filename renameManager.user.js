@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         renameManager
-// @version      0.0.1 - closed BETA
-// @description  Fahrzeuge und Gebäude umbenennen
+// @version      0.0.2 - closed BETA
+// @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
 // @grant        GM_addStyle
@@ -99,8 +99,12 @@ overflow-y: auto;
 
     async function saveInNotes() {
         await $.get("/note", function(data) {
-            personalNotes = $("#note_message", data).text().split(databaseStart)[0].trim();
-            databases = $("#note_message", data).text().split(databaseStart)[1].trim();
+            if($("#note_message", data).text().includes(databaseStart)) {
+                personalNotes = $("#note_message", data).text().split(databaseStart)[0].trim();
+                databases = $("#note_message", data).text().split(databaseStart)[1].trim();
+            } else {
+                personalNotes = $("#note_message", data).text().trim();
+            }
         });
         var databaseContent = personalNotes + "\n\n\n\n\n" + databaseStart + "\n" + (databases.includes(placeholderDatabase) ? databases.replace(renameRegex, placeholderDatabase + "\n" + JSON.stringify(config)) : (databases ? (databases + "\n" + placeholderDatabase + "\n" + JSON.stringify(config)) : (placeholderDatabase + "\n" + JSON.stringify(config))));
         await $.post("/note", {"note": {"message": databaseContent}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
