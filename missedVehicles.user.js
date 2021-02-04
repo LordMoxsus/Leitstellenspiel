@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         missedVehicles
-// @version      1.0.0
+// @version      1.0.1
 // @author       DrTraxx & Allure149
 // @include      *://www.leitstellenspiel.de/missions/*
 // @include      *://leitstellenspiel.de/missions/*
@@ -46,7 +46,6 @@
         }
 
         insertAlert.innerHTML = alertText;
-        //document.getElementById("mission_general_info").insertAfter(insertAlert);
         $("#mission_general_info").parent().after(insertAlert);
     }
 
@@ -90,9 +89,8 @@
                               "ELW 1":"battalion_chief_vehicles", "Flugfeldlöschfahrzeuge":"arff", "Flugfeldlöschfahrzeug":"arff", "Rettungstreppen":"rettungstreppe", "Rettungstreppe":"rettungstreppe",
                               "GW-Werkfeuerwehr":"gw_werkfeuerwehr", "Turbolöscher":"turboloescher", "ULF mit Löscharm":"ulf", "Teleskopmasten":"teleskopmast", "Teleskopmast":"teleskopmast",
                               "Wasserwerfer":"wasserwerfer", "Dekon-P":"hazmat_dekon", "GruKw":"grukw", "FüKw":"fukw", "leBefKw":"lebefkw", "ELW 2":"mobile_command_vehicles", "GW-Messtechnik":"gwmess",
-                              "GW-Gefahrgut":"hazmat_vehicles", "GW-Höhenrettung":"height_rescue_units", "Drehleitern (DLK 23)":"platform_trucks", "Drehleiter (DLK 23)":"platform_trucks",
-                              "Rettungshundestaffel/n":"rescue_dog_units","THW-Mehrzweckkraftwagen (MzKW)":"thw_mzkw","Feuerwehrmann":"firemen","Feuerwehrleute":"firemen","Polizist":"policemen","Polizisten":"policemen",
-                              "DHuFüKw":"k9","Außenlastbehälter (allgemein)":"helicopter_bucket"}
+                              "GW-Gefahrgut":"hazmat_vehicles", "GW-Höhenrettung":"height_rescue_units", "Drehleitern (DLK 23)":"platform_trucks", "Drehleiter (DLK 23)":"platform_trucks","DHuFüKw":"k9",
+                              "Außenlastbehälter (allgemein)":"helicopter_bucket"}
             var $vehicleRenames = {};
 
             for(var vehicle in $renameIt){
