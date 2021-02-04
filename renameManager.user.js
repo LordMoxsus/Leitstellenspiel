@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      0.0.5 - closed BETA
+// @version      0.0.6 - closed BETA
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -219,12 +219,12 @@ overflow-y: auto;
 
     function renameVehicle(ipt, buildingId, buildingType, vehicleType, counter, buildingName) {
         return new Promise(function(resolve) {
-            var buildingAliasOne = config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "unbekannt";
-            var buildingAliasTwo = config.buildings[buildingId].alias_two ? config.buildings[buildingId].alias_two : "unbekannt";
-            var buildingTypeAliasOne = config.building_types[buildingType].alias_one ? config.building_types[buildingType].alias_one : "unbekannt";
-            var buildingTypeAliasTwo = config.building_types[buildingType].alias_two ? config.building_types[buildingType].alias_two : "unbekannt";
-            var vehicleTypeAliasOne = config.vehicle_types[vehicleType].alias_one ? config.vehicle_types[vehicleType].alias_one : "unbekannt";
-            var vehicleTypeAliasTwo = config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
+            var buildingAliasOne = config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "unbekannt";
+            var buildingAliasTwo = config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_two ? config.buildings[buildingId].alias_two : "unbekannt";
+            var buildingTypeAliasOne = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].alias_one ? config.building_types[buildingType].alias_one : "unbekannt";
+            var buildingTypeAliasTwo = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].alias_two ? config.building_types[buildingType].alias_two : "unbekannt";
+            var vehicleTypeAliasOne = config.vehicle_types && config.vehicleTypes[vehicleType] && config.vehicle_types[vehicleType].alias_one ? config.vehicle_types[vehicleType].alias_one : "unbekannt";
+            var vehicleTypeAliasTwo = config.vehicle_types && config.vehicleTypes[vehicleType] && config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
             var output = ipt
                 .replace("{Fahrzeugtyp-Alias 1}", vehicleTypeAliasOne).replace("{Fahrzeugtyp-Alias 2}", vehicleTypeAliasTwo)
                 .replace("{Wachentyp-Alias 1}", buildingTypeAliasOne).replace("{Wachentyp-Alias 2}", buildingTypeAliasTwo)
