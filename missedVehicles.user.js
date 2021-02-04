@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         missedVehicles
-// @version      1.0.1
+// @version      1.0.2
 // @author       DrTraxx & Allure149
 // @include      *://www.leitstellenspiel.de/missions/*
 // @include      *://leitstellenspiel.de/missions/*
@@ -90,7 +90,7 @@
                               "GW-Werkfeuerwehr":"gw_werkfeuerwehr", "Turbolöscher":"turboloescher", "ULF mit Löscharm":"ulf", "Teleskopmasten":"teleskopmast", "Teleskopmast":"teleskopmast",
                               "Wasserwerfer":"wasserwerfer", "Dekon-P":"hazmat_dekon", "GruKw":"grukw", "FüKw":"fukw", "leBefKw":"lebefkw", "ELW 2":"mobile_command_vehicles", "GW-Messtechnik":"gwmess",
                               "GW-Gefahrgut":"hazmat_vehicles", "GW-Höhenrettung":"height_rescue_units", "Drehleitern (DLK 23)":"platform_trucks", "Drehleiter (DLK 23)":"platform_trucks","DHuFüKw":"k9",
-                              "Außenlastbehälter (allgemein)":"helicopter_bucket"}
+                              "Außenlastbehälter (allgemein)":"helicopter_bucket", "THW-Mehrzweckkraftwagen (MzKW)":"thw_mzkw"}
             var $vehicleRenames = {};
 
             for(var vehicle in $renameIt){
