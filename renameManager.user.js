@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      0.0.6 - closed BETA
+// @version      0.0.7 - closed BETA
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -217,19 +217,47 @@ overflow-y: auto;
         $("#reMaModalBody").html(modalContent);
     }
 
+    function convertToRoman(num) {
+
+        var roNumerals = {
+            M: Math.floor(num / 1000),
+            CM: Math.floor(num % 1000 / 900),
+            D: Math.floor(num % 1000 % 900 / 500),
+            CD: Math.floor(num % 1000 % 900 % 500 / 400),
+            C: Math.floor(num % 1000 % 900 % 500 % 400 / 100),
+            XC: Math.floor(num % 1000 % 900 % 500 % 400 % 100 / 90),
+            L: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 / 50),
+            XL: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 / 40),
+            X: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 % 40 / 10),
+            IX: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 % 40 % 10 / 9),
+            V: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 % 40 % 10 % 9 / 5),
+            IV: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 % 40 % 10 % 9 % 5 / 4),
+            I: Math.floor(num % 1000 % 900 % 500 % 400 % 100 % 90 % 50 % 40 % 10 % 9 % 5 % 4 / 1)
+        };
+        var roNuStr = "";
+
+        for (var prop in roNumerals) {
+            for (i = 0; i < roNumerals[prop]; i++) {
+                roNuStr += prop;
+            }
+
+        }
+        return roNuStr;
+    }
+
     function renameVehicle(ipt, buildingId, buildingType, vehicleType, counter, buildingName) {
         return new Promise(function(resolve) {
             var buildingAliasOne = config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "unbekannt";
             var buildingAliasTwo = config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_two ? config.buildings[buildingId].alias_two : "unbekannt";
             var buildingTypeAliasOne = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].alias_one ? config.building_types[buildingType].alias_one : "unbekannt";
             var buildingTypeAliasTwo = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].alias_two ? config.building_types[buildingType].alias_two : "unbekannt";
-            var vehicleTypeAliasOne = config.vehicle_types && config.vehicleTypes[vehicleType] && config.vehicle_types[vehicleType].alias_one ? config.vehicle_types[vehicleType].alias_one : "unbekannt";
-            var vehicleTypeAliasTwo = config.vehicle_types && config.vehicleTypes[vehicleType] && config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
+            var vehicleTypeAliasOne = config.vehicle_types && config.vehicle_types[vehicleType] && config.vehicle_types[vehicleType].alias_one ? config.vehicle_types[vehicleType].alias_one : "unbekannt";
+            var vehicleTypeAliasTwo = config.vehicle_types && config.vehicle_types[vehicleType] && config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
             var output = ipt
                 .replace("{Fahrzeugtyp-Alias 1}", vehicleTypeAliasOne).replace("{Fahrzeugtyp-Alias 2}", vehicleTypeAliasTwo)
                 .replace("{Wachentyp-Alias 1}", buildingTypeAliasOne).replace("{Wachentyp-Alias 2}", buildingTypeAliasTwo)
                 .replace("{Wachen-Alias 1}", buildingAliasOne).replace("{Wachen-Alias 2}", buildingAliasTwo)
-                .replace("{Wachenname}", buildingName).replace("{Zähler}", counter);
+                .replace("{Wachenname}", buildingName).replace("{Zähler}", counter).replace("{röm. Ziffer}", convertToRoman(counter));
             resolve(output);
         });
     }
@@ -294,6 +322,7 @@ overflow-y: auto;
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{Wachen-Alias 2}</a>
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{Wachenname}</a>
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{Zähler}</a>
+                         <a class="btn btn-info btn-xs placeholder" style="flex:1">{röm. Ziffer}</a>
                        </div>
                        <input type="text" class="form-control" id="reMaRenameTextarea" value="${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].textarea ? config.building_types[buildingType].textarea : ""}">
                        <div class="btn-group">
