@@ -118,6 +118,7 @@ overflow-y: auto;
         config.vehicle_types = {};
         for(var a in aVehicleTypesNew) {
             var c = aVehicleTypesNew[i];
+            config.vehicle_types[c.id] = {};
             config.vehicle_types[c.id].alias_one = c.short_name;
             config.vehicle_types[c.id].alias_two = c.name;
         }
