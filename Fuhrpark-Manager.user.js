@@ -1,20 +1,20 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.10.2
+// @version      2.11.0
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      *://www.leitstellenspiel.de/
 // @include      *://leitstellenspiel.de/
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
-/* global $, user_id, user_premium */
+/* global $, user_id, user_premium, mission_count_max */
 
 (async function() {
     'use strict';
 
     if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"showOnBuild":true,"showWork":true,"showDelay":true});
 
-    $("head").append(`<style>
+    GM_addStyle(`<style>
 .modal {
 display: none;
 position: fixed; /* Stay in place front is invalid - may break your css so removed */
@@ -956,6 +956,8 @@ cursor: default;
         }
 
         isNaN(options.dropdown.dispatchCenter.id) ? infoContentOneValue("Gebäude", aBuildings.length, 'noTree') : infoContentMax("Gebäude", infoBuildingsDatabase.length - (otherBuildings.lst > 0 ? otherBuildings.lst : 0), aBuildings.length, 'noTree');
+
+        infoContentOneValue("maximal mögliche eigene Einsätze", mission_count_max.toLocaleString(), "noTree");
 
         infoContentMax(configTable.marginLeft.replace('%PLATZHALTER%','Leitstellen'+configTable.expand.replace("%CLASS%", "lst")), otherBuildings.lst, Math.ceil(aBuildings.length / 25), 'noTree');
         calculateNextLst(configTable.arrowHospital, Math.floor(aBuildings.length / 25), 'lst fumNested');
