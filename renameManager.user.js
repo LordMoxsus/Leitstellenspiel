@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.1.0
+// @version      1.2.0
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -267,10 +267,11 @@ overflow-y: auto;
             var vehicleTypeAliasTwo = config.vehicle_types && config.vehicle_types[vehicleType] && config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
             var outCount = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].zero_before && counter < 10 ? `0${counter}` : counter;
             var output = ipt
-                .replace("{Fahrzeugtyp-Alias 1}", vehicleTypeAliasOne).replace("{Fahrzeugtyp-Alias 2}", vehicleTypeAliasTwo)
-                .replace("{Wachentyp-Alias 1}", buildingTypeAliasOne).replace("{Wachentyp-Alias 2}", buildingTypeAliasTwo)
-                .replace("{Wachen-Alias 1}", buildingAliasOne).replace("{Wachen-Alias 2}", buildingAliasTwo)
-                .replace("{Wachenname}", buildingName).replace("{Zähler}", outCount).replace("{röm. Ziffer}", convertToRoman(counter));
+            .replace("{Fahrzeugtyp-Alias 1}", vehicleTypeAliasOne).replace("{Fahrzeugtyp-Alias 2}", vehicleTypeAliasTwo)
+            .replace("{Wachentyp-Alias 1}", buildingTypeAliasOne).replace("{Wachentyp-Alias 2}", buildingTypeAliasTwo)
+            .replace("{Wachen-Alias 1}", buildingAliasOne).replace("{Wachen-Alias 2}", buildingAliasTwo)
+            .replace("{Wachenname}", buildingName).replace("{Zähler}", outCount)
+            .replace("{röm. Ziffer}", convertToRoman(counter)).replace("{Buchstabe}", String.fromCharCode(counter+64));
             resolve(output);
         });
     }
@@ -336,6 +337,7 @@ overflow-y: auto;
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{Wachenname}</a>
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{Zähler}</a>
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{röm. Ziffer}</a>
+                         <a class="btn btn-info btn-xs placeholder" style="flex:1">{Buchstabe}</a>
                        </div>
                        <input type="text" class="form-control" id="reMaRenameTextarea" value="${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].textarea ? config.building_types[buildingType].textarea : ""}">
                        <div class="form-check">
