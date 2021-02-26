@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.0.0
+// @version      1.1.0
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
-// @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
+// @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
+// @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/buildings\/\d+$/
 // @grant        GM_addStyle
 // @require      https://drtraxx.github.io/js/apis.1.0.1.js
 // ==/UserScript==
@@ -264,11 +265,12 @@ overflow-y: auto;
             var buildingTypeAliasTwo = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].alias_two ? config.building_types[buildingType].alias_two : "unbekannt";
             var vehicleTypeAliasOne = config.vehicle_types && config.vehicle_types[vehicleType] && config.vehicle_types[vehicleType].alias_one ? config.vehicle_types[vehicleType].alias_one : "unbekannt";
             var vehicleTypeAliasTwo = config.vehicle_types && config.vehicle_types[vehicleType] && config.vehicle_types[vehicleType].alias_two ? config.vehicle_types[vehicleType].alias_two : "unbekannt";
+            var outCount = config.building_types && config.building_types[buildingType] && config.building_types[buildingType].zero_before && counter < 10 ? `0${counter}` : counter;
             var output = ipt
                 .replace("{Fahrzeugtyp-Alias 1}", vehicleTypeAliasOne).replace("{Fahrzeugtyp-Alias 2}", vehicleTypeAliasTwo)
                 .replace("{Wachentyp-Alias 1}", buildingTypeAliasOne).replace("{Wachentyp-Alias 2}", buildingTypeAliasTwo)
                 .replace("{Wachen-Alias 1}", buildingAliasOne).replace("{Wachen-Alias 2}", buildingAliasTwo)
-                .replace("{Wachenname}", buildingName).replace("{Zähler}", counter).replace("{röm. Ziffer}", convertToRoman(counter));
+                .replace("{Wachenname}", buildingName).replace("{Zähler}", outCount).replace("{röm. Ziffer}", convertToRoman(counter));
             resolve(output);
         });
     }
@@ -336,6 +338,10 @@ overflow-y: auto;
                          <a class="btn btn-info btn-xs placeholder" style="flex:1">{röm. Ziffer}</a>
                        </div>
                        <input type="text" class="form-control" id="reMaRenameTextarea" value="${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].textarea ? config.building_types[buildingType].textarea : ""}">
+                       <div class="form-check">
+                         <input type="checkbox" class="form-check-input" id="reMaZeroBefore">
+                         <label class="form-check-label" for="reMaZeroBefore">0 vor einstelligem Zähler</label>
+                       </div>
                        <div class="btn-group">
                          <a class="btn btn-info" id="reMaStartRenameBuilding">Umbenennen</a>
                          <a class="btn btn-success" id="reMaSaveNamesBuilding">Alle speichern</a>
@@ -496,6 +502,20 @@ overflow-y: auto;
     $("body").on("click", "#renameManagement", function() {
         $("#reMaModalBody").html("");
         $("#reMaSave").attr("save_type", "");
+    });
+
+    $("body").on("click", "#reMaZeroBefore", async function() {
+        if($("#reMaZeroBefore")[0].checked) {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].zero_before = true;
+            await saveInNotes();
+        } else {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].zero_before = false;
+            await saveInNotes();
+        }
     });
 
 })();
