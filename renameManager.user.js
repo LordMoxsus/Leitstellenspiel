@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.2.2
+// @version      1.2.3
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -296,7 +296,7 @@ overflow-y: auto;
 
         await $.getJSON("https://nominatim.openstreetmap.org/reverse?format=json&lat="+building.latitude+"&lon="+building.longitude+"&zoom=18&addressdetails=1", function(data) {
             $(".active:first").after("<span class='label label-info' style='cursor:default;margin-left:2em'>"+(data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town))+"</span>");
-            buildingCounty = data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town);
+            buildingCounty = (data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town)).replace(/^\w+\s/g, "");
         });
 
         $("#vehicle_table")
@@ -358,6 +358,10 @@ overflow-y: auto;
                          <a class="btn btn-success" id="reMaSaveNamesBuilding">Alle speichern</a>
                        </div>
                      </div>`);
+
+        if(config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county) {
+            $("#reMaBuildingAliasOne").val(config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : buildingCounty);
+        }
     }
 
     $("body").on("click", "#reMaStartRenameBuilding", function() {
@@ -478,6 +482,7 @@ overflow-y: auto;
     $("body").on("click", "#reMaRenameField .placeholder", function() {
         if(!$("#reMaRenameTextarea").val().includes($(this).text())) {
             $("#reMaRenameTextarea").val($("#reMaRenameTextarea").val() + $(this).text());
+            $("#reMaRenameTextarea").focus();
         }
     });
 
