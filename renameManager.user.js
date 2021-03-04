@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.2.0
+// @version      1.2.1
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -85,16 +85,29 @@ overflow-y: auto;
         {"id": 21, "name": "Rettungshundestaffel"}
     ];
 
-    await $.get("/note", function(data) {
-        if($("#note_message", data).text().includes(databaseStart)) {
-            personalNotes = $("#note_message", data).text().split(databaseStart)[0].trim();
-            databases = $("#note_message", data).text().split(databaseStart)[1].trim();
-            config = JSON.parse(databases.match(renameRegex)[0].replace(placeholderDatabase, "").trim());
-        } else {
-            personalNotes = $("#note_message", data).text().trim();
-            config = {};
+    async function getConfig() {
+        await $.get("/note", function(data) {
+            if($("#note_message", data).text().includes(databaseStart)) {
+                personalNotes = $("#note_message", data).text().split(databaseStart)[0].trim();
+                databases = $("#note_message", data).text().split(databaseStart)[1].trim();
+                config = JSON.parse(databases.match(renameRegex)[0].replace(placeholderDatabase, "").trim());
+            } else {
+                personalNotes = $("#note_message", data).text().trim();
+                config = {};
+            }
+        });
+
+        if(!config.vehicle_types) {
+            config.vehicle_types = {};
+            for(var a in aVehicleTypesNew) {
+                var c = aVehicleTypesNew[a];
+                config.vehicle_types[c.id] = {};
+                config.vehicle_types[c.id].alias_one = c.short_name;
+                config.vehicle_types[c.id].alias_two = c.name;
+            }
+            await saveInNotes();
         }
-    });
+    }
 
     for(var i in buildingTypes) {
         var e = buildingTypes[i];
@@ -113,17 +126,6 @@ overflow-y: auto;
         console.debug("config beim Speichern", config);
         var databaseContent = personalNotes + "\n\n\n\n\n" + databaseStart + "\n" + (databases.includes(placeholderDatabase) ? databases.replace(renameRegex, placeholderDatabase + "\n" + JSON.stringify(config)) : (databases ? (databases + "\n" + placeholderDatabase + "\n" + JSON.stringify(config)) : (placeholderDatabase + "\n" + JSON.stringify(config))));
         await $.post("/note", {"note": {"message": databaseContent}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
-    }
-
-    if(!config.vehicle_types) {
-        config.vehicle_types = {};
-        for(var a in aVehicleTypesNew) {
-            var c = aVehicleTypesNew[a];
-            config.vehicle_types[c.id] = {};
-            config.vehicle_types[c.id].alias_one = c.short_name;
-            config.vehicle_types[c.id].alias_two = c.name;
-        }
-        await saveInNotes();
     }
 
     async function saveToLocalStorage(type) {
@@ -284,14 +286,17 @@ overflow-y: auto;
 
         if(found[0] === false) return false;
 
+        await getConfig();
         var buildingId = window.location.href.replace(/\D+/g, "");
         var buildingType = $("h1").attr("building_type");
         var buildingName = $("h1")[0].firstChild.textContent;
         var building = await singleBuilding(buildingId);
         var renamed = false;
+        var buildingCounty = "";
 
         await $.getJSON("https://nominatim.openstreetmap.org/reverse?format=json&lat="+building.latitude+"&lon="+building.longitude+"&zoom=18&addressdetails=1", function(data) {
             $(".active:first").after("<span class='label label-info' style='cursor:default;margin-left:2em'>"+(data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town))+"</span>");
+            buildingCounty = data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town);
         });
 
         $("#vehicle_table")
@@ -342,7 +347,11 @@ overflow-y: auto;
                        <input type="text" class="form-control" id="reMaRenameTextarea" value="${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].textarea ? config.building_types[buildingType].textarea : ""}">
                        <div class="form-check">
                          <input type="checkbox" class="form-check-input" id="reMaZeroBefore">
-                         <label class="form-check-label" for="reMaZeroBefore">0 vor einstelligem Zähler</label>
+                         <label class="form-check-label" for="reMaZeroBefore" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].zero_before ? "checked" : ""}>0 vor einstelligem Zähler</label>
+                       </div>
+                       <div class="form-check">
+                         <input type="checkbox" class="form-check-input" id="reMaCountyAlias1">
+                         <label class="form-check-label" for="reMaCountyAlias1" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county ? "checked" : ""}>Landkreis/ kreisfreie Stadt als Wachen-Alias 1</label>
                        </div>
                        <div class="btn-group">
                          <a class="btn btn-info" id="reMaStartRenameBuilding">Umbenennen</a>
@@ -501,9 +510,15 @@ overflow-y: auto;
         saveToLocalStorage($(this).attr("save_type"));
     });
 
-    $("body").on("click", "#renameManagement", function() {
-        $("#reMaModalBody").html("");
-        $("#reMaSave").attr("save_type", "");
+    $("body").on("click", "#renameManagement", async function() {
+        await getConfig();
+        if(!isNaN(+$("#reMaSelBuType").val())) {
+            $("#reMaModalBody").html("<center>wird generiert ...</center>");
+            buildingTable($("#reMaSelBuType").val(), "buildings");
+        } else {
+            $("#reMaModalBody").html("");
+            $("#reMaSave").attr("save_type", "");
+        }
     });
 
     $("body").on("click", "#reMaZeroBefore", async function() {
@@ -516,6 +531,22 @@ overflow-y: auto;
             if(!config.building_types) config.building_types = {};
             if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
             config.building_types[buildingType].zero_before = false;
+            await saveInNotes();
+        }
+    });
+
+    $("body").on("click", "#reMaCountyAlias1", async function() {
+        if($("#reMaCountyAlias1")[0].checked) {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].county = true;
+            $("#reMaBuildingAliasOne").val(config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : buildingCounty);
+            await saveInNotes();
+        } else {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].county = false;
+            $("#reMaBuildingAliasOne").val(config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "");
             await saveInNotes();
         }
     });
