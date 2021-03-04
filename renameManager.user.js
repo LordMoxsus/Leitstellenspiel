@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.2.1
+// @version      1.2.2
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -346,12 +346,12 @@ overflow-y: auto;
                        </div>
                        <input type="text" class="form-control" id="reMaRenameTextarea" value="${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].textarea ? config.building_types[buildingType].textarea : ""}">
                        <div class="form-check">
-                         <input type="checkbox" class="form-check-input" id="reMaZeroBefore">
-                         <label class="form-check-label" for="reMaZeroBefore" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].zero_before ? "checked" : ""}>0 vor einstelligem Zähler</label>
+                         <input type="checkbox" class="form-check-input" id="reMaZeroBefore" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].zero_before ? "checked" : ""}>
+                         <label class="form-check-label" for="reMaZeroBefore">0 vor einstelligem Zähler</label>
                        </div>
                        <div class="form-check">
-                         <input type="checkbox" class="form-check-input" id="reMaCountyAlias1">
-                         <label class="form-check-label" for="reMaCountyAlias1" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county ? "checked" : ""}>Landkreis/ kreisfreie Stadt als Wachen-Alias 1</label>
+                         <input type="checkbox" class="form-check-input" id="reMaCountyAlias1" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county ? "checked" : ""}>
+                         <label class="form-check-label" for="reMaCountyAlias1">Landkreis/ kreisfreie Stadt als Wachen-Alias 1</label>
                        </div>
                        <div class="btn-group">
                          <a class="btn btn-info" id="reMaStartRenameBuilding">Umbenennen</a>
