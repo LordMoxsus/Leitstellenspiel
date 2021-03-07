@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.11.1
+// @version      2.11.2
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
-// @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/.*$/
+// @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
 // @grant        GM_addStyle
 // ==/UserScript==
 /* global $, user_id, user_premium, mission_count_max */
@@ -222,38 +222,43 @@ cursor: default;
             "vehicleTypes":`<option selected>alle Fahrzeugtypen</option>`,
             "database":{"class":[],"types":[],"dispatchCenter":[]}
         };
-        $.each(aBuildings, function(key, item){
-            database.buildings.get.typeId[item.id] = item.building_type;
-            database.buildings.get.name[item.id] = item.caption;
-            database.buildings.get.onDispatchCenter[item.id] = item.leitstelle_building_id;
-            if(item.building_type == 7){
-                dropdown.database.dispatchCenter.push({"id": item.id, "name": item.caption});
+        var i, e;
+        for(i in aBuildings){
+            e = aBuildings[i]
+            database.buildings.get.typeId[e.id] = e.building_type;
+            database.buildings.get.name[e.id] = e.caption;
+            database.buildings.get.onDispatchCenter[e.id] = e.leitstelle_building_id;
+            if(e.building_type == 7){
+                dropdown.database.dispatchCenter.push({"id": e.id, "name": e.caption});
             }
-        });
-        $.each(aVehicleTypesNew, function(key, item){
-            dropdown.database.types.push({"typeId": item.id, "name": item.name});
-        });
-        $.each(aVehicles, function(key, item){
-            if(item.vehicle_type_caption && !dropdown.database.class.includes(item.vehicle_type_caption)) {
-                dropdown.database.class.push({"ownClass": item.vehicle_type_caption});
+        }
+        for(i in aVehicleTypesNew){
+            e = aVehicleTypesNew[i]
+            dropdown.database.types.push({"typeId": e.id, "name": e.name});
+        };
+        for(i in aVehicles){
+            e = aVehicles[i]
+            if(e.vehicle_type_caption && !dropdown.database.class.includes(e.vehicle_type_caption)) {
+                dropdown.database.class.push(e.vehicle_type_caption);
             }
-        });
+        };
         if(dropdown.database.dispatchCenter.length > 0){
             if(dropdown.database.dispatchCenter.length >= 2){
                 dropdown.database.dispatchCenter.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
             }
-            for(let i = 0; i < dropdown.database.dispatchCenter.length; i++){
+            for(i in dropdown.database.dispatchCenter){
                 dropdown.dispatchCenter += `<option value="${dropdown.database.dispatchCenter[i].id}">${dropdown.database.dispatchCenter[i].name}</option>`;
             }
         }
         dropdown.database.types.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase() ? 1 : -1);
-        for(let i = 0; i < dropdown.database.types.length; i++){
+        for(i in dropdown.database.types){
             dropdown.vehicleTypes += `<option value="${dropdown.database.types[i].typeId}">${dropdown.database.types[i].name}</option>`;
         }
         if(dropdown.database.class.length > 0){
-            if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.ownClass.toUpperCase() > b.ownClass.toUpperCase() ? 1 : -1);
-            for(let i = 0; i < dropdown.database.class.length; i++){
-                dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i].ownClass}">${dropdown.database.class[i].ownClass}</option>`;
+            console.log(dropdown.database.class);
+            if(dropdown.database.class.length >= 2) dropdown.database.class.sort((a, b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1);
+            for(i in dropdown.database.class){
+                dropdown.vehicleTypes += `<option value="-1" data-vehicle="${dropdown.database.class[i]}">${dropdown.database.class[i]}</option>`;
             }
         }
         $('#filterDispatchCenter').html(dropdown.dispatchCenter);
