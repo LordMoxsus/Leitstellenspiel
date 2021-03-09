@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BuildNotice
-// @version      1.1.0
+// @version      1.1.1
 // @description  ermöglicht Notizen zu jedem Gebäude
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
@@ -24,13 +24,17 @@ color: lime;
 
     var buildNotice = JSON.parse(localStorage.buildNotice);
 
-    for(var key in buildNotice) {
-        if(buildNotice[key]) {
-            $("#building_button_"+key).removeClass("btn-default").addClass("btn-info");
+    $('#buildings_outer').on('DOMNodeInserted', '#building_list', function() {
+        for(var key in buildNotice) {
+            if(buildNotice[key]) {
+                $("#building_button_"+key).removeClass("btn-default").addClass("btn-info");
+            }
         }
-    }
 
-    $("#building_panel_heading .btn-group").append(`<a class="btn btn-default btn-xs" id="buNoToggleInfoBuildings"><span class="glyphicon glyphicon-eye-open"</span></a>`);
+        if(!$("#buNoToggleInfoBuildings").length) {
+            $("#building_panel_heading .btn-group").append(`<a class="btn btn-default btn-xs" id="buNoToggleInfoBuildings"><span class="glyphicon glyphicon-eye-open"</span></a>`);
+        }
+    });
 
     if(window.location.pathname.includes("buildings")) {
         var buildingId = window.location.pathname.replace(/\D+/g,'');
