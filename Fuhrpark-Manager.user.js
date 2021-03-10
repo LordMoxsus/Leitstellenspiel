@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Fuhrpark-Manager
-// @version      2.11.2
+// @version      2.11.3
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
 // @grant        GM_addStyle
+// @require      https://drtraxx.github.io/js/api_request.1.0.0.js
 // ==/UserScript==
-/* global $, user_id, user_premium, mission_count_max */
+/* global $, user_id, user_premium, mission_count_max, getVehicleTypes, getApi */
 
 (async function() {
     'use strict';
@@ -172,26 +173,14 @@ cursor: default;
         $('#sortBy').append(`<option value="${options.dropdown.sort[i]}">${options.dropdown.sort[i]}</option>`);
     }
 
-    function getVehicles(){
-        $.getJSON('/api/vehicles').done(function(data){
-            aVehicles = data;
-        });
+    async function getVehicles(){
+        aVehicles = await getApi("vehicles");
     }
 
     async function refreshApi(){
-        if(!localStorage.aVehicleTypesNew || JSON.parse(localStorage.aVehicleTypesNew).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
-            await $.getJSON("https://drtraxx.github.io/vehicletypes.json").done(data => localStorage.setItem('aVehicleTypesNew', JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
-        }
-        if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
-            await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-        }
-        if(!sessionStorage.aCredits || JSON.parse(sessionStorage.aCredits).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aCredits).userId != user_id) {
-            await $.getJSON('/api/credits ').done(data => sessionStorage.setItem('aCredits', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-        }
-
-        aVehicleTypesNew = JSON.parse(localStorage.aVehicleTypesNew).value;
-        aBuildings = JSON.parse(sessionStorage.aBuildings).value;
-        aCredits = JSON.parse(sessionStorage.aCredits).value;
+        aVehicleTypesNew = await getVehicleTypes();
+        aBuildings = await getApi("buildings");
+        aCredits = await getApi("credits");
     }
 
     await refreshApi();
@@ -425,7 +414,7 @@ cursor: default;
     function playerInfos(){
 
         var infoBuildingsDatabase = aBuildings.slice(0);
-        var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0,"onDispatchCenter":[]};
+        var vehicles = {"rth":0,"polHeli":0,"grtw":0,"naw":0,"itw":0,"onDispatchCenter":[]};
         var fire = {};
         var rescue = {};
         var seg = {};
@@ -457,6 +446,8 @@ cursor: default;
                 case 73: vehicles.grtw++;
                     break;
                 case 74: vehicles.naw++;
+                    break;
+                case 97: vehicles.itw++;
                     break;
             }
             vehicles.onDispatchCenter.push({"name":item.caption,"lst":database.buildings.get.onDispatchCenter[item.building_id]});
@@ -914,6 +905,7 @@ cursor: default;
             infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value, cssClass);
             if(value >= premiumCount){
                 infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, Math.floor(value / premiumCount), cssClass);
+                infoContentMax(`${html} Intensivtransportwagen (ITW)`, vehicles.itw, Math.floor(value / premiumCount), cssClass);
             }
         }
 
@@ -923,7 +915,7 @@ cursor: default;
             var nextGrtw = premiumCount - usedBuildings;
             if(nextGrtw < 0) nextGrtw = 0;
             userInfos += `<tr class="${cssClass}">
-                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten Großraumrettungswagen (GRTW)</td>
+                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten GRTW oder ITW</td>
                           <td class="col-1"><center>${nextGrtw.toLocaleString()}</center></td>
                           </tr>`;
         }
