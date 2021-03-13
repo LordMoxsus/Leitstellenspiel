@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Fuhrpark-Manager - dev !!!
-// @version      2.11.4 dev
+// @name         Fuhrpark-Manager
+// @version      2.11.4
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
