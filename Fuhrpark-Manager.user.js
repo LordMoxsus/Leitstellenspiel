@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Fuhrpark-Manager
-// @version      2.11.3
+// @name         Fuhrpark-Manager - dev !!!
+// @version      2.11.4 dev
 // @author       DrTraxx
 // @description  Zeigt den kompletten Fuhrpark, sowie diverse Statistiken - Logo designed by keks192221
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -905,18 +905,26 @@ cursor: default;
             infoContentMax(`${html} Notarztwagen (NAW)`, vehicles.naw, value, cssClass);
             if(value >= premiumCount){
                 infoContentMax(`${html} Großraumrettungswagen (GRTW)`, vehicles.grtw, Math.floor(value / premiumCount), cssClass);
-                infoContentMax(`${html} Intensivtransportwagen (ITW)`, vehicles.itw, Math.floor(value / premiumCount), cssClass);
+                infoContentMax(`${html} Intensivtransportwagen (ITW)`, vehicles.itw, Math.floor(value / (premiumCount-5)), cssClass);
             }
         }
 
         function calculateNextGrtw(html, rescueBuildings, cssClass){
             var maxGrtw = Math.floor(rescueBuildings / premiumCount);
-            var usedBuildings = rescueBuildings - (maxGrtw * premiumCount);
-            var nextGrtw = premiumCount - usedBuildings;
+            var maxItw = Math.floor(rescueBuildings / (premiumCount-5));
+            var usedBuildingsGrtw = rescueBuildings - (maxGrtw * premiumCount);
+            var usedBuildingsItw = rescueBuildings - (maxItw * (premiumCount-5));
+            var nextGrtw = premiumCount - usedBuildingsGrtw;
+            var nextItw = (premiumCount-5) - usedBuildingsItw;
             if(nextGrtw < 0) nextGrtw = 0;
+            if(nextItw < 0) nextItw = 0;
             userInfos += `<tr class="${cssClass}">
-                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten GRTW oder ITW</td>
+                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten GRTW</td>
                           <td class="col-1"><center>${nextGrtw.toLocaleString()}</center></td>
+                          </tr>
+                          <tr class="${cssClass}">
+                          <td class="col">${html} benötigte Rettungswachen bis zum nächsten ITW</td>
+                          <td class="col-1"><center>${nextItw.toLocaleString()}</center></td>
                           </tr>`;
         }
 
@@ -1144,6 +1152,10 @@ cursor: default;
         }
         if(month == 1 && day == 1) {
             returnValue = "<center><h2>Frohes neues Jahr</h2></center>";
+        }
+
+        if(!returnValue) {
+            returnValue = `<center><iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/album/house-m-d/543540816?i=543540820"></iframe></center>`
         }
 
         return returnValue;
