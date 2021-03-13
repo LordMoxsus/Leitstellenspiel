@@ -8,23 +8,23 @@
 // ==/UserScript==
 /* global $ */
 
-(function() {
+(function () {
     'use strict';
 
-    if($("#mission_replies > li").length) {
+    if ($("#mission_replies > li").length) {
         var alertContent = "";
 
-        $("#mission_replies > li").each(function() {
-            if($(this)[0].innerText.includes("RD") || $(this)[0].innerText.includes("Rettungsdienst")) {
+        $("#mission_replies > li").each(function () {
+            if ($(this)[0].innerText.includes("RD") || $(this)[0].innerText.includes("Rettungsdienst")) {
                 alertContent += $(this)[0].innerText + "<br>";
             }
         });
 
-        if(alertContent) {
+        if (alertContent) {
             $("#mission_general_info").parent().after(`<div class="alert alert-info">
-                                                     <button class="close" data-dismiss="alert" type="button">×</button>
-                                                     ${alertContent.trim()}
-                                                   </div>`);
+                                                        <button class="close" data-dismiss="alert" type="button">×</button>
+                                                        ${alertContent.trim()}
+                                                        </div>`);
         }
     }
 
