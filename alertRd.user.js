@@ -21,10 +21,12 @@
         });
 
         if (alertContent) {
-            $("#mission_general_info").parent().after(`<div class="alert alert-info">
-                                                        <button class="close" data-dismiss="alert" type="button">×</button>
-                                                        ${alertContent.trim()}
-                                                        </div>`);
+            $("#mission_general_info")
+                .parent()
+                .after(`<div class="alert alert-info">
+                            <button class="close" data-dismiss="alert" type="button">×</button>
+                            ${alertContent.trim()}
+                        </div>`);
         }
     }
 
