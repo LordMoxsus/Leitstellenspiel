@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.2.3
+// @version      1.4.0
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/buildings\/\d+$/
 // @grant        GM_addStyle
-// @require      https://drtraxx.github.io/js/apis.1.0.1.js
+// @require      https://drtraxx.github.io/js/api_request.1.0.0.js
 // ==/UserScript==
-/* global $, user_id, getVehicleTypes, singleVehicle, getBuildings, singleBuilding */
+/* global $, user_id, getVehicleTypes, singleVehicle, getApi, singleBuilding */
 
 (async function() {
     'use strict';
@@ -43,6 +43,7 @@ overflow-y: auto;
                           <div class="btn-group">
                            <a class="btn btn-success btn-xs" id="reMaVeTypes">Fahrzeugtypen</a>
                            <a class="btn btn-success btn-xs" id="reMaBuTypes">Wachentypen</a>
+                           <a class="btn btn-success btn-xs" id="reMaBuFields">Rename-Felder</a>
                           </div>
                           <select class="custom-select" id="reMaSelBuType">
                             <option selected>Gebäudetyp wählen</option>
@@ -65,6 +66,8 @@ overflow-y: auto;
         .after(`<li role="presentation"><a style="cursor:pointer" id="renameManagement" data-toggle="modal" data-target="#reMaModal" ><span class="glyphicon glyphicon-home"></span> Rename-Manager</a></li>`);
 
     var aVehicleTypesNew = await getVehicleTypes();
+    var aBuildings = await getApi("buildings");
+    var aVehicles = [];
     var placeholderDatabase = "=====DATABASE_RENAME_MANAGER=====";
     var databaseStart = "=====DATABASE=====";
     var renameRegex = /(?:=====DATABASE_RENAME_MANAGER=====\n)(?<json>\{.+\})/gm;
@@ -146,7 +149,6 @@ overflow-y: auto;
                 config[type][e.id].alias_two = $("#alias_two_"+e.id).val() ? $("#alias_two_"+e.id).val().trim() : "";
             }
         } else if(type == "buildings") {
-            var aBuildings = await getBuildings();
             for(i in aBuildings) {
                 e = aBuildings[i];
                 if(e.building_type == $("#reMaSelBuType").val()) {
@@ -155,6 +157,16 @@ overflow-y: auto;
                     config[type][e.id].alias_two = $("#alias_two_"+e.id).val() ? $("#alias_two_"+e.id).val().trim() : "";
                 }
             }
+        } else if(type == "rename_fields") {
+            delete config[type];
+            if(!config.building_types) config.building_types = {};
+            $("#reMaModalBody input[id*='reMaRenameTextarea_']").each(function() {
+                var $this = $(this);
+                var fieldId = +$this.attr("id").replace(/\D+/g, "");
+                var fieldValue = $this.val().trim();
+                if(!config.building_types[fieldId]) config.building_types[fieldId] = {};
+                config.building_types[fieldId].textarea = fieldValue;
+            });
         }
         await saveInNotes();
         alert("Die Einstellungen wurden gespeichert.");
@@ -162,7 +174,7 @@ overflow-y: auto;
     }
 
     async function buildingTable(filterType, type) {
-        var buildingDatabase = await getBuildings();
+        var buildingDatabase = aBuildings.slice(0);
         var modalContent = `<table class="table">
                               <thead>
                                 <tr>
@@ -284,19 +296,19 @@ overflow-y: auto;
         });
         if(found.length === 0) found.push(false);
 
-        if(found[0] === false) return false;
+        if(found[0] === false && $("h1").attr("building_type") != "7") return false;
 
         await getConfig();
         var buildingId = window.location.href.replace(/\D+/g, "");
         var buildingType = $("h1").attr("building_type");
         var buildingName = $("h1")[0].firstChild.textContent;
-        var building = await singleBuilding(buildingId);
+        var building = aBuildings.filter((obj) => obj.id == buildingId)[0];
         var renamed = false;
         var buildingCounty = "";
 
         await $.getJSON("https://nominatim.openstreetmap.org/reverse?format=json&lat="+building.latitude+"&lon="+building.longitude+"&zoom=18&addressdetails=1", function(data) {
-            $(".active:first").after("<span class='label label-info' style='cursor:default;margin-left:2em'>"+(data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town))+"</span>");
-            buildingCounty = (data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town)).replace(/^\w+\s/g, "");
+            $(".active:first").after("<span class='label label-info' style='cursor:default;margin-left:2em'>"+(data.address.county ? data.address.county : (data.address.city ? data.address.city : (data.address.town ? data.address.town : data.address.state)))+"</span>");
+            buildingCounty = (data.address.county ? data.address.county : (data.address.city ? data.address.city : (data.address.town ? data.address.town : data.address.state))).replace(/^\w+\s/g, "");
         });
 
         $("#vehicle_table")
@@ -364,9 +376,69 @@ overflow-y: auto;
         }
     }
 
+    $("h1").attr("building_type") == "7" && $('#tab_vehicle').on('DOMNodeInserted', 'script', async function(){
+        aVehicles = await getApi("vehicles");
+        $("#vehicle_table")
+            .before(`<a class="btn btn-success btn-xs" id="reMaTriggerRename">
+                       <span class="glyphicon glyphicon-eye-close"> RenameManager</span>
+                     </a>
+                     <a class="btn btn-success btn-xs" id="renameManagement" data-toggle="modal" data-target="#reMaModal">
+                       <span class="glyphicon glyphicon-cog"> Einstellungen</span>
+                     </a>
+                     <div class="hidden" id="reMaRenameField">
+                       <input type="text" class="form-control" value="Das Textfeld der Wachentypen wird in der Leitstelle übernommen." readonly>
+                       <div class="btn-group">
+                         <a class="btn btn-info" id="reMaStartRenameDispatch">Umbenennen</a>
+                         <a class="btn btn-success" id="reMaSaveNamesDispatch">Alle speichern</a>
+                       </div>
+                     </div>`);
+    });
+
+    $("body").on("click", "#reMaStartRenameDispatch", function() {
+        var counterTypes = {};
+        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
+            var $this = $(this);
+            var vehicleId = +$this.children("td").children("span").attr("id").replace(/\D+/g, "");
+            var vehicle = aVehicles.filter((obj) => obj.id == vehicleId)[0];
+            var building = aBuildings.filter((obj) => obj.id == vehicle.building_id)[0];
+            if(!counterTypes[building.id]) counterTypes[building.id] = {};
+            counterTypes[building.id][vehicle.vehicle_type] ? counterTypes[building.id][vehicle.vehicle_type]++ : counterTypes[building.id][vehicle.vehicle_type] = 1;
+            var confBuildingType = config.building_types && config.building_types[building.building_type] ? config.building_types[building.building_type] : {};
+            var confBuilding = config.buildings && config.buildings[building.id] ? config.buildings[building.id] : {};
+            var confVehicleType = config.vehicle_types[vehicle.vehicle_type];
+            var vehicleNewName = await renameVehicle(confBuildingType.textarea, building.id, building.building_type, vehicle.vehicle_type, counterTypes[building.id][vehicle.vehicle_type], building.caption);
+            if(vehicle && confBuildingType.textarea && !$("#reMaRename_"+vehicleId).length) {
+                $("#vehicle_link_"+vehicleId)
+                    .after(`<input type="text" class="form-control" id="reMaRename_${vehicleId}" value="${vehicleNewName}">
+                            <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${vehicleId}">Speichern</a>`);
+            }
+            if($("#reMaRename_"+vehicleId).length) {
+                $("#reMaRename_"+vehicleId).val(vehicleNewName);
+            }
+        });
+    });
+
+    $("body").on("click", "#reMaSaveNamesDispatch", async function() {
+        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function(){
+            var $this = $(this);
+            var vehicleId = +$this.children("td").children("span").attr("id").replace(/\D+/g, "");
+            if($("#reMaRename_"+vehicleId).length) {
+                if($("#reMaRename_"+vehicleId).val() !== $("#vehicle_link_"+vehicleId).text()) {
+                    await $.post("/vehicles/"+vehicleId, {"vehicle": {"caption": $("#reMaRename_"+vehicleId).val().trim()}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
+                    $("#vehicle_link_"+vehicleId).text($("#reMaRename_"+vehicleId).val().trim());
+                    $("#reMaRename_"+vehicleId).remove();
+                    $("#reMaSaveNameVehicle_"+vehicleId).remove();
+                } else {
+                    $("#reMaRename_"+vehicleId).remove();
+                    $("#reMaSaveNameVehicle_"+vehicleId).remove();
+                }
+            }
+        });
+    });
+
     $("body").on("click", "#reMaStartRenameBuilding", function() {
         var counterTypes = {};
-        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function(){
+        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
             var $this = $(this);
             var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
             var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
@@ -482,8 +554,8 @@ overflow-y: auto;
     $("body").on("click", "#reMaRenameField .placeholder", function() {
         if(!$("#reMaRenameTextarea").val().includes($(this).text())) {
             $("#reMaRenameTextarea").val($("#reMaRenameTextarea").val() + $(this).text());
-            $("#reMaRenameTextarea").focus();
         }
+        $("#reMaRenameTextarea").focus();
     });
 
     $("body").on("click", "#reMaVeTypes", function() {
@@ -506,7 +578,7 @@ overflow-y: auto;
         var lat = $this.attr("lat");
         var lon = $this.attr("lon");
         await $.getJSON("https://nominatim.openstreetmap.org/reverse?format=json&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", function(data) {
-            $this.text(data.address.county ? data.address.county : (data.address.city ? data.address.city : data.address.town));
+            $this.text(data.address.county ? data.address.county : (data.address.city ? data.address.city : (data.address.town ? data.address.town : data.address.state)));
         });
         $this.css({"cursor":"default"});
     });
@@ -554,6 +626,66 @@ overflow-y: auto;
             $("#reMaBuildingAliasOne").val(config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "");
             await saveInNotes();
         }
+    });
+
+    $("body").on("click", "#reMaBuFields", function() {
+        var modalContent = `<table class="table">
+                              <thead>
+                                <tr>
+                                  <th class="col-1">Wachentyp</th>
+                                  <th class="col">Rename-Field</th>
+                                </tr>
+                              </thead>
+                              <tbody>`;
+
+        for(var i in buildingTypes) {
+            var e = buildingTypes[i];
+            modalContent += `<tr>
+                               <td class="col-1">${e.name}</td>
+                               <td class="col">
+                                 <div class="btn-group" style="display:flex">
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Fahrzeugtyp-Alias 1}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Fahrzeugtyp-Alias 2}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Wachentyp-Alias 1}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Wachentyp-Alias 2}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Wachen-Alias 1}</a>
+                                 </div>
+                                 <div class="btn-group" style="display:flex">
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Wachen-Alias 2}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Wachenname}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Zähler}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{röm. Ziffer}</a>
+                                   <a class="btn btn-info btn-xs plchldrDispatch" style="flex:1" building_type="${e.id}">{Buchstabe}</a>
+                                 </div>
+                                 <input type="text" class="form-control" id="reMaRenameTextarea_${e.id}" value="${config.building_types && config.building_types[e.id] && config.building_types[e.id].textarea ? config.building_types[e.id].textarea : ""}">
+                                 <div class="form-check">
+                                   <input type="checkbox" class="form-check-input" building_type="${e.id}" ${config.building_types && config.building_types[e.id] && config.building_types[e.id].zero_before ? "checked" : ""}>
+                                   <label class="form-check-label" for="reMaZeroBefore">0 vor einstelligem Zähler</label>
+                                 </div>`;
+        }
+        modalContent += "</tbody></table>";
+        $("#reMaSave").attr("save_type", "rename_fields");
+        $("#reMaModalBody").html(modalContent);
+    });
+
+    $("body").on("click", "#reMaModalBody .form-check-input", async function() {
+        var $this = $(this);
+        var buildingType = $this.attr("building_type");
+        if(!config.building_types) config.building_types = {};
+        if(!config.building_types[buildingType]) config.building_types[buildingType] = {}
+        config.building_types[buildingType].zero_before = $this[0].checked;
+        await saveInNotes();
+    });
+
+    $("body").on("click", ".plchldrDispatch", function() {
+        var $this = $(this);
+        var buildingType = $this.attr("building_type");
+        var placeholder = $this.text();
+
+        if(!$("#reMaRenameTextarea_"+buildingType).val().includes(placeholder)) {
+            $("#reMaRenameTextarea_"+buildingType).val($("#reMaRenameTextarea_"+buildingType).val() + placeholder);
+        }
+        $("#reMaRenameTextarea_"+buildingType).focus();
     });
 
 })();
