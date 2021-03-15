@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.4.1
+// @version      1.4.2
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -406,8 +406,8 @@ overflow-y: auto;
             var confBuildingType = config.building_types && config.building_types[building.building_type] ? config.building_types[building.building_type] : {};
             var confBuilding = config.buildings && config.buildings[building.id] ? config.buildings[building.id] : {};
             var confVehicleType = config.vehicle_types[vehicle.vehicle_type];
-            var vehicleNewName = await renameVehicle(confBuildingType.textarea, building.id, building.building_type, vehicle.vehicle_type, counterTypes[building.id][vehicle.vehicle_type], building.caption);
             if(vehicle && confBuildingType.textarea && !$("#reMaRename_"+vehicleId).length) {
+                var vehicleNewName = await renameVehicle(confBuildingType.textarea, building.id, building.building_type, vehicle.vehicle_type, counterTypes[building.id][vehicle.vehicle_type], building.caption);
                 $("#vehicle_link_"+vehicleId)
                     .after(`<input type="text" class="form-control" id="reMaRename_${vehicleId}" value="${vehicleNewName}">
                             <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${vehicleId}">Speichern</a>`);
