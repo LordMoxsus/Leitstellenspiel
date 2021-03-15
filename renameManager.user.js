@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.4.0
+// @version      1.4.1
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -436,27 +436,48 @@ overflow-y: auto;
         });
     });
 
-    $("body").on("click", "#reMaStartRenameBuilding", function() {
-        var counterTypes = {};
-        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
-            var $this = $(this);
-            var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
-            var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
-            var vehicle = await singleVehicle(vehicleId);
-            counterTypes[vehicle.vehicle_type] ? counterTypes[vehicle.vehicle_type]++ : counterTypes[vehicle.vehicle_type] = 1;
-            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, vehicle.vehicle_type, counterTypes[vehicle.vehicle_type], buildingName);
-
-            if(vehicle && $("#reMaRenameTextarea").val() && !$("#reMaRename_"+vehicleId).length) {
-                renamed = true;
-                vehicleTable
-                    .parent()
-                    .append(`<input type="text" class="form-control" id="reMaRename_${vehicleId}" value="${vehicleNewName}">
-                             <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${vehicleId}">Speichern</a>`);
-            }
-            if($("#reMaRename_"+vehicleId).length) {
-                $("#reMaRename_"+vehicleId).val(vehicleNewName);
-            }
+    async function getBuildingVehicles() {
+        return new Promise(async function(resolve) {
+            var vehicles = [];
+            $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
+                var $this = $(this);
+                var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
+                var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
+                var vehicle = await singleVehicle(vehicleId);
+                if(vehicle) {
+                    vehicles.push({
+                        "id": vehicleId,
+                        "type": vehicle.vehicle_type
+                    });
+                }
+                if(vehicles.length == $('#vehicle_table >> tr:not(.tablesorter-headerRow)').length) {
+                    resolve(vehicles);
+                }
+            });
         });
+    }
+
+    $("body").on("click", "#reMaStartRenameBuilding", async function() {
+        var counterTypes = {};
+        var vehicles = await getBuildingVehicles();
+
+        if(vehicles.length > 1) vehicles.sort((a, b) => a.id > b.id ? 1 : -1);
+
+        for(var i in vehicles) {
+            var e = vehicles[i];
+            counterTypes[e.type] ? counterTypes[e.type]++ : counterTypes[e.type] = 1;
+            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, e.type, counterTypes[e.type], buildingName);
+            if($("#reMaRenameTextarea").val() && !$("#reMaRename_"+e.id).length) {
+                renamed = true;
+                $("a[href='/vehicles/"+e.id+"']:not(.btn)")
+                    .parent()
+                    .append(`<input type="text" class="form-control" id="reMaRename_${e.id}" value="${vehicleNewName}">
+                             <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${e.id}">Speichern</a>`);
+            }
+            if($("#reMaRename_"+e.id).length) {
+                $("#reMaRename_"+e.id).val(vehicleNewName);
+            }
+        }
     });
 
     $("body").on("click", "#vehicle_table .saveSingleName", async function() {
