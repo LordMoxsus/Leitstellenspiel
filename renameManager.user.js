@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         renameManager
-// @version      1.4.2
+// @version      1.4.3
 // @description  Fahrzeuge umbenennen
 // @author       DrTraxx
 // @include      /^https?:\/\/(?:w{3}\.)?(?:polizei\.)?leitstellenspiel\.de\/$/
@@ -305,6 +305,7 @@ overflow-y: auto;
         var building = aBuildings.filter((obj) => obj.id == buildingId)[0];
         var renamed = false;
         var buildingCounty = "";
+        var vehicles = [];
 
         await $.getJSON("https://nominatim.openstreetmap.org/reverse?format=json&lat="+building.latitude+"&lon="+building.longitude+"&zoom=18&addressdetails=1", function(data) {
             $(".active:first").after("<span class='label label-info' style='cursor:default;margin-left:2em'>"+(data.address.county ? data.address.county : (data.address.city ? data.address.city : (data.address.town ? data.address.town : data.address.state)))+"</span>");
@@ -365,10 +366,15 @@ overflow-y: auto;
                          <input type="checkbox" class="form-check-input" id="reMaCountyAlias1" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county ? "checked" : ""}>
                          <label class="form-check-label" for="reMaCountyAlias1">Landkreis/ kreisfreie Stadt als Wachen-Alias 1</label>
                        </div>
+                       <div class="form-check">
+                         <input type="checkbox" class="form-check-input" id="reMaNoKnown" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].known_vehicles ? "checked" : ""}>
+                         <label class="form-check-label" for="reMaNoKnown">kein Textfeld bei übereinstimmenden Namen generieren</label>
+                       </div>
                        <div class="btn-group">
                          <a class="btn btn-info" id="reMaStartRenameBuilding">Umbenennen</a>
                          <a class="btn btn-success" id="reMaSaveNamesBuilding">Alle speichern</a>
                        </div>
+                       <span class="label label-info" id="reMaStatus">Status: Warte auf Eingabe</span>
                      </div>`);
 
         if(config.building_types && config.building_types[buildingType] && config.building_types[buildingType].county) {
@@ -387,71 +393,116 @@ overflow-y: auto;
                      </a>
                      <div class="hidden" id="reMaRenameField">
                        <input type="text" class="form-control" value="Das Textfeld der Wachentypen wird in der Leitstelle übernommen." readonly>
+                       <div class="form-check">
+                         <input type="checkbox" class="form-check-input" id="reMaNoKnown" ${config.building_types && config.building_types[buildingType] && config.building_types[buildingType].known_vehicles ? "checked" : ""}>
+                         <label class="form-check-label" for="reMaNoKnown">kein Textfeld bei übereinstimmenden Namen generieren</label>
+                       </div>
                        <div class="btn-group">
                          <a class="btn btn-info" id="reMaStartRenameDispatch">Umbenennen</a>
                          <a class="btn btn-success" id="reMaSaveNamesDispatch">Alle speichern</a>
                        </div>
+                       <span class="label label-info" id="reMaStatus">Status: Warte auf Eingabe</span>
                      </div>`);
     });
 
-    $("body").on("click", "#reMaStartRenameDispatch", function() {
-        var counterTypes = {};
-        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
-            var $this = $(this);
-            var vehicleId = +$this.children("td").children("span").attr("id").replace(/\D+/g, "");
-            var vehicle = aVehicles.filter((obj) => obj.id == vehicleId)[0];
-            var building = aBuildings.filter((obj) => obj.id == vehicle.building_id)[0];
-            if(!counterTypes[building.id]) counterTypes[building.id] = {};
-            counterTypes[building.id][vehicle.vehicle_type] ? counterTypes[building.id][vehicle.vehicle_type]++ : counterTypes[building.id][vehicle.vehicle_type] = 1;
-            var confBuildingType = config.building_types && config.building_types[building.building_type] ? config.building_types[building.building_type] : {};
-            var confBuilding = config.buildings && config.buildings[building.id] ? config.buildings[building.id] : {};
-            var confVehicleType = config.vehicle_types[vehicle.vehicle_type];
-            if(vehicle && confBuildingType.textarea && !$("#reMaRename_"+vehicleId).length) {
-                var vehicleNewName = await renameVehicle(confBuildingType.textarea, building.id, building.building_type, vehicle.vehicle_type, counterTypes[building.id][vehicle.vehicle_type], building.caption);
-                $("#vehicle_link_"+vehicleId)
-                    .after(`<input type="text" class="form-control" id="reMaRename_${vehicleId}" value="${vehicleNewName}">
-                            <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${vehicleId}">Speichern</a>`);
-            }
-            if($("#reMaRename_"+vehicleId).length) {
-                $("#reMaRename_"+vehicleId).val(vehicleNewName);
-            }
+    async function getDispatchVehicles() {
+        return new Promise(function(resolve) {
+            var arrReturn = [];
+            $("#reMaStatus").text("Sammle Daten.");
+            $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
+                var $this = $(this);
+                var vehicleId = +$this.children("td").children("span").attr("id").replace(/\D+/g, "");
+                var vehicle = aVehicles.filter((obj) => obj.id == vehicleId)[0];
+                var building = aBuildings.filter((obj) => obj.id == vehicle.building_id)[0];
+                arrReturn. push({
+                    "vId": vehicleId,
+                    "vType": vehicle.vehicle_type,
+                    "bId": building.id,
+                    "bType": building.building_type,
+                    "bCaption": building.caption
+                });
+                if($('#vehicle_table >> tr:not(.tablesorter-headerRow)').length == arrReturn.length) {
+                    $("#reMaStatus").text("Datensammlung abgeschlossen.");
+                    resolve(arrReturn);
+                }
+            });
         });
+    }
+
+    async function renameVehicles() {
+        for(var i in vehicles){
+            var e = vehicles[i];
+            $("#reMaStatus").text("Benenne Fahrzeug "+(+i+1).toLocaleString()+" von "+vehicles.length.toLocaleString()+" um.");
+            if(!$("#reMaRename_"+e.vId).length) continue;
+            if($("#reMaRename_"+e.vId).val() !== $("#vehicle_link_"+e.vId).text()) {
+                await $.post("/vehicles/"+e.vId, {"vehicle": {"caption": $("#reMaRename_"+e.vId).val().trim()}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
+                if(buildingType == 7) {
+                    $("#vehicle_link_"+e.vId).text($("#reMaRename_"+e.vId).val().trim());
+                } else {
+                    $("a[href='/vehicles/"+e.vId+"']:not(.btn)").text($("#reMaRename_"+e.vId).val().trim());
+                }
+                $("#reMaRename_"+e.vId).remove();
+                $("#reMaSaveNameVehicle_"+e.vId).remove();
+            } else {
+                $("#reMaRename_"+e.vId).remove();
+                $("#reMaSaveNameVehicle_"+e.vId).remove();
+            }
+
+        }
+        $("#reMaStatus").text("Alle Fahrzeuge erfolgreich umbenannt.");
+    }
+
+    $("body").on("click", "#reMaStartRenameDispatch", async function() {
+        var counterTypes = {};
+        vehicles = await getDispatchVehicles();
+
+        if(vehicles.length > 1) vehicles.sort((a, b) => a.vId > b.vId ? 1 : -1);
+
+        for(var i in vehicles) {
+            var e = vehicles[i];
+            $("#reMaStatus").text("Generiere Name "+(+i+1).toLocaleString()+" von "+vehicles.length.toLocaleString());
+            if(!counterTypes[e.bId]) counterTypes[e.bId] = {};
+            counterTypes[e.bId][e.vType] ? counterTypes[e.bId][e.vType]++ : counterTypes[e.bId][e.vType] = 1;
+            var confBuildingType = config.building_types && config.building_types[e.bType] ? config.building_types[e.bType] : {};
+            var confBuilding = config.buildings && config.buildings[e.bId] ? config.buildings[e.bId] : {};
+            if(confBuildingType.textarea && !$("#reMaRename_"+e.vId).length) {
+                var vehicleNewName = await renameVehicle(confBuildingType.textarea, e.bId, e.bType, e.vType, counterTypes[e.bId][e.vType], e.bCaption);
+                if($("#reMaNoKnown")[0].checked && vehicleNewName == $("#vehicle_link_"+e.vId).text()) {
+                    continue;
+                }
+                $("#vehicle_link_"+e.vId)
+                    .after(`<input type="text" class="form-control" id="reMaRename_${e.vId}" value="${vehicleNewName}">
+                            <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${e.vId}">Speichern</a>`);
+            }
+            if($("#reMaRename_"+e.vId).length) {
+                $("#reMaRename_"+e.vId).val(await renameVehicle(confBuildingType.textarea, e.bId, e.bType, e.vType, counterTypes[e.bId][e.vType], e.bCaption));
+            }
+        }
+        $("#reMaStatus").text("Alle Fahrzeugnamen generiert.");
     });
 
-    $("body").on("click", "#reMaSaveNamesDispatch", async function() {
-        $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function(){
-            var $this = $(this);
-            var vehicleId = +$this.children("td").children("span").attr("id").replace(/\D+/g, "");
-            if($("#reMaRename_"+vehicleId).length) {
-                if($("#reMaRename_"+vehicleId).val() !== $("#vehicle_link_"+vehicleId).text()) {
-                    await $.post("/vehicles/"+vehicleId, {"vehicle": {"caption": $("#reMaRename_"+vehicleId).val().trim()}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
-                    $("#vehicle_link_"+vehicleId).text($("#reMaRename_"+vehicleId).val().trim());
-                    $("#reMaRename_"+vehicleId).remove();
-                    $("#reMaSaveNameVehicle_"+vehicleId).remove();
-                } else {
-                    $("#reMaRename_"+vehicleId).remove();
-                    $("#reMaSaveNameVehicle_"+vehicleId).remove();
-                }
-            }
-        });
+    $("body").on("click", "#reMaSaveNamesDispatch", function() {
+        renameVehicles();
     });
 
     async function getBuildingVehicles() {
         return new Promise(async function(resolve) {
-            var vehicles = [];
+            var arrReturn = [];
+            $("#reMaStatus").text("Sammle Daten.");
             $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function() {
                 var $this = $(this);
                 var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
                 var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
                 var vehicle = await singleVehicle(vehicleId);
                 if(vehicle) {
-                    vehicles.push({
-                        "id": vehicleId,
-                        "type": vehicle.vehicle_type
+                    arrReturn.push({
+                        "vId": vehicleId,
+                        "vType": vehicle.vehicle_type
                     });
                 }
-                if(vehicles.length == $('#vehicle_table >> tr:not(.tablesorter-headerRow)').length) {
-                    resolve(vehicles);
+                if(arrReturn.length == $('#vehicle_table >> tr:not(.tablesorter-headerRow)').length) {
+                    $("#reMaStatus").text("Datensammlung abgeschlossen.");
+                    resolve(arrReturn);
                 }
             });
         });
@@ -459,25 +510,30 @@ overflow-y: auto;
 
     $("body").on("click", "#reMaStartRenameBuilding", async function() {
         var counterTypes = {};
-        var vehicles = await getBuildingVehicles();
+        vehicles = await getBuildingVehicles();
 
-        if(vehicles.length > 1) vehicles.sort((a, b) => a.id > b.id ? 1 : -1);
+        if(vehicles.length > 1) vehicles.sort((a, b) => a.vId > b.vId ? 1 : -1);
 
         for(var i in vehicles) {
             var e = vehicles[i];
-            counterTypes[e.type] ? counterTypes[e.type]++ : counterTypes[e.type] = 1;
-            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, e.type, counterTypes[e.type], buildingName);
-            if($("#reMaRenameTextarea").val() && !$("#reMaRename_"+e.id).length) {
-                renamed = true;
-                $("a[href='/vehicles/"+e.id+"']:not(.btn)")
-                    .parent()
-                    .append(`<input type="text" class="form-control" id="reMaRename_${e.id}" value="${vehicleNewName}">
-                             <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${e.id}">Speichern</a>`);
+            $("#reMaStatus").text("Generiere Name "+(+i+1).toLocaleString()+" von "+vehicles.length.toLocaleString());
+            counterTypes[e.vType] ? counterTypes[e.vType]++ : counterTypes[e.vType] = 1;
+            var vehicleNewName = await renameVehicle($("#reMaRenameTextarea").val(), buildingId, buildingType, e.vType, counterTypes[e.vType], buildingName);
+            if($("#reMaNoKnown")[0].checked && vehicleNewName == $("a[href='/vehicles/"+e.vId+"']:not(.btn)").text()) {
+                continue;
             }
-            if($("#reMaRename_"+e.id).length) {
-                $("#reMaRename_"+e.id).val(vehicleNewName);
+            if($("#reMaRenameTextarea").val() && !$("#reMaRename_"+e.vId).length) {
+                renamed = true;
+                $("a[href='/vehicles/"+e.vId+"']:not(.btn)")
+                    .parent()
+                    .append(`<input type="text" class="form-control" id="reMaRename_${e.vId}" value="${vehicleNewName}">
+                             <a class="btn btn-success btn-xs saveSingleName" id="reMaSaveNameVehicle_${e.vId}">Speichern</a>`);
+            }
+            if($("#reMaRename_"+e.vId).length) {
+                $("#reMaRename_"+e.vId).val(vehicleNewName);
             }
         }
+        $("#reMaStatus").text("Alle Fahrzeugnamen generiert.");
     });
 
     $("body").on("click", "#vehicle_table .saveSingleName", async function() {
@@ -523,22 +579,7 @@ overflow-y: auto;
             config.building_types[buildingType].textarea = $("#reMaRenameTextarea").val().trim();
             await saveInNotes();
 
-            $('#vehicle_table >> tr:not(.tablesorter-headerRow)').each(async function(){
-                var $this = $(this);
-                var vehicleTable = $this.children("td").children("a[href*='/vehicles/']:not(.btn)");
-                var vehicleId = vehicleTable.attr("href").replace(/\D+/g, "");
-                if($("#reMaRename_"+vehicleId).length) {
-                    if($("#reMaRename_"+vehicleId).val() !== vehicleTable.text()) {
-                        await $.post("/vehicles/"+vehicleId, {"vehicle": {"caption": $("#reMaRename_"+vehicleId).val().trim()}, "authenticity_token" : $("meta[name=csrf-token]").attr("content"), "_method": "put"});
-                        vehicleTable.text($("#reMaRename_"+vehicleId).val().trim());
-                        $("#reMaRename_"+vehicleId).remove();
-                        $("#reMaSaveNameVehicle_"+vehicleId).remove();
-                    } else {
-                        $("#reMaRename_"+vehicleId).remove();
-                        $("#reMaSaveNameVehicle_"+vehicleId).remove();
-                    }
-                }
-            });
+            renameVehicles();
         }
     });
 
@@ -645,6 +686,20 @@ overflow-y: auto;
             if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
             config.building_types[buildingType].county = false;
             $("#reMaBuildingAliasOne").val(config.buildings && config.buildings[buildingId] && config.buildings[buildingId].alias_one ? config.buildings[buildingId].alias_one : "");
+            await saveInNotes();
+        }
+    });
+
+    $("body").on("click", "#reMaNoKnown", async function() {
+        if($("#reMaNoKnown")[0].checked) {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].known_vehicles = true;
+            await saveInNotes();
+        } else {
+            if(!config.building_types) config.building_types = {};
+            if(!config.building_types[buildingType]) config.building_types[buildingType] = {};
+            config.building_types[buildingType].known_vehicles = false;
             await saveInNotes();
         }
     });
