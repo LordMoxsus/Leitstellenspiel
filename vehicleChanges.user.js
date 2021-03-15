@@ -1,46 +1,42 @@
 // ==UserScript==
 // @name         vehicleChanges
-// @version      1.2.1
+// @version      1.2.2
 // @description  ändert die Einstellungen von AB, SEG ELW, GRTW und Außenlastbehälter
 // @author       DrTraxx
-// @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
+// @include      /^https?:\/\/(w{3}\.)?(polizei\.)?leitstellenspiel\.de\/$/
 // @grant        GM_addStyle
 // ==/UserScript==
 /* global $, user_id, I18n */
 
-(async function() {
-    'use strict';
+(async function () {
+  'use strict';
 
-    var aVehicles = [];
-    var containerIds = [47,48,49,54,62,71,77,78];
-    var segLeader = [];
-    var container = [];
-    var grtw = [];
-    var waterBin = [];
+  var aVehicles = [];
+  var containerIds = [47, 48, 49, 54, 62, 71, 77, 78];
+  var segLeader = [];
+  var container = [];
+  var grtw = [];
+  var waterBin = [];
 
-    async function loadApi() {
+  async function loadApi() {
 
-        if(!sessionStorage.aVehicles || JSON.parse(sessionStorage.aVehicles).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aVehicles).userId != user_id) {
-            await $.getJSON('/api/vehicles').done(data => sessionStorage.setItem('aVehicles', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-        }
+    aVehicles = await $.getJSON('/api/vehicles')
 
-        aVehicles = JSON.parse(sessionStorage.aVehicles).value;
-
-        for(var i in aVehicles) {
-            var e = aVehicles[i];
-            if(e.vehicle_type === 59) segLeader.push(e);
-            if(containerIds.includes(e.vehicle_type)) container.push(e);
-            if(e.vehicle_type === 73) grtw.push(e);
-            if(e.vehicle_type === 96) waterBin.push(e);
-        }
-        console.debug("aVehicles", aVehicles);
-        console.debug("segLeader", segLeader);
-        console.debug("container", container);
-        console.debug("grtw", grtw);
-        console.debug("waterBin", waterBin);
+    for (var i in aVehicles) {
+      var e = aVehicles[i];
+      if (e.vehicle_type === 59) segLeader.push(e);
+      if (containerIds.includes(e.vehicle_type)) container.push(e);
+      if (e.vehicle_type === 73) grtw.push(e);
+      if (e.vehicle_type === 96) waterBin.push(e);
     }
+    console.debug("aVehicles", aVehicles);
+    console.debug("segLeader", segLeader);
+    console.debug("container", container);
+    console.debug("grtw", grtw);
+    console.debug("waterBin", waterBin);
+  }
 
-    GM_addStyle(`.modal {
+  GM_addStyle(`.modal {
 display: none;
 position: fixed; /* Stay in place front is invalid - may break your css so removed */
 padding-top: 100px;
@@ -58,9 +54,9 @@ height: 650px;
 overflow-y: auto;
 }`);
 
-    $("body")
-        .prepend(
-        `<div class="modal fade bd-example-modal-lg" id="veChModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  $("body")
+    .prepend(
+      `<div class="modal fade bd-example-modal-lg" id="veChModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
            <div class="modal-dialog modal-lg" role="document">
              <div class="modal-content">
                <div class="modal-header">
@@ -84,61 +80,61 @@ overflow-y: auto;
            </div>
          </div>`);
 
-    $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/missionSpeed']")
-        .parent()
-        .after(`<li role="presentation"><a data-toggle="modal" data-target="#veChModal" style="cursor:pointer" id="veChOpenModal"><span class="glyphicon glyphicon-cog"></span> Fahrzeugeinstellungen</a></li>`);
+  $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/missionSpeed']")
+    .parent()
+    .after(`<li role="presentation"><a data-toggle="modal" data-target="#veChModal" style="cursor:pointer" id="veChOpenModal"><span class="glyphicon glyphicon-cog"></span> Fahrzeugeinstellungen</a></li>`);
 
-    async function progress(type) {
-        var vehiclesToSet = [];
-        var postContent = "";
-        var count = 0;
+  async function progress(type) {
+    var vehiclesToSet = [];
+    var postContent = "";
+    var count = 0;
 
-        if(type == "container") {
-            vehiclesToSet = container;
-            postContent = {"tractive_random": $("#contCbxRdmWlf")[0].checked ? 1 : 0, "tractive_building_random": $("#contCbxEachWlf")[0].checked ? 1 : 0, "vehicle_mode": $("#conSelWlf").val()};
-        } else if(type == "segLeader") {
-            vehiclesToSet = segLeader;
-            postContent = {"hospital_automatic": $("#ldrAutomatic")[0].checked ? 1 : 0, "hospital_own": $("#ldrHospOwn")[0].checked ? 1 : 0, "hospital_right_building_extension": $("#ldrHospRgtExt")[0].checked ? 1 : 0, "hospital_max_price": $("#ldrMaxTax").val(), "hospital_max_distance": $("#ldrMaxDrive").val(), "hospital_free_space": $("#ldrMaxEmptPlace").val()};
-        } else if(type == "grtw") {
-            vehiclesToSet = grtw;
-            postContent = {"vehicle_mode": $("#grtwMode").val()};
-        } else if(type == "waterBin") {
-            vehiclesToSet = waterBin;
-            postContent = {"tractive_random": $("#contCbxRdmWaterBin")[0].checked ? 1 : 0, "tractive_building_random": $("#contCbxEachWaterBin")[0].checked ? 1 : 0};
-        }
-
-        $("#veChModalBody")
-            .append(`<div class="progress" style="margin-top:2em">
-                       <div class="progress-bar bg-success" role="progressbar" style="width: 0%;color: black" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${vehiclesToSet.length}" id="veChPrgs">0 / ${vehiclesToSet.length.toLocaleString()}</div>
-                     </div>`);
-        console.debug("progress", type, vehiclesToSet);
-        console.debug("postContent", postContent);
-
-        for(var i in vehiclesToSet) {
-            count++;
-            var percent = Math.round(count / vehiclesToSet.length * 100);
-            var e = vehiclesToSet[i];
-            $("#veChPrgs")
-                .attr("aria-valuenow", count)
-                .css({"width" : percent+"%"})
-                .text(count.toLocaleString() + " / " + vehiclesToSet.length.toLocaleString());
-            await $.post("/vehicles/" + e.id, {"vehicle": postContent, "authenticity_token": $("meta[name=csrf-token]").attr("content"), "_method": "put"});
-        }
+    if (type == "container") {
+      vehiclesToSet = container;
+      postContent = { "tractive_random": $("#contCbxRdmWlf")[0].checked ? 1 : 0, "tractive_building_random": $("#contCbxEachWlf")[0].checked ? 1 : 0, "vehicle_mode": $("#conSelWlf").val() };
+    } else if (type == "segLeader") {
+      vehiclesToSet = segLeader;
+      postContent = { "hospital_automatic": $("#ldrAutomatic")[0].checked ? 1 : 0, "hospital_own": $("#ldrHospOwn")[0].checked ? 1 : 0, "hospital_right_building_extension": $("#ldrHospRgtExt")[0].checked ? 1 : 0, "hospital_max_price": $("#ldrMaxTax").val(), "hospital_max_distance": $("#ldrMaxDrive").val(), "hospital_free_space": $("#ldrMaxEmptPlace").val() };
+    } else if (type == "grtw") {
+      vehiclesToSet = grtw;
+      postContent = { "vehicle_mode": $("#grtwMode").val() };
+    } else if (type == "waterBin") {
+      vehiclesToSet = waterBin;
+      postContent = { "tractive_random": $("#contCbxRdmWaterBin")[0].checked ? 1 : 0, "tractive_building_random": $("#contCbxEachWaterBin")[0].checked ? 1 : 0 };
     }
 
-    $("body").on("click", "#veChOpenModal", async function() {
-        if(!$("#veChBtnGrp").hasClass("hidden")) $("#veChBtnGrp").addClass("hidden");
-        segLeader.length = 0;
-        container.length = 0;
-        grtw.length = 0;
-        waterBin.length = 0;
-        await loadApi();
-        $("#veChBtnGrp").removeClass("hidden");
-    });
+    $("#veChModalBody")
+      .append(`<div class="progress" style="margin-top:2em">
+                       <div class="progress-bar bg-success" role="progressbar" style="width: 0%;color: black" aria-valuenow="0" aria-valuemin="0" aria-valuemax="${vehiclesToSet.length}" id="veChPrgs">0 / ${vehiclesToSet.length.toLocaleString()}</div>
+                     </div>`);
+    console.debug("progress", type, vehiclesToSet);
+    console.debug("postContent", postContent);
 
-    $("body").on("click", "#veChBtnContainer", function() {
-        $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle AB (${container.length.toLocaleString()})</h4>
+    for (var i in vehiclesToSet) {
+      count++;
+      var percent = Math.round(count / vehiclesToSet.length * 100);
+      var e = vehiclesToSet[i];
+      $("#veChPrgs")
+        .attr("aria-valuenow", count)
+        .css({ "width": percent + "%" })
+        .text(count.toLocaleString() + " / " + vehiclesToSet.length.toLocaleString());
+      await $.post("/vehicles/" + e.id, { "vehicle": postContent, "authenticity_token": $("meta[name=csrf-token]").attr("content"), "_method": "put" });
+    }
+  }
+
+  $("body").on("click", "#veChOpenModal", async function () {
+    if (!$("#veChBtnGrp").hasClass("hidden")) $("#veChBtnGrp").addClass("hidden");
+    segLeader.length = 0;
+    container.length = 0;
+    grtw.length = 0;
+    waterBin.length = 0;
+    await loadApi();
+    $("#veChBtnGrp").removeClass("hidden");
+  });
+
+  $("body").on("click", "#veChBtnContainer", function () {
+    $("#veChModalBody")
+      .html(`<h4>Einstellungen für alle AB (${container.length.toLocaleString()})</h4>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="contCbxRdmWlf">
                      <label class="form-check-label" for="contCbxRdmWlf">
@@ -157,11 +153,11 @@ overflow-y: auto;
                    </select>
                    <br>
                    <a class="btn btn-success" id="veChSaveAll" bullet_point="container" style="margin-top:2em">Einstellungen übernehmen</a>`);
-    });
+  });
 
-    $("body").on("click", "#veChBtnLeader", function() {
-        $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle ELW (SEG) (${segLeader.length.toLocaleString()})</h4>
+  $("body").on("click", "#veChBtnLeader", function () {
+    $("#veChModalBody")
+      .html(`<h4>Einstellungen für alle ELW (SEG) (${segLeader.length.toLocaleString()})</h4>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="ldrAutomatic">
                      <label class="form-check-label" for="ldrAutomatic">
@@ -216,22 +212,22 @@ overflow-y: auto;
                    </div>
                    <br>
                    <a class="btn btn-success" id="veChSaveAll" bullet_point="segLeader" style="margin-top:2em">Einstellungen übernehmen</a>`);
-    });
+  });
 
-    $("body").on("click", "#veChBtnGrtw", function() {
-        $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle GRTW  (${grtw.length.toLocaleString()})</h4>
+  $("body").on("click", "#veChBtnGrtw", function () {
+    $("#veChModalBody")
+      .html(`<h4>Einstellungen für alle GRTW  (${grtw.length.toLocaleString()})</h4>
                    <select class="custom-select" id="grtwMode">
                      <option selected value="0">Maximal 7 leichtverletzte Patienten</option>
                      <option value="1">Maximal 3 (auch schwerverletzte) Patienten, Notarzt als Besatzung nötig</option>
                    </select>
                    <br>
                    <a class="btn btn-success" id="veChSaveAll" bullet_point="grtw" style="margin-top:2em">Einstellungen übernehmen</a>`);
-    });
+  });
 
-    $("body").on("click", "#veChBtnWaterBin", function() {
-        $("#veChModalBody")
-            .html(`<h4>Einstellungen für alle Außenlastbehälter (${waterBin.length.toLocaleString()})</h4>
+  $("body").on("click", "#veChBtnWaterBin", function () {
+    $("#veChModalBody")
+      .html(`<h4>Einstellungen für alle Außenlastbehälter (${waterBin.length.toLocaleString()})</h4>
                    <div class="form-check">
                      <input class="form-check-input" type="checkbox" value="" id="contCbxRdmWaterBin">
                      <label class="form-check-label" for="contCbxRdmWaterBin">
@@ -246,41 +242,41 @@ overflow-y: auto;
                    </div>
                    <br>
                    <a class="btn btn-success" id="veChSaveAll" bullet_point="waterBin" style="margin-top:2em">Einstellungen übernehmen</a>`);
-    });
+  });
 
-    $("body").on("click", "#contCbxRdmWlf", function() {
-        if($("#contCbxRdmWlf")[0].checked) {
-            $("#contCbxEachWlf").parent().removeClass("hidden");
-        } else {
-            $("#contCbxEachWlf").parent().addClass("hidden");
-            $("#contCbxEachWlf")[0].checked = false;
-        }
-    });
+  $("body").on("click", "#contCbxRdmWlf", function () {
+    if ($("#contCbxRdmWlf")[0].checked) {
+      $("#contCbxEachWlf").parent().removeClass("hidden");
+    } else {
+      $("#contCbxEachWlf").parent().addClass("hidden");
+      $("#contCbxEachWlf")[0].checked = false;
+    }
+  });
 
-    $("body").on("click", "#contCbxRdmWaterBin", function() {
-        if($("#contCbxRdmWaterBin")[0].checked) {
-            $("#contCbxEachWaterBin").parent().removeClass("hidden");
-        } else {
-            $("#contCbxEachWaterBin").parent().addClass("hidden");
-            $("#contCbxEachWaterBin")[0].checked = false;
-        }
-    });
+  $("body").on("click", "#contCbxRdmWaterBin", function () {
+    if ($("#contCbxRdmWaterBin")[0].checked) {
+      $("#contCbxEachWaterBin").parent().removeClass("hidden");
+    } else {
+      $("#contCbxEachWaterBin").parent().addClass("hidden");
+      $("#contCbxEachWaterBin")[0].checked = false;
+    }
+  });
 
-    $("body").on("click", "#ldrAutomatic", function() {
-        if($("#ldrAutomatic")[0].checked) {
-            $("#ldrHiddenContent").removeClass("hidden");
-        } else {
-            $("#ldrHiddenContent").addClass("hidden");
-            $("#ldrHospOwn")[0].checked = false;
-            $("#ldrHospRgtExt")[0].checked = false;
-            $("#ldrMaxTax").val(0);
-            $("#ldrMaxDrive").val(1);
-            $("#ldrMaxEmptPlace").val(0);
-        }
-    });
+  $("body").on("click", "#ldrAutomatic", function () {
+    if ($("#ldrAutomatic")[0].checked) {
+      $("#ldrHiddenContent").removeClass("hidden");
+    } else {
+      $("#ldrHiddenContent").addClass("hidden");
+      $("#ldrHospOwn")[0].checked = false;
+      $("#ldrHospRgtExt")[0].checked = false;
+      $("#ldrMaxTax").val(0);
+      $("#ldrMaxDrive").val(1);
+      $("#ldrMaxEmptPlace").val(0);
+    }
+  });
 
-    $("body").on("click", "#veChSaveAll", function() {
-        progress($(this).attr("bullet_point"));
-    });
+  $("body").on("click", "#veChSaveAll", function () {
+    progress($(this).attr("bullet_point"));
+  });
 
 })();
