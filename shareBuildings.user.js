@@ -1,41 +1,37 @@
 // ==UserScript==
 // @name         shareBuildings
-// @version      1.1.2
+// @version      1.1.3
 // @description  gibt automatisch Krankenhäuser und Zellen im Verband frei
 // @author       DrTraxx
-// @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|missionchief\.gr|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|nodsentralspillet|meldkamerspel|operador193|jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|operatorratunkowy\.pl|dispetcher112\.ru|larmcentralen-spelet\.se)\/.*$/
+// @include      ^https?:\/\/(w{3}\.)?(polizei\.)?leitstellenspiel\.de\/$/
 // @grant        none
 // ==/UserScript==
 /* global $, user_id, I18n */
 
-(async function() {
-    'use strict';
+(async function () {
+  'use strict';
 
-    var aBuildings = [];
-    var beds = [];
-    var cells = [];
+  var aBuildings = [];
+  var beds = [];
+  var cells = [];
 
-    async function loadApi() {
+  async function loadApi() {
 
-        if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60) || JSON.parse(sessionStorage.aBuildings).userId != user_id) {
-            await $.getJSON('/api/buildings').done(data => sessionStorage.setItem('aBuildings', JSON.stringify({lastUpdate: new Date().getTime(), value: data, userId: user_id})) );
-        }
+    aBuildings = await $.getJSON('/api/buildings');
 
-        aBuildings = JSON.parse(sessionStorage.aBuildings).value;
-
-        for(var i in aBuildings) {
-            var e = aBuildings[i];
-            if(e.building_type === 4) beds.push(e);
-            if(e.building_type === 6 || e.building_type === 19) cells.push(e);
-        }
-
-        console.debug("aBuildings", aBuildings);
-        console.debug("beds", beds);
-        console.debug("cells", cells);
+    for (var i in aBuildings) {
+      var e = aBuildings[i];
+      if (e.building_type === 4) beds.push(e);
+      if (e.building_type === 6 || e.building_type === 19) cells.push(e);
     }
 
-    $("body")
-        .prepend(`<div class="modal fade bd-example-modal-lg" id="shBuModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    console.debug("aBuildings", aBuildings);
+    console.debug("beds", beds);
+    console.debug("cells", cells);
+  }
+
+  $("body")
+    .prepend(`<div class="modal fade bd-example-modal-lg" id="shBuModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg" role="document">
                       <div class="modal-content">
                         <div class="modal-header">
@@ -87,73 +83,73 @@
                     </div>
                   </div>`);
 
-    $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/missionSpeed']")
-        .parent()
-        .after(`<li role="presentation"><a data-toggle="modal" data-target="#shBuModal" id="shBuOpenModal" style="cursor:pointer"><span class="glyphicon glyphicon-ok-sign"></span> Gebäude freigeben</a></li>`);
+  $("ul .dropdown-menu[aria-labelledby='menu_profile'] >> a[href='/missionSpeed']")
+    .parent()
+    .after(`<li role="presentation"><a data-toggle="modal" data-target="#shBuModal" id="shBuOpenModal" style="cursor:pointer"><span class="glyphicon glyphicon-ok-sign"></span> Gebäude freigeben</a></li>`);
 
-    async function shareBuildings(array, modalElement) {
-        var count = 0;
+  async function shareBuildings(array, modalElement) {
+    var count = 0;
 
-        for(var i in array) {
-            count++;
-            var percent = Math.round(count / array.length * 100);
-            var e = array[i];
-            modalElement
-                .attr("aria-valuenow", count)
-                .css({"width" : percent+"%"})
-                .text(count + " / " + array.length.toLocaleString());
-            if($("#shBuCheckShare")[0].checked) {
-                if(!e.is_alliance_shared) {
-                    await $.get("/buildings/" + e.id + "/alliance");
-                    //e.is_alliance_shared = true;
-                    aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = true;
-                }
-                await $.get("/buildings/" + e.id + "/alliance_costs/" + $("#shBuSelPercentage").val());
-            } else {
-                if(e.is_alliance_shared) {
-                    await $.get("/buildings/" + e.id + "/alliance");
-                    //e.is_alliance_shared = false;
-                    aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = false;
-                }
-            }
+    for (var i in array) {
+      count++;
+      var percent = Math.round(count / array.length * 100);
+      var e = array[i];
+      modalElement
+        .attr("aria-valuenow", count)
+        .css({ "width": percent + "%" })
+        .text(count + " / " + array.length.toLocaleString());
+      if ($("#shBuCheckShare")[0].checked) {
+        if (!e.is_alliance_shared) {
+          await $.get("/buildings/" + e.id + "/alliance");
+          //e.is_alliance_shared = true;
+          aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = true;
         }
+        await $.get("/buildings/" + e.id + "/alliance_costs/" + $("#shBuSelPercentage").val());
+      } else {
+        if (e.is_alliance_shared) {
+          await $.get("/buildings/" + e.id + "/alliance");
+          //e.is_alliance_shared = false;
+          aBuildings.filter((obj) => e.id === obj.id)[0].is_alliance_shared = false;
+        }
+      }
     }
+  }
 
-    $("body").on("click", "#shBuOpenModal", async function() {
-        if(!$("#shBuCheckShare").parent().hasClass("hidden")) $("#shBuCheckShare").parent().addClass("hidden");
-        beds.length = 0;
-        cells.length = 0;
-        await loadApi();
-        $("#shBuPrgsBeds").attr("aria-valuemax", beds.length);
-        $("#shBuPrgsCells").attr("aria-valuemax", cells.length);
-        $("#shBuCheckShare").parent().removeClass("hidden");
-    });
+  $("body").on("click", "#shBuOpenModal", async function () {
+    if (!$("#shBuCheckShare").parent().hasClass("hidden")) $("#shBuCheckShare").parent().addClass("hidden");
+    beds.length = 0;
+    cells.length = 0;
+    await loadApi();
+    $("#shBuPrgsBeds").attr("aria-valuemax", beds.length);
+    $("#shBuPrgsCells").attr("aria-valuemax", cells.length);
+    $("#shBuCheckShare").parent().removeClass("hidden");
+  });
 
-    $("body").on("click", "#shBuShareHospitals", function() {
-        $("#shBuDivHospitals").removeClass("hidden");
-        $("#shBuPrgsBeds")
-                    .attr("aria-valuenow", 0)
-                    .css({"width" : "0%"})
-                    .text("0 / " + beds.length.toLocaleString());
-        shareBuildings(beds, $("#shBuPrgsBeds"));
-    });
+  $("body").on("click", "#shBuShareHospitals", function () {
+    $("#shBuDivHospitals").removeClass("hidden");
+    $("#shBuPrgsBeds")
+      .attr("aria-valuenow", 0)
+      .css({ "width": "0%" })
+      .text("0 / " + beds.length.toLocaleString());
+    shareBuildings(beds, $("#shBuPrgsBeds"));
+  });
 
-    $("body").on("click", "#shBuShareCells", function() {
-        $("#shBuDivCells").removeClass("hidden");
-        $("#shBuPrgsCells")
-                    .attr("aria-valuenow", 0)
-                    .css({"width" : "0%"})
-                    .text("0 / " + cells.length.toLocaleString());
-        shareBuildings(cells, $("#shBuPrgsCells"));
-    });
+  $("body").on("click", "#shBuShareCells", function () {
+    $("#shBuDivCells").removeClass("hidden");
+    $("#shBuPrgsCells")
+      .attr("aria-valuenow", 0)
+      .css({ "width": "0%" })
+      .text("0 / " + cells.length.toLocaleString());
+    shareBuildings(cells, $("#shBuPrgsCells"));
+  });
 
-    $("body").on("click", "#shBuCheckShare", function() {
-        if($("#shBuCheckShare")[0].checked) {
-            $("#shBuSelPercentage").removeClass("hidden");
-        } else {
-            $("#shBuSelPercentage").addClass("hidden");
-        }
-    });
+  $("body").on("click", "#shBuCheckShare", function () {
+    if ($("#shBuCheckShare")[0].checked) {
+      $("#shBuSelPercentage").removeClass("hidden");
+    } else {
+      $("#shBuSelPercentage").addClass("hidden");
+    }
+  });
 
 
 })();
