@@ -3,7 +3,7 @@
 // @version      1.1.3
 // @description  gibt automatisch Krankenhäuser und Zellen im Verband frei
 // @author       DrTraxx
-// @include      ^https?:\/\/(w{3}\.)?(polizei\.)?leitstellenspiel\.de\/$/
+// @include      /^https?:\/\/(w{3}\.)?(polizei\.)?leitstellenspiel\.de\/$/
 // @grant        none
 // ==/UserScript==
 /* global $, user_id, I18n */
