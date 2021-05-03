@@ -9,7 +9,7 @@
 // ==/UserScript==
 /* global $, user_id, user_premium, mission_count_max, getVehicleTypes, getApi */
 
-(async function()) {
+(async function() {
     'use strict';
 
     if(!localStorage.fum_options) localStorage.fum_options = JSON.stringify({"showOnBuild":true,"showWork":true,"showDelay":true});
@@ -1692,4 +1692,4 @@ cursor: default;
         createTable(options.status.count);
     });
 
-})();
+});
