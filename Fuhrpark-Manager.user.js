@@ -1692,4 +1692,4 @@ cursor: default;
         createTable(options.status.count);
     });
 
-});
+})();
